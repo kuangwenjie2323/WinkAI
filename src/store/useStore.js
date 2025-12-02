@@ -301,6 +301,7 @@ export const useStore = create(
         sessions: state.sessions,
         currentSessionId: state.currentSessionId,
         settings: state.settings,
+        uiState: state.uiState,  // 持久化 UI 状态
         imageLibrary: state.imageLibrary,
         videoLibrary: state.videoLibrary,
         codeSnippets: state.codeSnippets,
