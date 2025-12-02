@@ -78,11 +78,11 @@ export const useStore = create(
         autoSaveHistory: true
       },
 
-      // UI状态（不持久化，通过localStorage单独管理）
+      // UI状态（持久化到localStorage）
       uiState: {
         leftSidebarOpen: true,
         leftActiveTab: 'sessions',  // 'sessions' | 'images' | 'videos' | 'code'
-        rightPanelOpen: typeof window !== 'undefined' && window.innerWidth >= 1024  // 桌面端默认展开
+        rightPanelOpen: true  // 右侧面板默认展开
       },
 
       // 图像库（持久化）
