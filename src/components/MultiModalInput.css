@@ -1,10 +1,9 @@
 /* 多模态输入容器 */
 .multimodal-input-container {
   position: relative;
-  background: var(--bg-primary);
-  backdrop-filter: blur(10px);
-  padding: var(--spacing-4);
-  border-top: 1px solid var(--border-primary);
+  background: transparent;
+  padding: var(--spacing-6) var(--spacing-8);
+  border-top: none;
 }
 
 /* 拖拽覆盖层 */
@@ -14,17 +13,18 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: oklch(0.55 0.2 264 / 0.9);
+  background: rgba(168, 199, 250, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  border-radius: var(--radius-md);
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
 }
 
 .drag-content {
   text-align: center;
-  color: white;
+  color: var(--text-primary);
 }
 
 .drag-content p {
@@ -45,7 +45,7 @@
   position: relative;
   width: 80px;
   height: 80px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-primary);
   transition: all var(--transition-fast);
@@ -140,36 +140,45 @@
   white-space: nowrap;
 }
 
-/* 输入区域 */
+/* 输入区域 - Google AI Studio 胶囊样式 */
 .input-wrapper {
+  position: relative;
   display: flex;
   align-items: flex-end;
-  gap: var(--spacing-2);
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  border: 1px solid var(--border-primary);
+  padding: var(--spacing-3) var(--spacing-4);
+  transition: all var(--transition-fast);
   max-width: 100%;
 }
 
-/* 上传按钮 */
+.input-wrapper:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.1);
+}
+
+/* 上传按钮 - 在输入框内左侧 */
 .upload-btn {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  background: transparent;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
-  border: 1px solid var(--border-primary);
+  margin-right: var(--spacing-2);
 }
 
 .upload-btn:hover:not(:disabled) {
   background: var(--bg-hover);
-  color: var(--text-primary);
-  border-color: var(--accent-primary);
-  transform: scale(1.05);
+  color: var(--accent-primary);
+  transform: scale(1.1);
 }
 
 .upload-btn:disabled {
@@ -177,28 +186,21 @@
   cursor: not-allowed;
 }
 
-/* 文本输入框 */
+/* 文本输入框 - 无边框融入胶囊 */
 .message-textarea {
   flex: 1;
-  padding: var(--spacing-2) var(--spacing-3);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  font-size: var(--font-sm);
+  padding: var(--spacing-2) 0;
+  border: none;
+  font-size: var(--font-base);
   font-family: inherit;
   resize: none;
-  min-height: 40px;
+  min-height: 48px;
   max-height: 200px;
-  background: var(--bg-secondary);
+  background: transparent;
   color: var(--text-primary);
   transition: all var(--transition-fast);
   outline: none;
   line-height: 1.5;
-}
-
-.message-textarea:focus {
-  border-color: var(--accent-primary);
-  background: var(--bg-primary);
-  box-shadow: 0 0 0 3px oklch(0.55 0.2 264 / 0.1);
 }
 
 .message-textarea:disabled {
@@ -210,7 +212,7 @@
   color: var(--text-tertiary);
 }
 
-/* 发送按钮 */
+/* 发送按钮 - 在输入框内右侧 */
 .send-btn {
   flex-shrink: 0;
   width: 40px;
@@ -218,17 +220,18 @@
   border: none;
   border-radius: var(--radius-full);
   background: var(--accent-primary);
-  color: var(--accent-text);
+  color: #131314;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
+  margin-left: var(--spacing-2);
 }
 
 .send-btn:hover:not(:disabled) {
   background: var(--accent-hover);
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: var(--shadow-md);
 }
 
@@ -237,15 +240,16 @@
 }
 
 .send-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
   transform: scale(1);
+  background: var(--bg-tertiary);
 }
 
 /* 响应式 */
 @media (max-width: 768px) {
   .multimodal-input-container {
-    padding: var(--spacing-3);
+    padding: var(--spacing-4);
   }
 
   .image-preview-item {
@@ -253,13 +257,18 @@
     height: 70px;
   }
 
+  .input-wrapper {
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+
   .upload-btn,
   .send-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 
   .message-textarea {
     font-size: var(--font-sm);
+    min-height: 36px;
   }
 }
