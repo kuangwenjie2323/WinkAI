@@ -19,7 +19,11 @@ export default defineConfig({
         }
       }
     },
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    // 确保 lucide-react 不被过度 tree-shake
+    commonjsOptions: {
+      include: [/lucide-react/, /node_modules/]
+    }
   },
 
   // 环境变量前缀
