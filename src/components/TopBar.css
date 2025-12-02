@@ -74,6 +74,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-xs);
+  position: relative;
+}
+
+/* 备用文本 - 默认隐藏，图标消失时显示 */
+.btn-fallback {
+  display: none;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 当图标为空时显示备用文本 */
+.icon-btn:empty .btn-fallback,
+.icon-btn svg:not(:valid) ~ .btn-fallback {
+  display: inline;
+}
+
+/* 检测图标是否加载失败，显示备用文本 */
+@supports not (display: none) {
+  .btn-fallback {
+    display: inline;
+  }
 }
 
 .icon-btn:hover {

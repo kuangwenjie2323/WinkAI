@@ -32,6 +32,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           title="清空对话"
         >
           <Trash2 size={18} />
+          <span className="btn-fallback">清空</span>
         </button>
 
         <button
@@ -40,6 +41,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           title={uiState.rightPanelOpen ? '关闭控制面板' : '打开控制面板'}
         >
           {uiState.rightPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+          <span className="btn-fallback">面板</span>
         </button>
 
         <button
@@ -48,10 +50,12 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           title={theme === 'light' ? '切换到暗色模式' : '切换到亮色模式'}
         >
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          <span className="btn-fallback">主题</span>
         </button>
 
         <button className="icon-btn" onClick={onSettingsOpen} title="设置">
           <Settings size={18} />
+          <span className="btn-fallback">设置</span>
         </button>
       </div>
     </div>
