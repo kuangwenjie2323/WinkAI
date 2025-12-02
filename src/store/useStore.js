@@ -85,6 +85,9 @@ export const useStore = create(
         rightPanelOpen: true  // 右侧面板默认展开
       },
 
+      // 水合状态（不持久化，用于检测状态是否已从 localStorage 恢复）
+      _hasHydrated: false,
+
       // 图像库（持久化）
       imageLibrary: [],
 
@@ -236,6 +239,11 @@ export const useStore = create(
         uiState: { ...state.uiState, rightPanelOpen: open }
       })),
 
+      // 设置水合状态
+      setHasHydrated: (hydrated) => set({
+        _hasHydrated: hydrated
+      }),
+
       // 图像库管理
       addToImageLibrary: (image) => set((state) => ({
         imageLibrary: [...state.imageLibrary, { ...image, id: `img-${Date.now()}`, createdAt: Date.now() }]
@@ -306,7 +314,11 @@ export const useStore = create(
         videoLibrary: state.videoLibrary,
         codeSnippets: state.codeSnippets,
         customModels: state.customModels
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        // 当状态从 localStorage 恢复后，设置水合完成标志
+        state?.setHasHydrated(true)
+      }
     }
   )
 )

@@ -8,8 +8,17 @@ import SettingsPanel from './components/SettingsPanel'
 import './App.css'
 
 function App() {
-  const { uiState, settings, updateSettings } = useStore()
+  const { _hasHydrated, uiState, settings, updateSettings } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // 等待状态水合完成
+  if (!_hasHydrated) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+      </div>
+    )
+  }
 
   // 应用主题
   useEffect(() => {
