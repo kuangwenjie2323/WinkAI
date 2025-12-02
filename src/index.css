@@ -1,0 +1,260 @@
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* 字体 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+
+  /* 字体大小规范（基于14px基准 - Google AI Studio风格） */
+  --font-xs: 0.6875rem;    /* 11px - 次要标签 */
+  --font-sm: 0.8125rem;    /* 13px - 辅助文本 */
+  --font-base: 0.875rem;   /* 14px - 正文基准 */
+  --font-md: 1rem;         /* 16px - 标题 */
+  --font-lg: 1.125rem;     /* 18px - 大标题 */
+  --font-xl: 1.25rem;      /* 20px - 主标题 */
+  --font-2xl: 1.5rem;      /* 24px - 超大标题 */
+
+  /* 行高规范 */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* 亮色主题（OKLch 色彩空间） */
+  --bg-primary: oklch(1 0 0);              /* 纯白背景 */
+  --bg-secondary: oklch(0.98 0 0);         /* 次级背景 */
+  --bg-tertiary: oklch(0.96 0 0);          /* 三级背景 */
+  --bg-hover: oklch(0.94 0 0);             /* 悬停背景 */
+
+  --text-primary: oklch(0.2 0 0);          /* 主文本 */
+  --text-secondary: oklch(0.5 0 0);        /* 次文本 */
+  --text-tertiary: oklch(0.65 0 0);        /* 三级文本 */
+
+  --border-primary: oklch(0.92 0 0);       /* 主边框 */
+  --border-secondary: oklch(0.94 0 0);     /* 次边框 */
+
+  --accent-primary: oklch(0.55 0.2 264);   /* 主色调（蓝紫色） */
+  --accent-hover: oklch(0.5 0.22 264);     /* 悬停色 */
+  --accent-light: oklch(0.96 0.05 264);    /* 浅色调 */
+  --accent-text: oklch(1 0 0);             /* Accent上的文本 */
+
+  --success: oklch(0.6 0.15 145);
+  --error: oklch(0.6 0.2 25);
+  --warning: oklch(0.7 0.15 75);
+
+  /* 阴影 */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+  /* 圆角规范 */
+  --radius-none: 0;
+  --radius-sm: 0.375rem;   /* 6px - 小按钮 */
+  --radius-md: 0.5rem;     /* 8px - 标准按钮 */
+  --radius-lg: 0.75rem;    /* 12px - 卡片 */
+  --radius-xl: 1rem;       /* 16px - 大卡片 */
+  --radius-2xl: 1.5rem;    /* 24px - 面板 */
+  --radius-full: 9999px;   /* 全圆角 */
+
+  /* 间距规范（4px基准 - Material Design） */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;    /* 4px */
+  --spacing-2: 0.5rem;     /* 8px */
+  --spacing-3: 0.75rem;    /* 12px */
+  --spacing-4: 1rem;       /* 16px */
+  --spacing-5: 1.25rem;    /* 20px */
+  --spacing-6: 1.5rem;     /* 24px */
+  --spacing-8: 2rem;       /* 32px */
+  --spacing-10: 2.5rem;    /* 40px */
+  --spacing-12: 3rem;      /* 48px */
+  --spacing-16: 4rem;      /* 64px */
+
+  /* 过渡 */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+  --bg-primary: oklch(0.18 0 0);
+  --bg-secondary: oklch(0.21 0 0);
+  --bg-tertiary: oklch(0.24 0 0);
+  --bg-hover: oklch(0.27 0 0);
+
+  --text-primary: oklch(0.95 0 0);
+  --text-secondary: oklch(0.7 0 0);
+  --text-tertiary: oklch(0.55 0 0);
+
+  --border-primary: oklch(0.28 0 0);
+  --border-secondary: oklch(0.25 0 0);
+
+  --accent-primary: oklch(0.65 0.2 264);
+  --accent-hover: oklch(0.7 0.22 264);
+  --accent-light: oklch(0.28 0.08 264);
+  --accent-text: oklch(1 0 0);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-base);
+  line-height: var(--leading-normal);
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* 选中文本 */
+::selection {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+
+/* 焦点样式 */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* 禁用状态 */
+:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 链接 */
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* 按钮基础样式 */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: none;
+  background: none;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* 输入框基础样式 */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  transition: all var(--transition-base);
+}
+
+/* 代码块 */
+code, pre {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 工具类 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

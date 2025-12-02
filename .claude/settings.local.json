@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(command -v:*)",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && nvm ls-remote --lts | tail -20\")",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && nvm install 20.19.6\")",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && nvm use --delete-prefix v20.19.6\")",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && node --version && npm --version\")",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && nvm use 20.19.6 && npm install vite@latest @vitejs/plugin-react@latest --save-dev --registry=https://registry.npmmirror.com\")",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && nvm use 20.19.6 && npm run dev\")",
+      "Bash(bash -c \"source ~/.nvm/nvm.sh && nvm use 20.19.6 && npm install react-markdown remark-gfm rehype-highlight rehype-raw @google/generative-ai openai @anthropic-ai/sdk zustand react-dropzone --registry=https://registry.npmmirror.com\")",
+      "Bash(test:*)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

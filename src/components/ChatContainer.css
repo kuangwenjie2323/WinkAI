@@ -1,0 +1,181 @@
+/* 聊天容器包装器 - 极简风格 */
+.chat-container-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+/* 消息区域 */
+.messages-area-new {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+/* 欢迎屏幕 */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--spacing-8);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.welcome-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-4);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.welcome-screen h2 {
+  margin: 0 0 var(--spacing-2) 0;
+  font-size: var(--font-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.welcome-screen p {
+  margin: 0 0 var(--spacing-6) 0;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-6);
+  max-width: 560px;
+  width: 100%;
+}
+
+.feature-item {
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.feature-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.setup-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--accent-primary);
+  color: var(--accent-text);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.setup-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.setup-btn:active {
+  transform: translateY(0);
+}
+
+/* 消息列表 */
+.messages-list-new {
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 自定义滚动条 */
+.messages-area-new::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-area-new::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.messages-area-new::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.messages-area-new::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* 输入区域 */
+.input-area-new {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .messages-list-new {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .welcome-screen {
+    padding: var(--spacing-xl);
+  }
+
+  .welcome-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-screen h2 {
+    font-size: 1.5rem;
+  }
+
+  .feature-list {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-item {
+    font-size: 0.875rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .setup-btn {
+    font-size: 0.9375rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
+}

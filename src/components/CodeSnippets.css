@@ -1,0 +1,215 @@
+/* 代码片段样式 */
+.library-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+}
+
+.library-label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.library-count {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-full);
+}
+
+/* 空状态 */
+.library-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8) var(--spacing-4);
+  color: var(--text-tertiary);
+  text-align: center;
+  flex: 1;
+}
+
+.library-empty svg {
+  margin-bottom: var(--spacing-3);
+  opacity: 0.5;
+}
+
+.library-empty p {
+  margin: 0 0 var(--spacing-1) 0;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.library-empty span {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+/* 代码片段列表 */
+.snippets-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: 0 var(--spacing-2);
+  overflow-y: auto;
+}
+
+/* 代码片段项 */
+.snippet-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.snippet-item:hover {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 片段头部 */
+.snippet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-2);
+}
+
+.snippet-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex: 1;
+}
+
+.snippet-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 操作按钮 */
+.snippet-actions {
+  display: flex;
+  gap: var(--spacing-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.snippet-item:hover .snippet-actions {
+  opacity: 1;
+}
+
+.snippet-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.snippet-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.snippet-action-btn.delete-btn:hover {
+  background: var(--error);
+  color: white;
+}
+
+/* 语言标签 */
+.snippet-language {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-2);
+}
+
+.language-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* 代码块 */
+.snippet-code {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-2);
+  margin: 0 0 var(--spacing-2) 0;
+  font-size: var(--font-xs);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--text-primary);
+  overflow-x: auto;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.snippet-code code {
+  white-space: pre;
+  line-height: 1.5;
+}
+
+/* 标签 */
+.snippet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+}
+
+.snippet-tag {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
+}
+
+/* 滚动条 */
+.snippets-list::-webkit-scrollbar,
+.snippet-code::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.snippets-list::-webkit-scrollbar-track,
+.snippet-code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.snippets-list::-webkit-scrollbar-thumb,
+.snippet-code::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-full);
+}
+
+.snippets-list::-webkit-scrollbar-thumb:hover,
+.snippet-code::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
