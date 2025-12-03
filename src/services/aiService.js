@@ -194,52 +194,58 @@ class AIService {
 
       // 图片生成模式
       if (options.mode === 'image') {
-        // Gemini 2.0 Flash 支持原生图片生成
-        const isGemini2 = model.includes('gemini-2') || model.includes('flash')
         const isImagenModel = model.includes('imagen')
 
-        if (isGemini2 || isImagenModel) {
+        if (isImagenModel) {
+          // Imagen 4.0 使用 REST API 直接调用
           try {
-            // 使用 Gemini 2.0 的原生图片生成
-            const imageModel = client.getGenerativeModel({
-              model: isImagenModel ? model : 'gemini-2.0-flash-exp',
-              generationConfig: {
-                responseModalities: ['Text', 'Image']
+            const apiKey = import.meta.env.VITE_GOOGLE_API_KEY
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  instances: [{ prompt }],
+                  parameters: {
+                    sampleCount: 1,
+                    aspectRatio: '16:9'
+                  }
+                })
               }
-            })
+            )
 
-            const result = await imageModel.generateContent(prompt)
-            const response = result.response
-
-            // 处理响应中的图片和文本
-            let hasImage = false
-            for (const part of response.candidates[0].content.parts) {
-              if (part.inlineData) {
-                // 找到图片数据
-                const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`
-                yield { type: 'content', content: `![生成的图片](${imageUrl})\n\n` }
-                hasImage = true
-              } else if (part.text) {
-                yield { type: 'content', content: part.text }
-              }
+            if (!response.ok) {
+              const errorText = await response.text()
+              throw new Error(`API 错误 ${response.status}: ${errorText}`)
             }
 
-            if (!hasImage) {
-              yield { type: 'content', content: '\n\n⚠️ 模型未返回图片，可能是内容被过滤或模型限制。请尝试修改提示词。' }
+            const data = await response.json()
+
+            if (data.predictions && data.predictions.length > 0) {
+              const prediction = data.predictions[0]
+              if (prediction.bytesBase64Encoded) {
+                const imageUrl = `data:image/png;base64,${prediction.bytesBase64Encoded}`
+                yield { type: 'content', content: `![生成的图片](${imageUrl})` }
+              } else {
+                yield { type: 'content', content: '图片生成成功但未返回图片数据' }
+              }
+            } else {
+              yield { type: 'content', content: '图片生成失败，请重试' }
             }
 
             yield { type: 'done', reason: 'stop' }
             return
           } catch (imgError) {
-            console.error('图片生成错误:', imgError)
-            yield { type: 'content', content: `图片生成失败: ${imgError.message}\n\n可能原因:\n1. API 配额限制\n2. 内容安全过滤\n3. 模型不支持图片生成\n\n请尝试切换到「对话」模式。` }
+            console.error('Imagen 生成错误:', imgError)
+            yield { type: 'content', content: `图片生成失败: ${imgError.message}` }
             yield { type: 'done', reason: 'stop' }
             return
           }
         }
 
-        // 其他模型不支持图片生成
-        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请选择以下模型:\n- gemini-2.0-flash-exp（推荐）\n- imagen-3.0-generate-002\n\n或者切换到「对话」模式使用当前模型。` }
+        // 非 Imagen 模型，提示用户选择正确的模型
+        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请选择 Imagen 模型:\n- imagen-4.0-generate-preview-06-06\n- imagen-4.0-ultra-generate-preview-06-06\n\n或者切换到「对话」模式使用当前模型。` }
         yield { type: 'done', reason: 'stop' }
         return
       }
