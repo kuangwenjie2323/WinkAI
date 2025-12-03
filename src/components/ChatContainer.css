@@ -1,9 +1,75 @@
-/* 聊天容器包装器 - 极简风格 */
+/* 聊天容器包装器 - Google AI Studio 风格 */
 .chat-container-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-primary);
+  background: radial-gradient(circle at 20% 20%, rgba(168, 199, 250, 0.14), transparent 35%), radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.06), transparent 40%), var(--bg-primary);
+  padding: var(--spacing-5) var(--spacing-6);
+  overflow: hidden;
+  flex: 1;
+}
+
+.canvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-5);
+  margin-bottom: var(--spacing-4);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(135deg, rgba(168, 199, 250, 0.1), rgba(19, 19, 20, 0.9));
+  box-shadow: var(--shadow-md);
+}
+
+.canvas-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.canvas-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.canvas-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+.canvas-chips {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.canvas-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.canvas-chip.chip-on {
+  border-color: rgba(168, 199, 250, 0.5);
+  background: rgba(168, 199, 250, 0.12);
+  color: var(--accent-primary);
+}
+
+.canvas-chip.chip-off {
+  border-color: var(--border-primary);
+  color: var(--text-secondary);
 }
 
 /* 消息区域 */
@@ -11,6 +77,10 @@
   flex: 1;
   overflow-y: auto;
   background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-md);
 }
 
 /* 欢迎屏幕 */
@@ -109,13 +179,14 @@
 
 /* 消息列表 */
 .messages-list-new {
-  padding: var(--spacing-2xl) var(--spacing-lg);
+  padding: var(--spacing-12) var(--spacing-lg);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
   max-width: 900px;
   margin: 0 auto;
   width: 100%;
+  position: relative;
 }
 
 /* 自定义滚动条 */
@@ -139,13 +210,21 @@
 
 /* 输入区域 */
 .input-area-new {
-  background: var(--bg-primary);
-  border-top: 1px solid var(--border-primary);
-  box-shadow: var(--shadow-lg);
+  background: transparent;
+  padding: var(--spacing-4) var(--spacing-1) var(--spacing-1);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .chat-container-wrapper {
+    padding: var(--spacing-4);
+  }
+
+  .canvas-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .messages-list-new {
     padding: var(--spacing-lg) var(--spacing-md);
   }

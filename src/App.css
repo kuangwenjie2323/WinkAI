@@ -26,27 +26,30 @@
 /* 应用容器 - Google AI Studio 三栏布局 */
 .app-container {
   display: grid;
-  grid-template-columns: 250px 1fr 320px;
+  grid-template-columns: 270px 1fr 340px;
   height: 100vh;
   width: 100%;
-  background: var(--bg-primary);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(168, 199, 250, 0.1), transparent 35%),
+    radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.04), transparent 35%),
+    var(--bg-primary);
   overflow: hidden;
   transition: grid-template-columns var(--transition-base);
 }
 
 /* 左侧折叠 */
 .app-container.left-collapsed {
-  grid-template-columns: 60px 1fr 320px;
+  grid-template-columns: 72px 1fr 340px;
 }
 
 /* 右侧折叠 */
 .app-container.right-collapsed {
-  grid-template-columns: 250px 1fr 0;
+  grid-template-columns: 270px 1fr 0;
 }
 
 /* 两侧都折叠 */
 .app-container.left-collapsed.right-collapsed {
-  grid-template-columns: 60px 1fr 0;
+  grid-template-columns: 72px 1fr 0;
 }
 
 /* 主内容区域 */
@@ -56,6 +59,7 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-primary);
+  min-height: 100vh;
 }
 
 /* 响应式布局 */
@@ -63,11 +67,11 @@
 /* 平板端 (768-1023px) */
 @media (max-width: 1023px) {
   .app-container {
-    grid-template-columns: minmax(60px, 260px) 1fr;
+    grid-template-columns: minmax(72px, 270px) 1fr;
   }
 
   .app-container.left-collapsed {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 72px 1fr;
   }
 
   /* 右侧面板使用fixed浮层 */

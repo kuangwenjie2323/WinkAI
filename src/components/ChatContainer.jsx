@@ -138,6 +138,25 @@ function ChatContainer() {
 
   return (
     <div className="chat-container-wrapper">
+      <div className="canvas-header">
+        <div className="canvas-titles">
+          <div className="eyebrow">Run</div>
+          <h2 className="canvas-title">Gemini 调试面板</h2>
+          <p className="canvas-subtitle">Google AI Studio 风格的多模态对话体验</p>
+        </div>
+        <div className="canvas-chips">
+          <span className="canvas-chip">
+            提供商 · {provider?.name}
+          </span>
+          <span className="canvas-chip">
+            模型 · {currentModel || provider?.defaultModel}
+          </span>
+          <span className={`canvas-chip ${settings.streamingEnabled ? 'chip-on' : 'chip-off'}`}>
+            流式 {settings.streamingEnabled ? '开启' : '关闭'}
+          </span>
+        </div>
+      </div>
+
       {/* 消息区域 */}
       <div className="messages-area-new">
         {!session?.messages?.length ? (

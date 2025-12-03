@@ -1,5 +1,5 @@
 import { useStore } from '../store/useStore'
-import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Image, Video, Code } from 'lucide-react'
+import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Image, Video, Code, Sparkles } from 'lucide-react'
 import ImageLibrary from './ImageLibrary'
 import VideoLibrary from './VideoLibrary'
 import CodeSnippets from './CodeSnippets'
@@ -113,6 +113,25 @@ function LeftSidebar() {
 
   return (
     <div className={`left-sidebar ${isOpen ? 'open' : 'collapsed'}`}>
+      <div className="sidebar-brand">
+        <div className="brand-icon">
+          <Sparkles size={16} />
+        </div>
+        {isOpen && (
+          <div className="brand-text">
+            <div className="brand-title">WinkAI Studio</div>
+            <div className="brand-subtitle">Google AI风格工作台</div>
+          </div>
+        )}
+        <button
+          className="collapse-toggle"
+          onClick={toggleSidebar}
+          title={isOpen ? '折叠侧边栏' : '展开侧边栏'}
+        >
+          {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </button>
+      </div>
+
       {/* 头部：新对话按钮或Tab标签 */}
       {isOpen ? (
         <>
@@ -155,13 +174,6 @@ function LeftSidebar() {
       {/* 内容区域 */}
       <div className="sidebar-content">
         {isOpen ? renderTabContent() : renderCollapsedTabs()}
-      </div>
-
-      {/* 折叠按钮 */}
-      <div className="sidebar-footer">
-        <button className="collapse-btn" onClick={toggleSidebar} title={isOpen ? '折叠侧边栏' : '展开侧边栏'}>
-          {isOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-        </button>
       </div>
     </div>
   )

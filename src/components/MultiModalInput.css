@@ -4,6 +4,8 @@
   background: transparent;
   padding: var(--spacing-6) var(--spacing-8);
   border-top: none;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 /* 拖拽覆盖层 */

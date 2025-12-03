@@ -16,10 +16,23 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
   return (
     <div className="topbar">
       <div className="topbar-left">
-        <h1 className="app-title">WinkAI</h1>
+        <div className="topbar-meta">
+          <div className="eyebrow">Gemini Playground</div>
+          <div className="title-row">
+            <h1 className="app-title">WinkAI Studio</h1>
+            <span className="pill live">Live</span>
+          </div>
+          <div className="subtitle">会话：{session?.name || '新对话'}</div>
+        </div>
+
         {provider && (
-          <div className="model-badge">
-            {provider.name} · {currentModel || provider.defaultModel}
+          <div className="model-chip">
+            <div className="chip-label">模型</div>
+            <div className="chip-value">
+              <span>{provider.name}</span>
+              <span className="dot">•</span>
+              <span>{currentModel || provider.defaultModel}</span>
+            </div>
           </div>
         )}
       </div>
