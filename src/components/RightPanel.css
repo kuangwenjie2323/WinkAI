@@ -294,11 +294,72 @@
   .right-panel.open {
     width: 320px;
   }
+
+  .panel-header {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .panel-section {
+    padding: var(--spacing-4);
+  }
+
+  .control-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 767px) {
+  .right-panel {
+    width: 300px;
+    max-width: 85vw;
+  }
+
   .right-panel.open {
-    width: 85vw;
-    max-width: 320px;
+    width: 300px;
+    max-width: 85vw;
+  }
+
+  .panel-header {
+    padding: var(--spacing-3);
+  }
+
+  .panel-header h3 {
+    font-size: var(--font-sm);
+  }
+
+  .panel-section {
+    padding: var(--spacing-3);
+  }
+
+  .section-title {
+    font-size: 10px;
+  }
+
+  .panel-select {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-xs);
+  }
+
+  .param-item label {
+    font-size: var(--font-xs);
+  }
+
+  .switch-item {
+    font-size: var(--font-xs);
+    padding: var(--spacing-2) 0;
+  }
+
+  .switch-item input[type="checkbox"] {
+    width: 36px;
+    height: 20px;
+  }
+
+  .switch-item input[type="checkbox"]::before {
+    width: 16px;
+    height: 16px;
+  }
+
+  .switch-item input[type="checkbox"]:checked::before {
+    transform: translateX(16px);
   }
 }

@@ -346,9 +346,40 @@
 
 /* 响应式 */
 @media (max-width: 767px) {
+  .left-sidebar {
+    background: var(--bg-secondary);
+  }
+
   .left-sidebar.open {
-    width: 85vw;
-    max-width: 280px;
+    width: 280px;
+  }
+
+  .left-sidebar.collapsed {
+    width: 280px;
+  }
+
+  .sidebar-brand {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .sidebar-header {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nav-list {
+    padding: var(--spacing-2);
+  }
+
+  .nav-item {
+    padding: var(--spacing-2);
+  }
+
+  .collapse-toggle {
+    display: none;
   }
 }
 

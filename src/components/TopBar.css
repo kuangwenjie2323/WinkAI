@@ -14,6 +14,7 @@
 .topbar-left {
   display: flex;
   align-items: center;
+  gap: var(--spacing-2);
 }
 
 .brand {
@@ -81,11 +82,20 @@
   color: var(--text-secondary);
 }
 
+/* 菜单按钮 - 默认隐藏，移动端显示 */
+.menu-btn {
+  display: none;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .topbar {
     height: 48px;
     padding: 0 var(--spacing-3);
+  }
+
+  .menu-btn {
+    display: flex;
   }
 
   .brand-mark {
@@ -128,5 +138,9 @@
   .icon-btn {
     min-width: 28px;
     min-height: 28px;
+  }
+
+  .brand-title {
+    display: none;
   }
 }

@@ -6,12 +6,13 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Trash2,
-  Sparkles
+  Sparkles,
+  Menu
 } from 'lucide-react'
 import './TopBar.css'
 
 function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
-  const { uiState, toggleRightPanel, getCurrentSession, clearSession } = useStore()
+  const { uiState, toggleRightPanel, setLeftSidebarOpen, getCurrentSession, clearSession } = useStore()
   const session = getCurrentSession()
 
   const handleClear = () => {
@@ -20,9 +21,22 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
     }
   }
 
+  const toggleLeftSidebar = () => {
+    setLeftSidebarOpen(!uiState.leftSidebarOpen)
+  }
+
   return (
     <div className="topbar">
       <div className="topbar-left">
+        {/* 移动端菜单按钮 */}
+        <button
+          className="icon-btn menu-btn"
+          onClick={toggleLeftSidebar}
+          title="菜单"
+        >
+          <Menu size={20} />
+        </button>
+
         <div className="brand">
           <div className="brand-mark">
             <Sparkles size={18} />

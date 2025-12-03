@@ -59,15 +59,40 @@
   min-height: 100vh;
 }
 
+/* 遮罩层 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgb(0 0 0 / 0.5);
+  z-index: 99;
+  animation: fadeIn var(--transition-base);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 响应式布局 */
 
 /* 平板端 (768-1023px) */
 @media (max-width: 1023px) {
   .app-container {
-    grid-template-columns: minmax(72px, 270px) 1fr;
+    grid-template-columns: 220px 1fr;
   }
 
   .app-container.left-collapsed {
+    grid-template-columns: 72px 1fr;
+  }
+
+  .app-container.right-collapsed {
+    grid-template-columns: 220px 1fr;
+  }
+
+  .app-container.left-collapsed.right-collapsed {
     grid-template-columns: 72px 1fr;
   }
 
@@ -80,6 +105,10 @@
     z-index: 100;
     box-shadow: var(--shadow-xl);
   }
+
+  .right-panel.closed {
+    transform: translateX(100%);
+  }
 }
 
 /* 移动端 (<768px) */
@@ -88,49 +117,52 @@
     grid-template-columns: 1fr;
   }
 
-  /* 左右侧边栏都使用fixed浮层 */
-  .left-sidebar {
-    position: fixed !important;
+  .app-container.left-collapsed,
+  .app-container.right-collapsed,
+  .app-container.left-collapsed.right-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  /* 移动端模式 - 左右侧边栏都使用fixed浮层 */
+  .app-container.mobile .left-sidebar {
+    position: fixed;
     left: 0;
     top: 0;
     height: 100vh;
     z-index: 100;
     box-shadow: var(--shadow-xl);
+    width: 280px;
     max-width: 85vw;
-  }
-
-  .left-sidebar.closed {
     transform: translateX(-100%);
+    transition: transform var(--transition-base);
   }
 
-  .right-panel {
-    position: fixed !important;
+  .app-container.mobile .left-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app-container.mobile .left-sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+
+  .app-container.mobile .right-panel {
+    position: fixed;
     right: 0;
     top: 0;
     height: 100vh;
     z-index: 100;
     box-shadow: var(--shadow-xl);
     max-width: 85vw;
+    transform: translateX(100%);
+    transition: transform var(--transition-base);
   }
 
-  .right-panel.closed {
+  .app-container.mobile .right-panel.open {
+    transform: translateX(0);
+  }
+
+  .app-container.mobile .right-panel.closed {
     transform: translateX(100%);
   }
-
-  /* 遮罩层 */
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgb(0 0 0 / 0.5);
-    z-index: 99;
-    animation: fadeIn var(--transition-base);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
