@@ -460,14 +460,108 @@ class AIService {
   }
 
   async _testCustom(config) {
-    const apiType = config.apiType || 'openai'
+    const endpoint = config.endpoint || ''
+    const apiKey = config.apiKey
+    const useCorsProxy = config.useCorsProxy || false
 
-    if (apiType === 'openai') {
-      return await this._testOpenAI(config)
-    } else if (apiType === 'anthropic') {
-      return await this._testAnthropic(config)
-    } else {
-      throw new Error(`不支持的 API 类型: ${apiType}`)
+    if (!apiKey) throw new Error('请提供 API Key')
+    if (!endpoint) throw new Error('请提供 API 地址')
+
+    // 如果启用 CORS 代理，使用代理服务器
+    const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'
+    const actualEndpoint = useCorsProxy ? `${CORS_PROXY}${endpoint}` : endpoint
+
+    // 尝试获取模型列表（可选）
+    let models = []
+
+    try {
+      const modelsResponse = await fetch(`${actualEndpoint}/models`, {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      })
+
+      if (modelsResponse.ok) {
+        const modelsData = await modelsResponse.json()
+
+        // 处理不同格式的模型列表响应
+        if (modelsData.data && Array.isArray(modelsData.data)) {
+          // OpenAI 格式
+          models = modelsData.data.map(m => ({
+            id: m.id,
+            name: m.id
+          }))
+        } else if (Array.isArray(modelsData)) {
+          // 简单数组格式
+          models = modelsData.map(m => ({
+            id: typeof m === 'string' ? m : m.id,
+            name: typeof m === 'string' ? m : (m.name || m.id)
+          }))
+        }
+      }
+    } catch (error) {
+      // 如果获取模型列表失败，使用配置中的模型
+      console.warn('无法获取模型列表，将使用配置的模型:', error.message)
+    }
+
+    // 如果没有获取到模型，尝试从 zustand store 获取自定义模型
+    if (models.length === 0) {
+      const { providers } = useStore.getState()
+      const customProvider = providers.custom
+      if (customProvider && customProvider.models && customProvider.models.length > 0) {
+        models = customProvider.models.map(m => ({
+          id: m,
+          name: m
+        }))
+      }
+    }
+
+    // 测试 API 连接（使用配置的第一个模型或 gpt-3.5-turbo）
+    const testModel = models.length > 0 ? models[0].id : 'gpt-3.5-turbo'
+
+    try {
+      const testResponse = await fetch(`${actualEndpoint}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: testModel,
+          messages: [{ role: 'user', content: 'Hi' }],
+          max_tokens: 5
+        })
+      })
+
+      if (!testResponse.ok) {
+        let errorDetail = ''
+        try {
+          const errorData = await testResponse.json()
+          errorDetail = errorData.error?.message || errorData.message || JSON.stringify(errorData)
+        } catch {
+          errorDetail = await testResponse.text()
+        }
+
+        throw new Error(`HTTP ${testResponse.status} ${testResponse.statusText}: ${errorDetail}`)
+      }
+
+      // 验证响应格式
+      const responseData = await testResponse.json()
+      if (!responseData.choices || !Array.isArray(responseData.choices)) {
+        throw new Error('API 响应格式不正确，缺少 choices 字段')
+      }
+
+      return {
+        models,
+        message: models.length > 0
+          ? `连接成功，找到 ${models.length} 个模型`
+          : '连接成功'
+      }
+    } catch (error) {
+      // 如果是 fetch 本身失败（网络错误、CORS 等）
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error(`网络请求失败: ${error.message}（可能是 CORS 问题或网络不可达）`)
+      }
+      // 重新抛出其他错误
+      throw error
     }
   }
 

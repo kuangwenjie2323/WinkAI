@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useStore } from '../store/useStore'
 import { X, Settings as SettingsIcon } from 'lucide-react'
 import './RightPanel.css'
@@ -16,6 +17,12 @@ function RightPanel({ isOpen, onClose }) {
   } = useStore()
 
   const provider = providers[currentProvider]
+
+  // 动态生成提供商列表
+  const providerEntries = useMemo(
+    () => Object.entries(providers || {}),
+    [providers]
+  )
 
   // 获取合并后的模型列表（默认 + 动态 + 自定义）
   const getMergedModels = (providerKey) => {
@@ -63,10 +70,11 @@ function RightPanel({ isOpen, onClose }) {
           value={currentProvider}
           onChange={(e) => setCurrentProvider(e.target.value)}
         >
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic Claude</option>
-          <option value="google">Google Gemini</option>
-          <option value="custom">自定义 API</option>
+          {providerEntries.map(([key, config]) => (
+            <option key={key} value={key}>
+              {config.name}
+            </option>
+          ))}
         </select>
 
         <h4 className="section-title">模型</h4>
@@ -114,8 +122,8 @@ function RightPanel({ isOpen, onClose }) {
           <input
             type="range"
             min="100"
-            max="16000"
-            step="100"
+            max="32768"
+            step="256"
             value={settings.maxTokens}
             onChange={(e) => updateSettings({ maxTokens: parseInt(e.target.value) })}
           />

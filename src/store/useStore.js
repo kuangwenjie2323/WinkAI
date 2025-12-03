@@ -19,7 +19,7 @@ export const useStore = create(
         anthropic: {
           name: 'Anthropic Claude',
           apiKey: '',
-          baseURL: 'https://api.anthropic.com',
+          baseURL: 'https://api.anthropic.com/v1',
           models: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
           defaultModel: 'claude-3-5-sonnet-20241022',
           supportsVision: true,
@@ -30,15 +30,12 @@ export const useStore = create(
           apiKey: '',
           baseURL: 'https://generativelanguage.googleapis.com/v1beta',
           models: [
-            'gemini-3-pro-preview',
-            'gemini-2.5-flash',
-            'gemini-2.5-pro',
-            'gemini-2.0-flash',
             'gemini-2.0-flash-exp',
             'gemini-1.5-pro',
-            'gemini-1.5-flash'
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-8b'
           ],
-          defaultModel: 'gemini-3-pro-preview',
+          defaultModel: 'gemini-2.0-flash-exp',
           supportsVision: true,
           supportsStreaming: true
         },
@@ -46,10 +43,12 @@ export const useStore = create(
           name: '自定义 API',
           apiKey: '',
           baseURL: '',
-          models: [],
-          defaultModel: '',
+          models: ['gemini-3-pro-preview', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022'],
+          defaultModel: 'gemini-3-pro-preview',
           supportsVision: false,
-          supportsStreaming: false
+          supportsStreaming: true,
+          useCorsProxy: false,  // 是否使用 CORS 代理
+          corsProxyUrl: ''      // 自定义 CORS 代理地址（留空则不使用代理）
         }
       },
 
@@ -71,7 +70,7 @@ export const useStore = create(
       settings: {
         theme: 'dark',
         temperature: 0.7,
-        maxTokens: 4096,
+        maxTokens: 8192,
         enableSearch: true,
         enableThinking: true,
         streamingEnabled: true,
@@ -138,6 +137,26 @@ export const useStore = create(
           [provider]: {
             ...state.providers[provider],
             baseURL
+          }
+        }
+      })),
+
+      setProviderUseCorsProxy: (provider, useCorsProxy) => set((state) => ({
+        providers: {
+          ...state.providers,
+          [provider]: {
+            ...state.providers[provider],
+            useCorsProxy
+          }
+        }
+      })),
+
+      setProviderCorsProxyUrl: (provider, corsProxyUrl) => set((state) => ({
+        providers: {
+          ...state.providers,
+          [provider]: {
+            ...state.providers[provider],
+            corsProxyUrl
           }
         }
       })),

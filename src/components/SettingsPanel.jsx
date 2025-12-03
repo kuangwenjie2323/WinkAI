@@ -12,6 +12,7 @@ function SettingsPanel({ isOpen, onClose }) {
     settings,
     setProviderApiKey,
     setProviderBaseURL,
+    setProviderUseCorsProxy,
     setCurrentProvider,
     setCurrentModel,
     updateSettings,
@@ -41,7 +42,8 @@ function SettingsPanel({ isOpen, onClose }) {
     const config = {
       apiKey: mergedApiKey,
       endpoint: mergedEndpoint,
-      apiType: 'openai' // custom API 默认使用 openai 类型
+      apiType: 'openai', // custom API 默认使用 openai 类型
+      useCorsProxy: providers[providerKey].useCorsProxy || false
     }
 
     try {
@@ -188,7 +190,10 @@ function SettingsPanel({ isOpen, onClose }) {
                       </>
                     ) : (
                       <div className="test-error">
-                        ✗ {testResults[currentProvider].error}
+                        <div style={{ fontWeight: 600, marginBottom: '4px' }}>✗ 连接失败</div>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, wordBreak: 'break-word' }}>
+                          {testResults[currentProvider].error}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -197,16 +202,32 @@ function SettingsPanel({ isOpen, onClose }) {
 
               {/* 自定义 API URL */}
               {currentProvider === 'custom' && (
-                <div className="form-group">
-                  <label>API 地址</label>
-                  <input
-                    type="url"
-                    value={provider.baseURL || ''}
-                    onChange={(e) => setProviderBaseURL(currentProvider, e.target.value)}
-                    placeholder="https://api.example.com/v1"
-                  />
-                  <p className="form-hint">兼容 OpenAI API 格式的自定义接口地址</p>
-                </div>
+                <>
+                  <div className="form-group">
+                    <label>API 地址</label>
+                    <input
+                      type="url"
+                      value={provider.baseURL || ''}
+                      onChange={(e) => setProviderBaseURL(currentProvider, e.target.value)}
+                      placeholder="https://api.example.com/v1"
+                    />
+                    <p className="form-hint">兼容 OpenAI API 格式的自定义接口地址</p>
+                  </div>
+
+                  <div className="form-group checkbox-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={provider.useCorsProxy || false}
+                        onChange={(e) => setProviderUseCorsProxy(currentProvider, e.target.checked)}
+                      />
+                      <span>使用 CORS 代理</span>
+                    </label>
+                    <p className="form-hint">
+                      如果遇到 CORS 跨域问题，启用此选项通过代理服务器访问 API
+                    </p>
+                  </div>
+                </>
               )}
 
               {/* 模型选择 */}
