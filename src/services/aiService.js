@@ -188,8 +188,36 @@ class AIService {
 
     try {
       const genModel = client.getGenerativeModel({ model })
+      const temperature = options.temperature || 0.7
+      const maxOutputTokens = options.maxTokens || 4096
 
-      // 转换消息格式
+      // 图片/视频生成类模型：不携带历史，直接走 generateContentStream，避免 thought_signature 错误
+      const isMediaGeneration = options.mode === 'image' || options.mode === 'video' || model.includes('image')
+
+      if (isMediaGeneration) {
+        const lastMessage = messages[messages.length - 1]
+        const prompt = lastMessage?.content || ''
+
+        const result = await genModel.generateContentStream({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature,
+            maxOutputTokens
+          }
+        })
+
+        for await (const chunk of result.stream) {
+          const text = chunk.text()
+          if (text) {
+            yield { type: 'content', content: text }
+          }
+        }
+
+        yield { type: 'done', reason: 'stop' }
+        return
+      }
+
+      // 文本对话：保留历史，使用 chat 模式
       const history = messages.slice(0, -1).map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
@@ -200,8 +228,8 @@ class AIService {
       const chat = genModel.startChat({
         history,
         generationConfig: {
-          temperature: options.temperature || 0.7,
-          maxOutputTokens: options.maxTokens || 4096
+          temperature,
+          maxOutputTokens
         }
       })
 

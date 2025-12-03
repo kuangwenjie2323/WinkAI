@@ -103,7 +103,8 @@ function ChatContainer() {
           providerConfig,
           {
             temperature: settings.temperature,
-            maxTokens: settings.maxTokens
+            maxTokens: settings.maxTokens,
+            mode: generationMode
           }
         )) {
           if (chunk.type === 'content') {
@@ -126,7 +127,8 @@ function ChatContainer() {
           providerConfig,
           {
             temperature: settings.temperature,
-            maxTokens: settings.maxTokens
+            maxTokens: settings.maxTokens,
+            mode: generationMode
           }
         )
         updateMessage(session.id, aiMessageId, {
