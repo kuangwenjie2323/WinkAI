@@ -32,5 +32,11 @@ export default defineConfig({
   // 优化依赖预构建
   optimizeDeps: {
     include: ['react', 'react-dom', 'zustand', 'lucide-react']
+  },
+
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: []
   }
 })
