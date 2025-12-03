@@ -3,11 +3,10 @@ import { useStore } from '../store/useStore'
 import aiService from '../services/aiService'
 import MessageRenderer from './MessageRenderer'
 import MultiModalInput from './MultiModalInput'
-import SettingsPanel from './SettingsPanel'
 import { Settings } from 'lucide-react'
 import './ChatContainer.css'
 
-function ChatContainer() {
+function ChatContainer({ onSettingsOpen }) {
   const {
     getCurrentSession,
     getCurrentProvider,
@@ -19,7 +18,6 @@ function ChatContainer() {
   } = useStore()
 
   const [isLoading, setIsLoading] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const messagesEndRef = useRef(null)
   const session = getCurrentSession()
   const provider = getCurrentProvider()
@@ -39,7 +37,7 @@ function ChatContainer() {
 
     if (!provider?.apiKey && currentProvider !== 'custom') {
       alert(`请先在设置中配置 ${provider?.name} 的 API Key`)
-      setSettingsOpen(true)
+      onSettingsOpen?.()
       return
     }
 
@@ -145,7 +143,7 @@ function ChatContainer() {
               <div className="feature-item">📝 Markdown 和代码高亮</div>
             </div>
             {!provider?.apiKey && currentProvider !== 'custom' && (
-              <button className="setup-btn" onClick={() => setSettingsOpen(true)}>
+              <button className="setup-btn" onClick={onSettingsOpen}>
                 <Settings size={18} />
                 开始配置
               </button>
@@ -165,9 +163,6 @@ function ChatContainer() {
       <div className="input-area-new">
         <MultiModalInput onSend={handleSend} disabled={isLoading} />
       </div>
-
-      {/* 设置面板 */}
-      <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }
