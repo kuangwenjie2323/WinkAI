@@ -35,9 +35,12 @@ function SettingsPanel({ isOpen, onClose }) {
   const handleTestConnection = async (providerKey) => {
     setTesting(true)
 
+    const mergedApiKey = aiService.getApiKey(providerKey)
+    const mergedEndpoint = aiService.getApiEndpoint(providerKey)
+
     const config = {
-      apiKey: providers[providerKey].apiKey,
-      endpoint: providers[providerKey].baseURL,
+      apiKey: mergedApiKey,
+      endpoint: mergedEndpoint,
       apiType: 'openai' // custom API 默认使用 openai 类型
     }
 
@@ -62,6 +65,7 @@ function SettingsPanel({ isOpen, onClose }) {
   if (!isOpen) return null
 
   const provider = providers[currentProvider]
+  const effectiveApiKey = aiService.getApiKey(currentProvider)
 
   const toggleApiKeyVisibility = (providerKey) => {
     setShowApiKey(prev => ({ ...prev, [providerKey]: !prev[providerKey] }))
@@ -155,7 +159,7 @@ function SettingsPanel({ isOpen, onClose }) {
                   <button
                     className="test-btn"
                     onClick={() => handleTestConnection(currentProvider)}
-                    disabled={!provider.apiKey || testing}
+                    disabled={(currentProvider !== 'custom' && !effectiveApiKey) || testing}
                   >
                     {testing ? '测试中...' : '测试'}
                   </button>

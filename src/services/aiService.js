@@ -16,6 +16,19 @@ class AIService {
     }
   }
 
+  // 规范化 Endpoint，处理重复的 /v1 片段等
+  normalizeEndpoint(provider, endpoint) {
+    if (!endpoint) return endpoint
+
+    let normalized = endpoint.trim()
+
+    if (provider === 'anthropic') {
+      normalized = normalized.replace(/\/+v1\/?$/, '')
+    }
+
+    return normalized.replace(/\/+$/, '')
+  }
+
   // 获取 API Key（环境变量优先）
   getApiKey(provider) {
     // 环境变量优先
@@ -29,8 +42,8 @@ class AIService {
     if (envKey) return envKey
 
     // 回退到 localStorage
-    const { apiKeys } = useStore.getState()
-    return apiKeys[provider]
+    const { providers } = useStore.getState()
+    return providers?.[provider]?.apiKey
   }
 
   // 获取 API Endpoint（环境变量优先）
@@ -43,40 +56,46 @@ class AIService {
       custom: import.meta.env.VITE_CUSTOM_API_ENDPOINT
     }[provider]
 
-    if (envEndpoint) return envEndpoint
+    if (envEndpoint) return this.normalizeEndpoint(provider, envEndpoint)
 
     // 回退到用户配置
-    const { apiEndpoints } = useStore.getState()
-    return apiEndpoints[provider] || this.defaultEndpoints[provider]
+    const { providers } = useStore.getState()
+    const storedEndpoint = providers?.[provider]?.baseURL
+
+    return this.normalizeEndpoint(provider, storedEndpoint || this.defaultEndpoints[provider])
   }
 
   // 初始化客户端
-  initClient(provider, config) {
-    const { apiKey, baseURL } = config
+  initClient(provider, config = {}) {
+    const resolvedApiKey = this.getApiKey(provider) || config.apiKey
+    const resolvedBaseURL = this.normalizeEndpoint(
+      provider,
+      this.getApiEndpoint(provider) || config.baseURL || config.endpoint
+    )
 
-    if (!apiKey) {
+    if (!resolvedApiKey) {
       throw new Error(`${provider} API Key 未设置`)
     }
 
     switch (provider) {
       case 'openai':
         this.clients.openai = new OpenAI({
-          apiKey,
-          baseURL,
+          apiKey: resolvedApiKey,
+          baseURL: resolvedBaseURL,
           dangerouslyAllowBrowser: true
         })
         break
 
       case 'anthropic':
         this.clients.anthropic = new Anthropic({
-          apiKey,
-          baseURL,
+          apiKey: resolvedApiKey,
+          baseURL: resolvedBaseURL,
           dangerouslyAllowBrowser: true
         })
         break
 
       case 'google':
-        this.clients.google = new GoogleGenerativeAI(apiKey)
+        this.clients.google = new GoogleGenerativeAI(resolvedApiKey)
         break
 
       case 'custom':
@@ -267,7 +286,15 @@ class AIService {
    * @param {Object} config - { apiKey, endpoint, apiType }
    * @returns {Promise<Object>} { success, provider, responseTime, models, message, error }
    */
-  async testConnection(provider, config) {
+  async testConnection(provider, config = {}) {
+    const mergedConfig = {
+      ...config,
+      apiKey: this.getApiKey(provider) || config.apiKey,
+      endpoint: this.normalizeEndpoint(
+        provider,
+        config.endpoint || config.baseURL || this.getApiEndpoint(provider)
+      )
+    }
     const startTime = Date.now()
 
     try {
@@ -275,16 +302,16 @@ class AIService {
 
       switch (provider) {
         case 'openai':
-          result = await this._testOpenAI(config)
+          result = await this._testOpenAI(mergedConfig)
           break
         case 'anthropic':
-          result = await this._testAnthropic(config)
+          result = await this._testAnthropic(mergedConfig)
           break
         case 'google':
-          result = await this._testGoogle(config)
+          result = await this._testGoogle(mergedConfig)
           break
         case 'custom':
-          result = await this._testCustom(config)
+          result = await this._testCustom(mergedConfig)
           break
         default:
           throw new Error(`未知的提供商: ${provider}`)

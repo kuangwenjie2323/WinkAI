@@ -23,6 +23,13 @@ function ChatContainer() {
   const messagesEndRef = useRef(null)
   const session = getCurrentSession()
   const provider = getCurrentProvider()
+  const mergedApiKey = aiService.getApiKey(currentProvider)
+  const mergedEndpoint = aiService.getApiEndpoint(currentProvider)
+  const providerConfig = {
+    ...(provider || {}),
+    apiKey: mergedApiKey,
+    baseURL: mergedEndpoint
+  }
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -37,7 +44,7 @@ function ChatContainer() {
   const handleSend = async (input) => {
     const { text, images } = input
 
-    if (!provider?.apiKey && currentProvider !== 'custom') {
+    if (!mergedApiKey && currentProvider !== 'custom') {
       alert(`请先在设置中配置 ${provider?.name} 的 API Key`)
       setSettingsOpen(true)
       return
@@ -83,7 +90,7 @@ function ChatContainer() {
           currentProvider,
           messages,
           model,
-          provider,
+          providerConfig,
           {
             temperature: settings.temperature,
             maxTokens: settings.maxTokens
@@ -106,7 +113,7 @@ function ChatContainer() {
           currentProvider,
           messages,
           model,
-          provider,
+          providerConfig,
           {
             temperature: settings.temperature,
             maxTokens: settings.maxTokens
@@ -144,7 +151,7 @@ function ChatContainer() {
               <div className="feature-item">⚡ 实时流式输出</div>
               <div className="feature-item">📝 Markdown 和代码高亮</div>
             </div>
-            {!provider?.apiKey && currentProvider !== 'custom' && (
+            {!mergedApiKey && currentProvider !== 'custom' && (
               <button className="setup-btn" onClick={() => setSettingsOpen(true)}>
                 <Settings size={18} />
                 开始配置
