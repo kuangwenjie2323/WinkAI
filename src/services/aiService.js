@@ -520,7 +520,7 @@ class AIService {
 
     const modelsData = await modelsResponse.json()
     const models = modelsData.models
-      .filter(m => m.name.includes('gemini'))
+      .filter(m => m.name.includes('gemini') || m.name.includes('imagen'))
       .map(m => {
         // 模型 ID：去掉 'models/' 前缀
         const modelId = m.name.replace('models/', '')
