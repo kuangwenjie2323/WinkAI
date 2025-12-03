@@ -5,44 +5,98 @@ import rehypeRaw from 'rehype-raw'
 import 'highlight.js/styles/github-dark.css'
 import './MessageRenderer.css'
 
-// 消息渲染组件
+// 解析内容中的 base64 图片
+function parseGeneratedImages(content) {
+  const imageRegex = /!\[([^\]]*)\]\((data:image\/[^)]+)\)/g
+  const images = []
+  let match
+
+  while ((match = imageRegex.exec(content)) !== null) {
+    images.push({
+      alt: match[1],
+      src: match[2]
+    })
+  }
+
+  // 移除图片 markdown 语法，返回纯文本内容
+  const textContent = content.replace(imageRegex, '').trim()
+
+  return { images, textContent }
+}
+
+// 消息渲染组件 - Google AI Studio 风格
 function MessageRenderer({ message }) {
   const { role, content, images, thinking, isStreaming } = message
 
+  // 解析生成的图片
+  const { images: generatedImages, textContent } = parseGeneratedImages(content || '')
+  const hasGeneratedImages = generatedImages.length > 0
+
   return (
-    <div className={`message-renderer ${role}`}>
-      <div className="message-avatar">
-        {role === 'user' ? '👤' : '🤖'}
+    <div className={`message-item ${role}`}>
+      {/* 角色标签 */}
+      <div className="message-role-header">
+        <span className="role-label">{role === 'user' ? 'User' : 'Model'}</span>
+        <span className="message-time">
+          {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </span>
       </div>
 
-      <div className="message-content-wrapper">
-        {/* 思考过程 */}
-        {thinking && (
-          <div className="thinking-block">
-            <div className="thinking-header">
-              <span className="thinking-icon">💭</span>
-              <span>思考中...</span>
-            </div>
-            <div className="thinking-content">{thinking}</div>
+      {/* 思考过程 */}
+      {thinking && (
+        <div className="thinking-block">
+          <div className="thinking-header">
+            <span className="thinking-icon">💭</span>
+            <span>思考过程</span>
           </div>
-        )}
+          <div className="thinking-content">{thinking}</div>
+        </div>
+      )}
 
-        {/* 图片预览 */}
-        {images && images.length > 0 && (
-          <div className="message-images">
-            {images.map((img, idx) => (
+      {/* 用户上传的图片 */}
+      {images && images.length > 0 && (
+        <div className="uploaded-images">
+          {images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`上传的图片 ${idx + 1}`}
+              className="uploaded-image"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* AI 生成的图片 - 单独渲染 */}
+      {hasGeneratedImages && (
+        <div className="generated-images">
+          {generatedImages.map((img, idx) => (
+            <div key={idx} className="generated-image-container">
               <img
-                key={idx}
-                src={img}
-                alt={`上传的图片 ${idx + 1}`}
-                className="message-image"
+                src={img.src}
+                alt={img.alt || '生成的图片'}
+                className="generated-image"
               />
-            ))}
-          </div>
-        )}
+              <div className="image-actions">
+                <a
+                  href={img.src}
+                  download={`generated-image-${Date.now()}.png`}
+                  className="download-btn"
+                >
+                  下载
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* 消息内容 */}
-        <div className="message-text">
+      {/* 消息文本内容 */}
+      {(textContent || !hasGeneratedImages) && (
+        <div className="message-body">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -81,26 +135,26 @@ function MessageRenderer({ message }) {
                   </a>
                 )
               },
-              img({ node, ...props }) {
-                return <img {...props} className="markdown-image" loading="lazy" />
+              img({ node, src, alt, ...props }) {
+                // 处理可能遗漏的 base64 图片
+                if (src && src.startsWith('data:image/')) {
+                  return (
+                    <div className="generated-image-container inline">
+                      <img src={src} alt={alt || '图片'} className="generated-image" />
+                    </div>
+                  )
+                }
+                return <img src={src} alt={alt} {...props} className="markdown-image" loading="lazy" />
               }
             }}
           >
-            {content}
+            {textContent || content}
           </ReactMarkdown>
 
           {/* 流式输出光标 */}
           {isStreaming && <span className="streaming-cursor">▊</span>}
         </div>
-
-        {/* 时间戳 */}
-        <div className="message-timestamp">
-          {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </div>
-      </div>
+      )}
     </div>
   )
 }

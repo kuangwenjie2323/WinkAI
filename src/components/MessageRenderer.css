@@ -1,296 +1,361 @@
-/* 消息渲染器样式 */
-.message-renderer {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  animation: fadeIn 0.3s ease-in;
-}
-
-.message-renderer.user {
-  flex-direction: row-reverse;
-}
-
-.message-avatar {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.message-content-wrapper {
-  flex: 1;
-  max-width: 75%;
+/* 消息项 - Google AI Studio 风格 */
+.message-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-xl);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  animation: fadeIn 0.3s ease-out;
 }
 
-.message-renderer.user .message-content-wrapper {
-  align-items: flex-end;
+.message-item.user {
+  background: linear-gradient(135deg, rgba(168, 199, 250, 0.08), var(--bg-secondary));
+  border-color: rgba(168, 199, 250, 0.2);
+}
+
+.message-item.assistant {
+  background: var(--bg-secondary);
+}
+
+/* 角色标签头部 */
+.message-role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.role-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.message-item.user .role-label {
+  color: var(--accent-primary);
+}
+
+.message-time {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 思考块 */
 .thinking-block {
-  background: rgba(147, 51, 234, 0.1);
-  border: 1px solid rgba(147, 51, 234, 0.3);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+  background: rgba(147, 51, 234, 0.08);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3);
 }
 
 .thinking-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-2);
   font-weight: 600;
-  color: #9333ea;
-  margin-bottom: 0.5rem;
+  color: #a855f7;
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-2);
 }
 
 .thinking-icon {
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .thinking-content {
-  color: #6b7280;
-  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
   font-style: italic;
+  line-height: 1.6;
 }
 
-/* 图片预览 */
-.message-images {
+/* 用户上传的图片 */
+.uploaded-images {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: var(--spacing-2);
 }
 
-.message-image {
+.uploaded-image {
   max-width: 200px;
   max-height: 200px;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-lg);
   object-fit: cover;
+  border: 1px solid var(--border-primary);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.message-image:hover {
-  transform: scale(1.05);
+.uploaded-image:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
 }
 
-/* 消息文本 */
-.message-text {
-  padding: 1rem 1.25rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  color: #1f2937;
-  line-height: 1.6;
-  word-wrap: break-word;
+/* AI 生成的图片 */
+.generated-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
 }
 
-.message-renderer.user .message-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.generated-image-container {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-md);
 }
 
-/* Markdown 样式 */
-.message-text h1,
-.message-text h2,
-.message-text h3,
-.message-text h4,
-.message-text h5,
-.message-text h6 {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
+.generated-image-container.inline {
+  display: inline-block;
+  margin: var(--spacing-2) 0;
+}
+
+.generated-image {
+  display: block;
+  max-width: 100%;
+  max-height: 512px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.image-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.generated-image-container:hover .image-actions {
+  opacity: 1;
+}
+
+.download-btn {
+  padding: var(--spacing-1) var(--spacing-3);
+  background: var(--accent-primary);
+  color: var(--accent-text);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
   font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition-fast);
 }
 
-.message-text h1 { font-size: 1.5em; }
-.message-text h2 { font-size: 1.3em; }
-.message-text h3 { font-size: 1.1em; }
-
-.message-text p {
-  margin-bottom: 0.75em;
+.download-btn:hover {
+  background: var(--accent-hover);
 }
 
-.message-text ul,
-.message-text ol {
-  margin-left: 1.5em;
-  margin-bottom: 0.75em;
+/* 消息正文 */
+.message-body {
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: var(--font-base);
 }
 
-.message-text li {
-  margin-bottom: 0.25em;
+.message-body p {
+  margin: 0 0 var(--spacing-3) 0;
 }
 
-.message-text a {
-  color: #3b82f6;
-  text-decoration: underline;
+.message-body p:last-child {
+  margin-bottom: 0;
 }
 
-.message-renderer.user .message-text a {
-  color: #fde68a;
+.message-body h1,
+.message-body h2,
+.message-body h3,
+.message-body h4,
+.message-body h5,
+.message-body h6 {
+  margin: var(--spacing-4) 0 var(--spacing-2) 0;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.message-text blockquote {
-  border-left: 4px solid #d1d5db;
-  padding-left: 1em;
-  margin-left: 0;
-  color: #6b7280;
-  font-style: italic;
+.message-body h1 { font-size: 1.5em; }
+.message-body h2 { font-size: 1.3em; }
+.message-body h3 { font-size: 1.1em; }
+
+.message-body ul,
+.message-body ol {
+  margin: 0 0 var(--spacing-3) 0;
+  padding-left: var(--spacing-5);
 }
 
-.message-text table {
-  border-collapse: collapse;
+.message-body li {
+  margin-bottom: var(--spacing-1);
+}
+
+.message-body a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-fast);
+}
+
+.message-body a:hover {
+  border-bottom-color: var(--accent-primary);
+}
+
+.message-body blockquote {
+  margin: var(--spacing-3) 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-left: 3px solid var(--accent-primary);
+  background: var(--bg-tertiary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--text-secondary);
+}
+
+.message-body table {
   width: 100%;
-  margin: 1em 0;
+  border-collapse: collapse;
+  margin: var(--spacing-3) 0;
+  font-size: var(--font-sm);
 }
 
-.message-text th,
-.message-text td {
-  border: 1px solid #e5e7eb;
-  padding: 0.5em;
+.message-body th,
+.message-body td {
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--border-primary);
   text-align: left;
 }
 
-.message-text th {
-  background: #f3f4f6;
+.message-body th {
+  background: var(--bg-tertiary);
   font-weight: 600;
 }
 
 /* 行内代码 */
 .inline-code {
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0.2em 0.4em;
-  border-radius: 0.25rem;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 0.9em;
-  color: #e11d48;
-}
-
-.message-renderer.user .inline-code {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fef3c7;
+  color: #f472b6;
+  border: 1px solid var(--border-primary);
 }
 
 /* 代码块 */
 .code-block {
-  margin: 1em 0;
-  border-radius: 0.5rem;
+  margin: var(--spacing-3) 0;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #1f2937;
+  background: #0d1117;
+  border: 1px solid var(--border-primary);
 }
 
 .code-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem;
-  background: #374151;
-  border-bottom: 1px solid #4b5563;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: #161b22;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .code-language {
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   text-transform: uppercase;
-  color: #9ca3af;
+  color: var(--text-tertiary);
   font-weight: 600;
+  letter-spacing: 0.05em;
 }
 
 .code-copy {
   background: transparent;
-  border: 1px solid #6b7280;
-  color: #9ca3af;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .code-copy:hover {
-  background: #4b5563;
-  color: white;
-  border-color: #9ca3af;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
 }
 
 .code-block pre {
   margin: 0;
-  padding: 1rem;
+  padding: var(--spacing-3);
   overflow-x: auto;
-  background: #1f2937;
+  background: #0d1117;
 }
 
 .code-block code {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* Markdown 图片 */
 .markdown-image {
   max-width: 100%;
   height: auto;
-  border-radius: 0.5rem;
-  margin: 0.5em 0;
+  border-radius: var(--radius-lg);
+  margin: var(--spacing-2) 0;
 }
 
 /* 流式输出光标 */
 .streaming-cursor {
   display: inline-block;
-  width: 0.5em;
-  height: 1em;
-  background: currentColor;
-  margin-left: 0.1em;
+  width: 2px;
+  height: 1.2em;
+  background: var(--accent-primary);
+  margin-left: 2px;
+  vertical-align: text-bottom;
   animation: blink 1s steps(2) infinite;
 }
 
 @keyframes blink {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-}
-
-/* 时间戳 */
-.message-timestamp {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-  padding: 0 0.5rem;
-}
-
-/* 响应式 */
-@media (max-width: 768px) {
-  .message-content-wrapper {
-    max-width: 85%;
-  }
-
-  .message-text {
-    padding: 0.875rem 1rem;
-  }
-
-  .code-block pre {
-    padding: 0.75rem;
-  }
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 /* 动画 */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .message-item {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .generated-image {
+    max-height: 300px;
+  }
+
+  .code-block pre {
+    padding: var(--spacing-2);
+  }
+
+  .code-block code {
+    font-size: 0.8rem;
   }
 }
