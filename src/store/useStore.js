@@ -11,7 +11,15 @@ export const useStore = create(
           name: 'OpenAI',
           apiKey: '',
           baseURL: 'https://api.openai.com/v1',
-          models: ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
+          models: [
+            'gpt-4o',
+            'gpt-4o-mini',
+            'gpt-4-turbo',
+            'gpt-4',
+            'gpt-3.5-turbo',
+            'o1-preview',
+            'o1-mini'
+          ],
           defaultModel: 'gpt-4o',
           supportsVision: true,
           supportsStreaming: true
@@ -20,7 +28,13 @@ export const useStore = create(
           name: 'Anthropic Claude',
           apiKey: '',
           baseURL: 'https://api.anthropic.com/v1',
-          models: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
+          models: [
+            'claude-3-5-sonnet-20241022',
+            'claude-3-5-haiku-20241022',
+            'claude-3-opus-20240229',
+            'claude-3-sonnet-20240229',
+            'claude-3-haiku-20240307'
+          ],
           defaultModel: 'claude-3-5-sonnet-20241022',
           supportsVision: true,
           supportsStreaming: true
