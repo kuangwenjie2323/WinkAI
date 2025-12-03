@@ -11,7 +11,7 @@ class AIService {
     this.defaultEndpoints = {
       openai: 'https://api.openai.com/v1',
       anthropic: 'https://api.anthropic.com',
-      google: 'https://generativelanguage.googleapis.com/v1',
+      google: 'https://generativelanguage.googleapis.com/v1beta',
       custom: ''
     }
   }
@@ -425,9 +425,10 @@ class AIService {
 
     if (!apiKey) throw new Error('请提供 Google API Key')
 
-    // 获取模型列表
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`
-    const modelsResponse = await fetch(endpoint)
+    // 获取模型列表（尊重配置的 baseURL，默认使用 v1beta）
+    const base = (config.endpoint || this.defaultEndpoints.google || '').replace(/\/+$/, '')
+    const modelsEndpoint = `${base}/models?key=${apiKey}`
+    const modelsResponse = await fetch(modelsEndpoint)
 
     if (!modelsResponse.ok) {
       const errorText = await modelsResponse.text()
