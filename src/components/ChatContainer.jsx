@@ -160,22 +160,42 @@ function ChatContainer() {
       {/* 消息区域 */}
       <div className="messages-area-new">
         {!session?.messages?.length ? (
-          <div className="welcome-screen">
-            <div className="welcome-icon">🤖</div>
-            <h2>欢迎使用 WinkAI</h2>
-            <p>一个功能强大的多模态 AI Agent</p>
-            <div className="feature-list">
-              <div className="feature-item">💬 支持多个 AI 提供商</div>
-              <div className="feature-item">🖼️ 图片识别和分析</div>
-              <div className="feature-item">⚡ 实时流式输出</div>
-              <div className="feature-item">📝 Markdown 和代码高亮</div>
+          <div className="ai-studio-wireframe">
+            <div className="wire-row">
+              <div className="wire-card">
+                <div className="wire-header">
+                  <span className="wire-label">System Instructions (Optional)</span>
+                  <button className="link-btn">Edit</button>
+                </div>
+                <p className="wire-body">You are a helpful coder that writes concise, well-documented code samples.</p>
+              </div>
             </div>
-            {!mergedApiKey && currentProvider !== 'custom' && (
-              <button className="setup-btn" onClick={() => setSettingsOpen(true)}>
-                <Settings size={18} />
-                开始配置
+
+            <div className="wire-row two-col">
+              <div className="wire-card user">
+                <div className="wire-header">
+                  <span className="wire-label">User</span>
+                </div>
+                <p className="wire-body">Write a Python function that returns "Hello, world!".</p>
+              </div>
+              <div className="wire-card model">
+                <div className="wire-header">
+                  <span className="wire-label">Model Output</span>
+                </div>
+                <pre className="wire-code">
+{`def hello_world():
+    return "Hello, world!"`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="wire-input">
+              <input placeholder="Type something..." />
+              <button className="wire-send">
+                <Settings size={16} />
+                Run
               </button>
-            )}
+            </div>
           </div>
         ) : (
           <div className="messages-list-new">

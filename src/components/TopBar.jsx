@@ -1,5 +1,15 @@
 import { useStore } from '../store/useStore'
-import { Settings, Sun, Moon, PanelRightClose, PanelRightOpen, Trash2 } from 'lucide-react'
+import {
+  Settings,
+  Sun,
+  Moon,
+  PanelRightClose,
+  PanelRightOpen,
+  Trash2,
+  ChevronDown,
+  Shield,
+  User
+} from 'lucide-react'
 import './TopBar.css'
 
 function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
@@ -16,14 +26,21 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
   return (
     <div className="topbar">
       <div className="topbar-left">
-        <div className="topbar-meta">
-          <div className="eyebrow">Gemini Playground</div>
-          <div className="title-row">
-            <h1 className="app-title">WinkAI Studio</h1>
-            <span className="pill live">Live</span>
+        <div className="brand">
+          <div className="brand-mark">G</div>
+          <div className="brand-text">
+            <span className="brand-title">Google AI Studio</span>
+            <span className="brand-subtitle">Project Console</span>
           </div>
-          <div className="subtitle">会话：{session?.name || '新对话'}</div>
         </div>
+
+        <button className="ghost-btn">
+          <span className="ghost-label">Project</span>
+          <span className="ghost-value">My Playground</span>
+          <ChevronDown size={14} />
+        </button>
+
+        <div className="divider" />
 
         {provider && (
           <div className="model-chip">
@@ -37,7 +54,24 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
         )}
       </div>
 
+      <div className="topbar-center">
+        <div className="crumbs">
+          <span>My Prompt</span>
+          <span className="crumb-sep">›</span>
+          <span>Chat Playground</span>
+          <button className="link-btn">Edit</button>
+        </div>
+        <div className="env-pill">
+          <Shield size={14} />
+          <span>API Key Required</span>
+        </div>
+      </div>
+
       <div className="topbar-right">
+        <button className="solid-btn">
+          Get API Key
+        </button>
+
         <button
           className="icon-btn"
           onClick={handleClear}
@@ -66,10 +100,13 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           <span className="btn-fallback">主题</span>
         </button>
 
-        <button className="icon-btn" onClick={onSettingsOpen} title="设置">
-          <Settings size={18} />
-          <span className="btn-fallback">设置</span>
-        </button>
+        <div className="user-chip">
+          <User size={16} />
+          <span>Guest</span>
+          <button className="icon-btn ghost" onClick={onSettingsOpen} title="设置">
+            <Settings size={16} />
+          </button>
+        </div>
       </div>
     </div>
   )

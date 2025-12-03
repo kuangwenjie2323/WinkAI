@@ -18,14 +18,16 @@ function LeftSidebar() {
   } = useStore()
 
   const isOpen = uiState.leftSidebarOpen
-  const activeTab = uiState.leftActiveTab || 'sessions'
 
   const tabs = [
-    { id: 'sessions', label: '会话', icon: MessageSquare },
-    { id: 'images', label: '图片', icon: Image },
-    { id: 'videos', label: '视频', icon: Video },
-    { id: 'code', label: '代码', icon: Code }
+    { id: 'home', label: 'Home', icon: MessageSquare },
+    { id: 'prompts', label: 'My Prompts', icon: Image },
+    { id: 'tuned', label: 'Tuned Models', icon: Video },
+    { id: 'settings', label: 'Settings', icon: Code }
   ]
+
+  const tabIds = tabs.map(t => t.id)
+  const activeTab = tabIds.includes(uiState.leftActiveTab) ? uiState.leftActiveTab : 'prompts'
 
   const handleNewChat = () => {
     const newId = createSession('新对话')
@@ -53,41 +55,46 @@ function LeftSidebar() {
 
   // 渲染Tab内容
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 'sessions':
-        return (
-          <div className="sessions-list">
-            <div className="sessions-label">最近对话</div>
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className={`session-item ${session.id === currentSessionId ? 'active' : ''}`}
-                onClick={() => setCurrentSession(session.id)}
-              >
-                <MessageSquare size={16} className="session-icon" />
-                <span className="session-name">{session.name}</span>
-                {sessions.length > 1 && (
-                  <button
-                    className="delete-session-btn"
-                    onClick={(e) => handleDeleteSession(e, session.id)}
-                    title="删除对话"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )
-      case 'images':
-        return <ImageLibrary />
-      case 'videos':
-        return <VideoLibrary />
-      case 'code':
-        return <CodeSnippets />
-      default:
-        return null
+    if (activeTab === 'prompts') {
+      return (
+        <div className="sessions-list">
+          <div className="sessions-label">My Prompts</div>
+          {sessions.map((session) => (
+            <div
+              key={session.id}
+              className={`session-item ${session.id === currentSessionId ? 'active' : ''}`}
+              onClick={() => setCurrentSession(session.id)}
+            >
+              <MessageSquare size={16} className="session-icon" />
+              <span className="session-name">{session.name}</span>
+              {sessions.length > 1 && (
+                <button
+                  className="delete-session-btn"
+                  onClick={(e) => handleDeleteSession(e, session.id)}
+                  title="删除对话"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )
     }
+
+    if (activeTab === 'home') {
+      return <ImageLibrary />
+    }
+
+    if (activeTab === 'tuned') {
+      return <VideoLibrary />
+    }
+
+    if (activeTab === 'settings') {
+      return <CodeSnippets />
+    }
+
+    return null
   }
 
   // 渲染折叠状态的Tab图标
@@ -136,7 +143,7 @@ function LeftSidebar() {
       {isOpen ? (
         <>
           <div className="sidebar-header">
-            {activeTab === 'sessions' && (
+            {activeTab === 'prompts' && (
               <button className="new-chat-btn" onClick={handleNewChat} title="新对话">
                 <Plus size={18} />
                 <span>新对话</span>
@@ -163,7 +170,7 @@ function LeftSidebar() {
         </>
       ) : (
         <div className="sidebar-header">
-          {activeTab === 'sessions' && (
+          {activeTab === 'prompts' && (
             <button className="new-chat-icon-btn" onClick={handleNewChat} title="新对话">
               <Plus size={20} />
             </button>

@@ -56,7 +56,10 @@ function RightPanel({ isOpen, onClose }) {
     <div className={`right-panel ${isOpen ? 'open' : 'closed'}`}>
       {/* 头部 */}
       <div className="panel-header">
-        <h3>控制面板</h3>
+        <div>
+          <p className="panel-eyebrow">Run Settings</p>
+          <h3>Parameters</h3>
+        </div>
         <button className="close-btn" onClick={onClose} title="关闭">
           <X size={18} />
         </button>
@@ -64,41 +67,48 @@ function RightPanel({ isOpen, onClose }) {
 
       {/* 模型选择 */}
       <section className="panel-section">
-        <h4 className="section-title">AI提供商</h4>
-        <select
-          className="panel-select"
-          value={currentProvider}
-          onChange={(e) => setCurrentProvider(e.target.value)}
-        >
-          {providerEntries.map(([key, config]) => (
-            <option key={key} value={key}>
-              {config.name}
-            </option>
-          ))}
-        </select>
-
-        <h4 className="section-title">模型</h4>
-        <select
-          className="panel-select"
-          value={currentModel || provider?.defaultModel || ''}
-          onChange={(e) => setCurrentModel(e.target.value)}
-        >
-          {mergedModels.length > 0 ? (
-            mergedModels.map(model => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))
-          ) : (
-            <option value="">请先配置 API Key</option>
-          )}
-        </select>
+        <div className="control-row">
+          <div>
+            <p className="section-title">AI 提供商</p>
+            <select
+              className="panel-select"
+              value={currentProvider}
+              onChange={(e) => setCurrentProvider(e.target.value)}
+            >
+              {providerEntries.map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <p className="section-title">模型</p>
+            <select
+              className="panel-select"
+              value={currentModel || provider?.defaultModel || ''}
+              onChange={(e) => setCurrentModel(e.target.value)}
+            >
+              {mergedModels.length > 0 ? (
+                mergedModels.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))
+              ) : (
+                <option value="">请先配置 API Key</option>
+              )}
+            </select>
+          </div>
+        </div>
       </section>
 
       {/* 参数配置 */}
       <section className="panel-section">
-        <h4 className="section-title">参数配置</h4>
-
+        <div className="section-header">
+          <h4>模型参数</h4>
+          <span className="section-hint">对齐 Google AI Studio 控制</span>
+        </div>
         <div className="param-item">
           <label>
             <span>Temperature</span>
@@ -132,7 +142,12 @@ function RightPanel({ isOpen, onClose }) {
 
       {/* 功能开关 */}
       <section className="panel-section">
-        <h4 className="section-title">功能开关</h4>
+        <div className="section-header">
+          <h4>安全与功能</h4>
+          <button className="link-btn" onClick={() => onClose?.()}>
+            编辑
+          </button>
+        </div>
 
         <label className="switch-item">
           <input

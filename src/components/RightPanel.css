@@ -32,10 +32,18 @@
 
 .panel-header h3 {
   margin: 0;
-  font-size: var(--font-base);
-  font-weight: 500;
+  font-size: var(--font-md);
+  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
+}
+
+.panel-eyebrow {
+  margin: 0;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
 }
 
 .close-btn {
@@ -63,6 +71,24 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-3);
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: var(--font-sm);
+  letter-spacing: -0.01em;
+}
+
+.section-hint {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
 .panel-section:last-child {
   border-bottom: none;
 }
@@ -74,6 +100,12 @@
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.control-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-3);
 }
 
 /* 选择框 - Google AI Studio 风格 */
@@ -183,6 +215,14 @@
 .param-item input[type="range"]::-moz-range-thumb:hover {
   transform: scale(1.2);
   box-shadow: 0 0 0 4px rgba(168, 199, 250, 0.2);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: var(--font-sm);
+  cursor: pointer;
 }
 
 /* 开关按钮 - Google AI Studio 风格 */

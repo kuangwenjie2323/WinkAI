@@ -95,7 +95,7 @@ export const useStore = create(
       // UI状态（持久化到localStorage）
       uiState: {
         leftSidebarOpen: true,
-        leftActiveTab: 'sessions',  // 'sessions' | 'images' | 'videos' | 'code'
+        leftActiveTab: 'prompts',  // 'home' | 'prompts' | 'tuned' | 'settings'
         rightPanelOpen: true  // 右侧面板默认展开
       },
 
