@@ -192,44 +192,54 @@ class AIService {
       const lastMessage = messages[messages.length - 1]
       const prompt = lastMessage?.content || ''
 
-      // 图片生成模式：使用 Imagen API
+      // 图片生成模式
       if (options.mode === 'image') {
-        // 检测是否是 Imagen 模型
+        // Gemini 2.0 Flash 支持原生图片生成
+        const isGemini2 = model.includes('gemini-2') || model.includes('flash')
         const isImagenModel = model.includes('imagen')
 
-        if (isImagenModel) {
-          // 使用 Imagen API 生成图片
-          const imageModel = client.getGenerativeModel({ model })
-
+        if (isGemini2 || isImagenModel) {
           try {
-            const result = await imageModel.generateImages({
-              prompt,
-              config: {
-                numberOfImages: 1,
-                aspectRatio: '16:9'
+            // 使用 Gemini 2.0 的原生图片生成
+            const imageModel = client.getGenerativeModel({
+              model: isImagenModel ? model : 'gemini-2.0-flash-exp',
+              generationConfig: {
+                responseModalities: ['Text', 'Image']
               }
             })
 
-            if (result.images && result.images.length > 0) {
-              const imageData = result.images[0]
-              // 返回 base64 图片
-              const imageUrl = `data:image/png;base64,${imageData.bytesBase64Encoded}`
-              yield { type: 'content', content: `![生成的图片](${imageUrl})` }
-            } else {
-              yield { type: 'content', content: '图片生成失败，请重试' }
-            }
-          } catch (imgError) {
-            console.error('Imagen 生成错误:', imgError)
-            // 如果 Imagen 失败，回退到文本模式解释
-            yield { type: 'content', content: `图片生成失败: ${imgError.message}\n\n提示: 请确保使用 imagen-3.0-generate-002 等 Imagen 模型` }
-          }
+            const result = await imageModel.generateContent(prompt)
+            const response = result.response
 
-          yield { type: 'done', reason: 'stop' }
-          return
+            // 处理响应中的图片和文本
+            let hasImage = false
+            for (const part of response.candidates[0].content.parts) {
+              if (part.inlineData) {
+                // 找到图片数据
+                const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`
+                yield { type: 'content', content: `![生成的图片](${imageUrl})\n\n` }
+                hasImage = true
+              } else if (part.text) {
+                yield { type: 'content', content: part.text }
+              }
+            }
+
+            if (!hasImage) {
+              yield { type: 'content', content: '\n\n⚠️ 模型未返回图片，可能是内容被过滤或模型限制。请尝试修改提示词。' }
+            }
+
+            yield { type: 'done', reason: 'stop' }
+            return
+          } catch (imgError) {
+            console.error('图片生成错误:', imgError)
+            yield { type: 'content', content: `图片生成失败: ${imgError.message}\n\n可能原因:\n1. API 配额限制\n2. 内容安全过滤\n3. 模型不支持图片生成\n\n请尝试切换到「对话」模式。` }
+            yield { type: 'done', reason: 'stop' }
+            return
+          }
         }
 
-        // 非 Imagen 模型在图片模式下，提示用户切换模型
-        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请在设置中选择 Imagen 模型（如 \`imagen-3.0-generate-002\`）来生成图片。\n\n或者切换到「对话」模式使用当前模型进行文字对话。` }
+        // 其他模型不支持图片生成
+        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请选择以下模型:\n- gemini-2.0-flash-exp（推荐）\n- imagen-3.0-generate-002\n\n或者切换到「对话」模式使用当前模型。` }
         yield { type: 'done', reason: 'stop' }
         return
       }
