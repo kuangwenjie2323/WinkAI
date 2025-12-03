@@ -187,43 +187,60 @@ class AIService {
     if (!client) throw new Error('Google 客户端未初始化')
 
     try {
-      const genModel = client.getGenerativeModel({ model })
       const temperature = options.temperature || 0.7
       const maxOutputTokens = options.maxTokens || 4096
+      const lastMessage = messages[messages.length - 1]
+      const prompt = lastMessage?.content || ''
 
-      // 图片/视频生成类模型：不携带历史，直接走 generateContentStream，避免 thought_signature 错误
-      const isMediaGeneration = options.mode === 'image' || options.mode === 'video' || model.includes('image')
+      // 图片生成模式：使用 Imagen API
+      if (options.mode === 'image') {
+        // 检测是否是 Imagen 模型
+        const isImagenModel = model.includes('imagen')
 
-      if (isMediaGeneration) {
-        const lastMessage = messages[messages.length - 1]
-        const prompt = lastMessage?.content || ''
+        if (isImagenModel) {
+          // 使用 Imagen API 生成图片
+          const imageModel = client.getGenerativeModel({ model })
 
-        const result = await genModel.generateContentStream({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature,
-            maxOutputTokens
+          try {
+            const result = await imageModel.generateImages({
+              prompt,
+              config: {
+                numberOfImages: 1,
+                aspectRatio: '16:9'
+              }
+            })
+
+            if (result.images && result.images.length > 0) {
+              const imageData = result.images[0]
+              // 返回 base64 图片
+              const imageUrl = `data:image/png;base64,${imageData.bytesBase64Encoded}`
+              yield { type: 'content', content: `![生成的图片](${imageUrl})` }
+            } else {
+              yield { type: 'content', content: '图片生成失败，请重试' }
+            }
+          } catch (imgError) {
+            console.error('Imagen 生成错误:', imgError)
+            // 如果 Imagen 失败，回退到文本模式解释
+            yield { type: 'content', content: `图片生成失败: ${imgError.message}\n\n提示: 请确保使用 imagen-3.0-generate-002 等 Imagen 模型` }
           }
-        })
 
-        for await (const chunk of result.stream) {
-          const text = chunk.text()
-          if (text) {
-            yield { type: 'content', content: text }
-          }
+          yield { type: 'done', reason: 'stop' }
+          return
         }
 
+        // 非 Imagen 模型在图片模式下，提示用户切换模型
+        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请在设置中选择 Imagen 模型（如 \`imagen-3.0-generate-002\`）来生成图片。\n\n或者切换到「对话」模式使用当前模型进行文字对话。` }
         yield { type: 'done', reason: 'stop' }
         return
       }
+
+      const genModel = client.getGenerativeModel({ model })
 
       // 文本对话：保留历史，使用 chat 模式
       const history = messages.slice(0, -1).map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }))
-
-      const lastMessage = messages[messages.length - 1]
 
       const chat = genModel.startChat({
         history,
@@ -233,7 +250,7 @@ class AIService {
         }
       })
 
-      const result = await chat.sendMessageStream(lastMessage.content)
+      const result = await chat.sendMessageStream(prompt)
 
       for await (const chunk of result.stream) {
         const text = chunk.text()
