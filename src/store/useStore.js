@@ -255,6 +255,20 @@ export const useStore = create(
         )
       })),
 
+      // 删除指定消息及其之后的所有消息
+      deleteMessagesAfter: (sessionId, messageId) => set((state) => ({
+        sessions: state.sessions.map(session => {
+          if (session.id !== sessionId) return session
+          const messageIndex = session.messages.findIndex(m => m.id === messageId)
+          if (messageIndex === -1) return session
+          return {
+            ...session,
+            messages: session.messages.slice(0, messageIndex),
+            updatedAt: Date.now()
+          }
+        })
+      })),
+
       updateSettings: (newSettings) => set((state) => ({
         settings: { ...state.settings, ...newSettings }
       })),

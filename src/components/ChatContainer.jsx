@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useStore } from '../store/useStore'
 import aiService from '../services/aiService'
-import MessageRenderer from './MessageRenderer'
+import { MessageRenderer, MessageGroup } from './MessageRenderer'
 import MultiModalInput from './MultiModalInput'
 import SettingsPanel from './SettingsPanel'
 import { Settings } from 'lucide-react'
 import './ChatContainer.css'
+
+const MESSAGES_PER_GROUP = 25
 
 function ChatContainer() {
   const {
@@ -17,11 +19,15 @@ function ChatContainer() {
     generationMode,
     setGenerationMode,
     addMessage,
-    updateMessage
+    updateMessage,
+    deleteMessagesAfter
   } = useStore()
 
   const [isLoading, setIsLoading] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [editingMessageId, setEditingMessageId] = useState(null)
+  const [editContent, setEditContent] = useState('')
+  const [expandedGroups, setExpandedGroups] = useState({})
   const messagesEndRef = useRef(null)
   const session = getCurrentSession()
   const provider = getCurrentProvider()
@@ -33,6 +39,14 @@ function ChatContainer() {
     baseURL: mergedEndpoint
   }
 
+  // 计算消息分组
+  const messageGroups = useMemo(() => {
+    if (!session?.messages?.length) return []
+    const totalMessages = session.messages.length
+    const totalGroups = Math.ceil(totalMessages / MESSAGES_PER_GROUP)
+    return Array.from({ length: totalGroups }, (_, i) => i)
+  }, [session?.messages?.length])
+
   // 自动滚动到底部
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -42,9 +56,16 @@ function ChatContainer() {
     scrollToBottom()
   }, [session?.messages])
 
-  // 发送消息
-  const handleSend = async (input) => {
-    const { text, images } = input
+  // 切换分组展开状态
+  const toggleGroupExpanded = (groupIndex) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupIndex]: !prev[groupIndex]
+    }))
+  }
+
+  // 发送消息的核心逻辑
+  const sendMessageCore = async (text, images = null, messageHistory = null) => {
     const trimmedText = text.trim()
     if (!trimmedText && (!images || images.length === 0)) return
 
@@ -85,7 +106,8 @@ function ChatContainer() {
 
     try {
       // 准备消息历史
-      const messages = session.messages.map((msg) => ({
+      const baseMessages = messageHistory || session.messages
+      const messages = baseMessages.map((msg) => ({
         role: msg.role,
         content: msg.content
       }))
@@ -146,6 +168,83 @@ function ChatContainer() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // 发送消息
+  const handleSend = async (input) => {
+    const { text, images } = input
+    await sendMessageCore(text, images)
+  }
+
+  // 编辑消息
+  const handleEdit = (message) => {
+    setEditingMessageId(message.id)
+    // 移除模式前缀
+    const content = message.content
+      .replace(/^\[Image Generation\] /, '')
+      .replace(/^\[Video Generation\] /, '')
+    setEditContent(content)
+  }
+
+  // 保存编辑并重新生成
+  const handleEditSave = async () => {
+    if (!editingMessageId || !editContent.trim()) return
+
+    // 找到被编辑消息的索引
+    const messageIndex = session.messages.findIndex(m => m.id === editingMessageId)
+    if (messageIndex === -1) return
+
+    // 删除该消息及之后的所有消息
+    const messagesBeforeEdit = session.messages.slice(0, messageIndex)
+
+    // 清除编辑状态
+    const contentToSend = editContent.trim()
+    setEditingMessageId(null)
+    setEditContent('')
+
+    // 删除该消息及之后的消息
+    if (deleteMessagesAfter) {
+      deleteMessagesAfter(session.id, editingMessageId)
+    }
+
+    // 发送编辑后的消息
+    await sendMessageCore(contentToSend, null, messagesBeforeEdit)
+  }
+
+  // 取消编辑
+  const handleEditCancel = () => {
+    setEditingMessageId(null)
+    setEditContent('')
+  }
+
+  // 重新生成
+  const handleRegenerate = async (message) => {
+    // 找到该 AI 消息对应的用户消息
+    const messageIndex = session.messages.findIndex(m => m.id === message.id)
+    if (messageIndex <= 0) return
+
+    // 找到前一条用户消息
+    let userMessageIndex = messageIndex - 1
+    while (userMessageIndex >= 0 && session.messages[userMessageIndex].role !== 'user') {
+      userMessageIndex--
+    }
+
+    if (userMessageIndex < 0) return
+
+    const userMessage = session.messages[userMessageIndex]
+    const messagesBeforeRegenerate = session.messages.slice(0, userMessageIndex)
+
+    // 删除从用户消息开始的所有消息
+    if (deleteMessagesAfter) {
+      deleteMessagesAfter(session.id, userMessage.id)
+    }
+
+    // 重新发送用户消息
+    const content = userMessage.content
+      .replace(/^\[Image Generation\] /, '')
+      .replace(/^\[Video Generation\] /, '')
+
+    await sendMessageCore(content, userMessage.images, messagesBeforeRegenerate)
   }
 
   return (
@@ -226,9 +325,41 @@ function ChatContainer() {
           </div>
         ) : (
           <div className="messages-list-new">
-            {session.messages.map((message) => (
-              <MessageRenderer key={message.id} message={message} />
-            ))}
+            {messageGroups.length <= 1 ? (
+              // 少于25条消息，直接显示
+              session.messages.map((message) => (
+                <MessageRenderer
+                  key={message.id}
+                  message={message}
+                  onEdit={handleEdit}
+                  onRegenerate={handleRegenerate}
+                  isEditing={editingMessageId === message.id}
+                  editContent={editContent}
+                  onEditChange={setEditContent}
+                  onEditSave={handleEditSave}
+                  onEditCancel={handleEditCancel}
+                />
+              ))
+            ) : (
+              // 超过25条消息，分组显示
+              messageGroups.map((groupIndex) => (
+                <MessageGroup
+                  key={groupIndex}
+                  messages={session.messages}
+                  groupIndex={groupIndex}
+                  totalGroups={messageGroups.length}
+                  isExpanded={expandedGroups[groupIndex] || false}
+                  onToggle={() => toggleGroupExpanded(groupIndex)}
+                  onEdit={handleEdit}
+                  onRegenerate={handleRegenerate}
+                  isEditing={editingMessageId}
+                  editContent={editContent}
+                  onEditChange={setEditContent}
+                  onEditSave={handleEditSave}
+                  onEditCancel={handleEditCancel}
+                />
+              ))
+            )}
             <div ref={messagesEndRef} />
           </div>
         )}
