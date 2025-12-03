@@ -1,5 +1,18 @@
 import { useStore } from '../store/useStore'
-import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Image, Video, Code, Sparkles } from 'lucide-react'
+import {
+  Plus,
+  MessageSquare,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Image,
+  Video,
+  Code,
+  Sparkles,
+  BookOpen,
+  FolderDown,
+  Library
+} from 'lucide-react'
 import ImageLibrary from './ImageLibrary'
 import VideoLibrary from './VideoLibrary'
 import CodeSnippets from './CodeSnippets'
@@ -20,10 +33,10 @@ function LeftSidebar() {
   const isOpen = uiState.leftSidebarOpen
 
   const tabs = [
-    { id: 'home', label: 'Home', icon: MessageSquare },
-    { id: 'prompts', label: 'My Prompts', icon: Image },
-    { id: 'tuned', label: 'Tuned Models', icon: Video },
-    { id: 'settings', label: 'Settings', icon: Code }
+    { id: 'home', label: '概览', desc: '项目摘要', icon: MessageSquare },
+    { id: 'prompts', label: '我的 Prompt', desc: '最近的对话与草稿', icon: BookOpen },
+    { id: 'tuned', label: '微调模型', desc: '实验模型列表', icon: Sparkles },
+    { id: 'settings', label: '设置', desc: '偏好与存储', icon: Code }
   ]
 
   const tabIds = tabs.map(t => t.id)
@@ -52,6 +65,12 @@ function LeftSidebar() {
   const handleTabClick = (tabId) => {
     setLeftActiveTab(tabId)
   }
+
+  const quickActions = [
+    { label: '新对话', icon: Plus, onClick: handleNewChat },
+    { label: '导入文件', icon: FolderDown, onClick: () => alert('导入功能待实现') },
+    { label: '示例库', icon: Library, onClick: () => setLeftActiveTab('home') }
+  ]
 
   // 渲染Tab内容
   const renderTabContent = () => {
@@ -143,26 +162,36 @@ function LeftSidebar() {
       {isOpen ? (
         <>
           <div className="sidebar-header">
-            {activeTab === 'prompts' && (
-              <button className="new-chat-btn" onClick={handleNewChat} title="新对话">
-                <Plus size={18} />
-                <span>新对话</span>
-              </button>
-            )}
+            <div className="quick-actions">
+              {quickActions.map((action) => {
+                const Icon = action.icon
+                return (
+                  <button key={action.label} className="quick-btn" onClick={action.onClick}>
+                    <Icon size={16} />
+                    <span>{action.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Tab导航 */}
-          <div className="sidebar-tabs">
+          {/* 导航列表 */}
+          <div className="nav-list">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
-                  className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                  className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
                   onClick={() => handleTabClick(tab.id)}
                 >
-                  <Icon size={16} />
-                  <span>{tab.label}</span>
+                  <div className="nav-icon">
+                    <Icon size={16} />
+                  </div>
+                  <div className="nav-text">
+                    <div className="nav-title">{tab.label}</div>
+                    <div className="nav-desc">{tab.desc}</div>
+                  </div>
                 </button>
               )
             })}
