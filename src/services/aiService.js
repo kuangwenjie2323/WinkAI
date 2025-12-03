@@ -218,14 +218,17 @@ class AIService {
 
   // 自定义 API 流式聊天
   async *streamChatCustom(messages, model, config, options = {}) {
-    const { baseURL, apiKey } = config
+    const { baseURL, apiKey, corsProxyUrl } = config
 
     if (!baseURL) {
       throw new Error('自定义 API 地址未设置')
     }
 
+    // 应用 CORS 代理
+    const actualEndpoint = corsProxyUrl ? `${corsProxyUrl}${baseURL}` : baseURL
+
     try {
-      const response = await fetch(`${baseURL}/chat/completions`, {
+      const response = await fetch(`${actualEndpoint}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -462,14 +465,13 @@ class AIService {
   async _testCustom(config) {
     const endpoint = config.endpoint || ''
     const apiKey = config.apiKey
-    const useCorsProxy = config.useCorsProxy || false
+    const corsProxyUrl = config.corsProxyUrl || ''
 
     if (!apiKey) throw new Error('请提供 API Key')
     if (!endpoint) throw new Error('请提供 API 地址')
 
-    // 如果启用 CORS 代理，使用代理服务器
-    const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'
-    const actualEndpoint = useCorsProxy ? `${CORS_PROXY}${endpoint}` : endpoint
+    // 如果配置了 CORS 代理，使用用户提供的代理服务器
+    const actualEndpoint = corsProxyUrl ? `${corsProxyUrl}${endpoint}` : endpoint
 
     // 尝试获取模型列表（可选）
     let models = []

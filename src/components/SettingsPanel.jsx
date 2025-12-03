@@ -12,7 +12,7 @@ function SettingsPanel({ isOpen, onClose }) {
     settings,
     setProviderApiKey,
     setProviderBaseURL,
-    setProviderUseCorsProxy,
+    setProviderCorsProxyUrl,
     setCurrentProvider,
     setCurrentModel,
     updateSettings,
@@ -43,7 +43,7 @@ function SettingsPanel({ isOpen, onClose }) {
       apiKey: mergedApiKey,
       endpoint: mergedEndpoint,
       apiType: 'openai', // custom API 默认使用 openai 类型
-      useCorsProxy: providers[providerKey].useCorsProxy || false
+      corsProxyUrl: providers[providerKey].corsProxyUrl || ''
     }
 
     try {
@@ -214,17 +214,16 @@ function SettingsPanel({ isOpen, onClose }) {
                     <p className="form-hint">兼容 OpenAI API 格式的自定义接口地址</p>
                   </div>
 
-                  <div className="form-group checkbox-group">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={provider.useCorsProxy || false}
-                        onChange={(e) => setProviderUseCorsProxy(currentProvider, e.target.checked)}
-                      />
-                      <span>使用 CORS 代理</span>
-                    </label>
+                  <div className="form-group">
+                    <label>CORS 代理地址（可选）</label>
+                    <input
+                      type="url"
+                      value={provider.corsProxyUrl || ''}
+                      onChange={(e) => setProviderCorsProxyUrl(currentProvider, e.target.value)}
+                      placeholder="https://your-proxy.com/"
+                    />
                     <p className="form-hint">
-                      如果遇到 CORS 跨域问题，启用此选项通过代理服务器访问 API
+                      如果遇到 CORS 跨域问题，请配置你自己的代理服务器地址。格式: https://proxy.com/
                     </p>
                   </div>
                 </>
