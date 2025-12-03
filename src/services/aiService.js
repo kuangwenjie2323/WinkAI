@@ -195,11 +195,13 @@ class AIService {
       // 图片生成模式
       if (options.mode === 'image') {
         const isImagenModel = model.includes('imagen')
+        // 支持 gemini-2.0-flash-exp-image-generation 等带 image 关键词的模型
+        const isGeminiImageModel = model.includes('image') && model.includes('gemini')
 
         if (isImagenModel) {
-          // Imagen 4.0 使用 REST API 直接调用
+          // Imagen 模型使用 predict API
           try {
-            const apiKey = import.meta.env.VITE_GOOGLE_API_KEY
+            const apiKey = this.getApiKey('google')
             const response = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`,
               {
@@ -244,8 +246,60 @@ class AIService {
           }
         }
 
-        // 非 Imagen 模型，提示用户选择正确的模型
-        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请选择 Imagen 模型:\n- imagen-4.0-generate-preview-06-06\n- imagen-4.0-ultra-generate-preview-06-06\n\n或者切换到「对话」模式使用当前模型。` }
+        if (isGeminiImageModel) {
+          // Gemini 图片生成模型使用 generateContent API + responseModalities
+          try {
+            const apiKey = this.getApiKey('google')
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE']
+                  }
+                })
+              }
+            )
+
+            if (!response.ok) {
+              const errorText = await response.text()
+              throw new Error(`API 错误 ${response.status}: ${errorText}`)
+            }
+
+            const data = await response.json()
+            const parts = data.candidates?.[0]?.content?.parts || []
+
+            let hasImage = false
+            for (const part of parts) {
+              if (part.inlineData?.data) {
+                const mimeType = part.inlineData.mimeType || 'image/png'
+                const imageUrl = `data:${mimeType};base64,${part.inlineData.data}`
+                yield { type: 'content', content: `![生成的图片](${imageUrl})\n\n` }
+                hasImage = true
+              } else if (part.text) {
+                yield { type: 'content', content: part.text }
+              }
+            }
+
+            if (!hasImage && parts.length === 0) {
+              yield { type: 'content', content: '图片生成失败，请重试' }
+            }
+
+            yield { type: 'done', reason: 'stop' }
+            return
+          } catch (imgError) {
+            console.error('Gemini 图片生成错误:', imgError)
+            yield { type: 'content', content: `图片生成失败: ${imgError.message}` }
+            yield { type: 'done', reason: 'stop' }
+            return
+          }
+        }
+
+        // 非图片生成模型，提示用户选择正确的模型
+        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请选择支持图片生成的模型:\n- gemini-2.0-flash-exp-image-generation\n- imagen-4.0-generate-001\n\n或者切换到「对话」模式使用当前模型。` }
         yield { type: 'done', reason: 'stop' }
         return
       }

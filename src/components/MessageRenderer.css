@@ -586,11 +586,29 @@
 /* 响应式 */
 @media (max-width: 768px) {
   .message-item {
-    padding: var(--spacing-3) var(--spacing-4);
+    padding: var(--spacing-3);
+    border-radius: var(--radius-lg);
+  }
+
+  .message-role-header {
+    padding-bottom: var(--spacing-1);
+  }
+
+  .role-label {
+    font-size: 10px;
+  }
+
+  .message-time {
+    font-size: 10px;
   }
 
   .generated-image {
-    max-height: 300px;
+    max-height: 280px;
+  }
+
+  .uploaded-image {
+    max-width: 150px;
+    max-height: 150px;
   }
 
   .code-block pre {
@@ -598,10 +616,100 @@
   }
 
   .code-block code {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .code-header {
+    padding: var(--spacing-1) var(--spacing-2);
   }
 
   .action-btn {
     opacity: 1;
+    padding: var(--spacing-1);
+  }
+
+  .message-body {
+    font-size: var(--font-sm);
+    line-height: 1.6;
+  }
+
+  .edit-textarea {
+    min-height: 80px;
+    font-size: var(--font-sm);
+  }
+
+  .edit-actions {
+    gap: var(--spacing-1);
+  }
+
+  .edit-cancel-btn,
+  .edit-save-btn {
+    padding: var(--spacing-1) var(--spacing-3);
+    font-size: var(--font-xs);
+  }
+
+  .group-toggle {
+    padding: var(--spacing-2);
+    font-size: var(--font-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .message-item {
+    padding: var(--spacing-2);
+  }
+
+  .message-role-header {
+    flex-wrap: wrap;
+    gap: var(--spacing-1);
+  }
+
+  .message-header-actions {
+    gap: var(--spacing-1);
+  }
+
+  .streaming-status {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .streaming-text {
+    font-size: 10px;
+  }
+
+  .streaming-dots span {
+    width: 4px;
+    height: 4px;
+  }
+
+  .generated-image {
+    max-height: 200px;
+  }
+
+  .uploaded-image {
+    max-width: 100px;
+    max-height: 100px;
+  }
+
+  .code-block code {
+    font-size: 0.7rem;
+  }
+
+  .message-body {
+    font-size: 13px;
+  }
+
+  .inline-code {
+    font-size: 0.8em;
+    padding: 1px 4px;
+  }
+
+  .copy-btn {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .copy-btn span {
+    display: none;
   }
 }

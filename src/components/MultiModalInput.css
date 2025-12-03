@@ -308,26 +308,85 @@
 /* 响应式 */
 @media (max-width: 768px) {
   .multimodal-input-container {
-    padding: var(--spacing-4);
+    padding: var(--spacing-3) var(--spacing-2);
+  }
+
+  .image-preview-area {
+    gap: var(--spacing-1);
+    margin-bottom: var(--spacing-2);
   }
 
   .image-preview-item {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
   }
 
   .input-wrapper {
-    padding: var(--spacing-2) var(--spacing-3);
+    padding: 8px 10px;
+    border-radius: 24px;
   }
 
-  .upload-btn,
+  .input-toolbar {
+    display: none;
+  }
+
+  .input-left {
+    padding-left: var(--spacing-1);
+  }
+
+  .upload-btn.icon {
+    width: 28px;
+    height: 28px;
+  }
+
   .send-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 
   .message-textarea {
     font-size: var(--font-sm);
-    min-height: 36px;
+    min-height: 32px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .multimodal-input-container {
+    padding: var(--spacing-2) var(--spacing-1);
+  }
+
+  .image-preview-item {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-md);
+  }
+
+  .input-wrapper {
+    padding: 6px 8px;
+    border-radius: 20px;
+  }
+
+  .upload-btn.icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .send-btn {
+    width: 32px;
+    height: 32px;
+    margin-left: var(--spacing-1);
+  }
+
+  .message-textarea {
+    font-size: 14px;
+    min-height: 28px;
+    padding: 4px 6px;
+  }
+
+  .key-pill {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
   }
 }

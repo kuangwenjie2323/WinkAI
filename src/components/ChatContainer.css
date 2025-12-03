@@ -343,44 +343,130 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .chat-container-wrapper {
-    padding: var(--spacing-4);
+    padding: var(--spacing-3);
   }
 
   .canvas-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .canvas-titles {
+    gap: 4px;
+  }
+
+  .canvas-title {
+    font-size: 1rem;
+  }
+
+  .canvas-subtitle {
+    font-size: var(--font-xs);
+  }
+
+  .canvas-chips {
+    justify-content: flex-start;
+    gap: var(--spacing-1);
+  }
+
+  .canvas-chip {
+    padding: 6px 10px;
+    font-size: var(--font-xs);
+  }
+
+  .mode-switch {
+    order: -1;
+  }
+
+  .mode-pill {
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: var(--font-xs);
+  }
+
+  .messages-area-new {
+    border-radius: var(--radius-xl);
   }
 
   .messages-list-new {
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-4) var(--spacing-3);
+    gap: var(--spacing-3);
   }
 
   .welcome-screen {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-4);
   }
 
   .welcome-icon {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
 
   .welcome-screen h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .feature-list {
     grid-template-columns: 1fr;
     max-width: 100%;
+    gap: var(--spacing-2);
+  }
+
+  .ai-studio-wireframe {
+    padding: var(--spacing-4);
+    gap: var(--spacing-3);
+  }
+
+  .wire-row.two-col {
+    flex-direction: column;
+  }
+
+  .wire-card {
+    padding: var(--spacing-3);
+  }
+
+  .input-area-new {
+    padding: var(--spacing-3) 0 0;
   }
 }
 
 @media (max-width: 480px) {
+  .chat-container-wrapper {
+    padding: var(--spacing-2);
+  }
+
+  .canvas-header {
+    padding: var(--spacing-2);
+    border-radius: var(--radius-xl);
+  }
+
+  .canvas-title {
+    font-size: 0.9rem;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+  }
+
+  .canvas-chip {
+    padding: 4px 8px;
+  }
+
+  .messages-area-new {
+    border-radius: var(--radius-lg);
+  }
+
+  .messages-list-new {
+    padding: var(--spacing-3) var(--spacing-2);
+  }
+
   .feature-item {
-    font-size: 0.875rem;
-    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.8rem;
+    padding: var(--spacing-2) var(--spacing-3);
   }
 
   .setup-btn {
-    font-size: 0.9375rem;
-    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 0.875rem;
+    padding: var(--spacing-2) var(--spacing-4);
   }
 }

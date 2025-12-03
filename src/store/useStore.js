@@ -44,11 +44,9 @@ export const useStore = create(
           apiKey: '',
           baseURL: 'https://generativelanguage.googleapis.com/v1beta',
           models: [
-            'gemini-3-pro-image-preview',
             'gemini-2.0-flash-exp',
             'gemini-1.5-pro',
-            'gemini-1.5-flash',
-            'gemini-1.5-flash-8b'
+            'gemini-1.5-flash'
           ],
           defaultModel: 'gemini-2.0-flash-exp',
           supportsVision: true,
@@ -58,8 +56,8 @@ export const useStore = create(
           name: '自定义 API',
           apiKey: '',
           baseURL: '',
-          models: ['gemini-3-pro-preview', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022'],
-          defaultModel: 'gemini-3-pro-preview',
+          models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022'],
+          defaultModel: 'gpt-4',
           supportsVision: false,
           supportsStreaming: true,
           apiType: 'openai',    // API 类型: 'openai' | 'anthropic' | 'google'
@@ -359,29 +357,7 @@ export const useStore = create(
           ...state.customModels,
           [provider]: state.customModels[provider].filter(m => m.id !== modelId)
         }
-      })),
-
-      // 确保默认的 Google 模型 ID 完整（兼容旧数据）
-      ensureGoogleModels: () => set((state) => {
-        const targetId = 'gemini-3-pro-image-preview'
-        const google = state.providers.google || {}
-        const models = google.models || []
-        const hasTarget = models.includes(targetId)
-        const mergedModels = hasTarget ? models : [targetId, ...models]
-
-        return {
-          providers: {
-            ...state.providers,
-            google: {
-              ...google,
-              models: mergedModels,
-              defaultModel: google.defaultModel && mergedModels.includes(google.defaultModel)
-                ? google.defaultModel
-                : targetId
-            }
-          }
-        }
-      })
+      }))
     }),
     {
       name: 'winkai-storage',
@@ -401,7 +377,6 @@ export const useStore = create(
       }),
       onRehydrateStorage: () => (state) => {
         // 当状态从 localStorage 恢复后，设置水合完成标志
-        state?.ensureGoogleModels?.()
         state?.setHasHydrated(true)
       }
     }
