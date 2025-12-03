@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, Send, X, Image as ImageIcon, Save, KeyRound, Plus } from 'lucide-react'
+import { Upload, Send, X, Image as ImageIcon, Save, Plus } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import './MultiModalInput.css'
 
@@ -176,18 +176,19 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
       )}
 
       {/* 输入区域 */}
-      <div className="input-wrapper pill">
-        <div className="input-toolbar">
-          <span className="mode-tag">{modeLabel}</span>
-          <span className="input-hint">{modeHint}</span>
-          <span className="char-count">{charCount} 字</span>
-        </div>
-
-        <div className="input-left">
-          <div className="key-pill">
-            <KeyRound size={18} />
-          </div>
-        </div>
+      <div className="input-wrapper">
+        {/* 上传按钮 */}
+        {mode !== 'video' && (
+          <button
+            className="upload-btn"
+            onClick={openFilePicker}
+            disabled={disabled}
+            type="button"
+            title="上传图片"
+          >
+            <Plus size={20} />
+          </button>
+        )}
 
         <textarea
           ref={textareaRef}
@@ -196,42 +197,26 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
           onKeyDown={handleKeyDown}
           placeholder={
             mode === 'image'
-              ? 'Start typing a prompt for an image'
+              ? '描述想要生成的图片...'
               : mode === 'video'
-                ? 'Start typing a prompt for a video'
-                : 'Start typing a prompt'
+                ? '描述想要生成的视频...'
+                : '输入消息... (Enter 发送)'
           }
           disabled={disabled}
           className="message-textarea"
           rows={1}
         />
 
-        <div className="input-actions">
-          {mode !== 'video' && (
-            <button
-              className="upload-btn icon"
-              onClick={openFilePicker}
-              disabled={disabled}
-              type="button"
-              title="上传图片"
-            >
-              <Plus size={18} />
-            </button>
-          )}
-
-          <button
-            className="run-btn"
-            onClick={handleSend}
-            disabled={sendDisabled}
-            type="button"
-            title="发送消息"
-          >
-            <span>Run</span>
-            <span className="shortcut">
-              ⌘ <span className="arrow">↵</span>
-            </span>
-          </button>
-        </div>
+        {/* 发送按钮 */}
+        <button
+          className="send-btn"
+          onClick={handleSend}
+          disabled={sendDisabled}
+          type="button"
+          title="发送消息"
+        >
+          <Send size={20} />
+        </button>
       </div>
     </div>
   )
