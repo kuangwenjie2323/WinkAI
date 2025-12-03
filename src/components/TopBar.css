@@ -1,7 +1,7 @@
 /* 顶部栏容器 - Google AI Studio 顶栏 */
 .topbar {
   height: 72px;
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-primary);
   padding: 0 var(--spacing-lg);
   display: grid;
@@ -59,7 +59,7 @@
   align-items: center;
   gap: var(--spacing-1);
   padding: var(--spacing-2) var(--spacing-3);
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
@@ -135,7 +135,7 @@
   flex-direction: column;
   gap: 6px;
   padding: var(--spacing-2) var(--spacing-3);
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   min-width: 220px;
@@ -242,7 +242,7 @@
   padding: var(--spacing-2) var(--spacing-3);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-full);
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
 

@@ -1,16 +1,3 @@
-非常感谢！这个链接提供了关键的实锤信息。
-
-链接中的参数 `model=gemini-3-pro-image-preview` 直接确认了 **Nano Banana Pro** 在 Google AI Studio 里的正式 Model ID 是 **`gemini-3-pro-image-preview`**。
-
-这对开发者来说至关重要，因为模型 ID 错一个字代码就会报错。
-
-基于这个最准确的 ID，我为您更新了最终版的 Skill。这个版本同时兼容 **Vertex AI**（企业版）和 **Google AI Studio**（API Key 个人版），并把默认模型 ID 修正为链接里确认的那个。
-
-### 📂 推荐保存路径
-`~/.claude/skills/google-media-studio/SKILL.md`
-
----
-
 ### 📄 文件内容：SKILL.md (v2.1 最终修正版)
 
 ```markdown
