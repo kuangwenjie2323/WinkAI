@@ -50,7 +50,7 @@ function App() {
           onSettingsOpen={() => setSettingsOpen(true)}
         />
 
-        <ChatContainer />
+        <ChatContainer onSettingsOpen={() => setSettingsOpen(true)} />
       </div>
 
       {/* 右侧控制面板 */}
