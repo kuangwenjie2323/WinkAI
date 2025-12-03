@@ -9,6 +9,15 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
   const [images, setImages] = useState([])
   const textareaRef = useRef(null)
   const { addToImageLibrary } = useStore()
+  const trimmedText = text.trim()
+  const sendDisabled = disabled || (!trimmedText && images.length === 0)
+  const charCount = trimmedText.length
+  const modeLabel = mode === 'image' ? '图片' : mode === 'video' ? '视频' : '对话'
+  const modeHint = mode === 'image'
+    ? '描述你想生成的画面'
+    : mode === 'video'
+      ? '描述你想生成的视频场景'
+      : '支持 Shift+Enter 换行'
 
   // 处理图片上传
   const onDrop = useCallback((acceptedFiles) => {
@@ -168,6 +177,12 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
 
       {/* 输入区域 */}
       <div className="input-wrapper">
+        <div className="input-toolbar">
+          <span className="mode-tag">{modeLabel}</span>
+          <span className="input-hint">{modeHint}</span>
+          <span className="char-count">{charCount} 字</span>
+        </div>
+
         {/* 上传按钮 */}
         {mode !== 'video' && (
           <button
@@ -203,7 +218,7 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
         <button
           className="send-btn"
           onClick={handleSend}
-          disabled={disabled || (!text.trim() && images.length === 0)}
+          disabled={sendDisabled}
           type="button"
           title="发送消息"
         >
