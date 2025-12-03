@@ -44,6 +44,7 @@ export const useStore = create(
           apiKey: '',
           baseURL: 'https://generativelanguage.googleapis.com/v1beta',
           models: [
+            'gemini-3-pro-image-preview',
             'gemini-2.0-flash-exp',
             'gemini-1.5-pro',
             'gemini-1.5-flash',
@@ -344,7 +345,29 @@ export const useStore = create(
           ...state.customModels,
           [provider]: state.customModels[provider].filter(m => m.id !== modelId)
         }
-      }))
+      })),
+
+      // 确保默认的 Google 模型 ID 完整（兼容旧数据）
+      ensureGoogleModels: () => set((state) => {
+        const targetId = 'gemini-3-pro-image-preview'
+        const google = state.providers.google || {}
+        const models = google.models || []
+        const hasTarget = models.includes(targetId)
+        const mergedModels = hasTarget ? models : [targetId, ...models]
+
+        return {
+          providers: {
+            ...state.providers,
+            google: {
+              ...google,
+              models: mergedModels,
+              defaultModel: google.defaultModel && mergedModels.includes(google.defaultModel)
+                ? google.defaultModel
+                : targetId
+            }
+          }
+        }
+      })
     }),
     {
       name: 'winkai-storage',
@@ -364,6 +387,7 @@ export const useStore = create(
       }),
       onRehydrateStorage: () => (state) => {
         // 当状态从 localStorage 恢复后，设置水合完成标志
+        state?.ensureGoogleModels?.()
         state?.setHasHydrated(true)
       }
     }

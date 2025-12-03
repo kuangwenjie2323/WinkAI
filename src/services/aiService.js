@@ -488,10 +488,15 @@ class AIService {
     const modelsData = await modelsResponse.json()
     const models = modelsData.models
       .filter(m => m.name.includes('gemini'))
-      .map(m => ({
-        id: m.name.replace('models/', ''),
-        name: m.displayName || m.name
-      }))
+      .map(m => {
+        // 模型 ID：去掉 'models/' 前缀
+        const modelId = m.name.replace('models/', '')
+        return {
+          id: modelId,
+          // 显示名：优先使用模型 ID，因为 displayName 可能不准确
+          name: modelId
+        }
+      })
 
     return {
       models,
