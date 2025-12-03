@@ -12,6 +12,7 @@ function SettingsPanel({ isOpen, onClose }) {
     settings,
     setProviderApiKey,
     setProviderBaseURL,
+    setProviderApiType,
     setProviderCorsProxyUrl,
     setCurrentProvider,
     setCurrentModel,
@@ -42,7 +43,7 @@ function SettingsPanel({ isOpen, onClose }) {
     const config = {
       apiKey: mergedApiKey,
       endpoint: mergedEndpoint,
-      apiType: 'openai', // custom API 默认使用 openai 类型
+      apiType: providers[providerKey].apiType || 'openai',
       corsProxyUrl: providers[providerKey].corsProxyUrl || ''
     }
 
@@ -211,7 +212,23 @@ function SettingsPanel({ isOpen, onClose }) {
                       onChange={(e) => setProviderBaseURL(currentProvider, e.target.value)}
                       placeholder="https://api.example.com/v1"
                     />
-                    <p className="form-hint">兼容 OpenAI API 格式的自定义接口地址</p>
+                    <p className="form-hint">自定义 API 接口地址</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>API 类型</label>
+                    <select
+                      value={provider.apiType || 'openai'}
+                      onChange={(e) => setProviderApiType(currentProvider, e.target.value)}
+                      className="model-select"
+                    >
+                      <option value="openai">OpenAI 兼容</option>
+                      <option value="anthropic">Anthropic Claude</option>
+                      <option value="google">Google Gemini</option>
+                    </select>
+                    <p className="form-hint">
+                      选择自定义 API 使用的协议格式
+                    </p>
                   </div>
 
                   <div className="form-group">

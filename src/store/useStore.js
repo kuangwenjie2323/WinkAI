@@ -47,6 +47,7 @@ export const useStore = create(
           defaultModel: 'gemini-3-pro-preview',
           supportsVision: false,
           supportsStreaming: true,
+          apiType: 'openai',    // API 类型: 'openai' | 'anthropic' | 'google'
           useCorsProxy: false,  // 是否使用 CORS 代理
           corsProxyUrl: ''      // 自定义 CORS 代理地址（留空则不使用代理）
         }
@@ -137,6 +138,16 @@ export const useStore = create(
           [provider]: {
             ...state.providers[provider],
             baseURL
+          }
+        }
+      })),
+
+      setProviderApiType: (provider, apiType) => set((state) => ({
+        providers: {
+          ...state.providers,
+          [provider]: {
+            ...state.providers[provider],
+            apiType
           }
         }
       })),
