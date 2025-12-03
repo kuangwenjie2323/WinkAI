@@ -149,7 +149,7 @@ function SettingsPanel({ isOpen, onClose }) {
                       onChange={(e) => setProviderApiKey(currentProvider, e.target.value)}
                       placeholder={envKeys[currentProvider] ? '使用环境变量配置' : `输入 ${provider.name} API Key`}
                       className="api-key-input"
-                      disabled={!!envKeys[currentProvider]}
+                      disabled={currentProvider !== 'custom' && !!envKeys[currentProvider]}
                     />
                     <button
                       type="button"
