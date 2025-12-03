@@ -70,6 +70,7 @@ export const useStore = create(
       // 当前选择的提供商
       currentProvider: 'openai',
       currentModel: '',
+      generationMode: 'chat', // chat | image | video
 
       // 聊天会话
       sessions: [{
@@ -193,6 +194,7 @@ export const useStore = create(
       },
 
       setCurrentModel: (model) => set({ currentModel: model }),
+      setGenerationMode: (mode) => set({ generationMode: mode }),
 
       addMessage: (sessionId, message) => set((state) => ({
         sessions: state.sessions.map(session =>
@@ -350,6 +352,7 @@ export const useStore = create(
         providers: state.providers,
         currentProvider: state.currentProvider,
         currentModel: state.currentModel,
+        generationMode: state.generationMode,
         sessions: state.sessions,
         currentSessionId: state.currentSessionId,
         settings: state.settings,

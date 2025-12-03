@@ -14,6 +14,8 @@ function ChatContainer() {
     currentProvider,
     currentModel,
     settings,
+    generationMode,
+    setGenerationMode,
     addMessage,
     updateMessage
   } = useStore()
@@ -43,6 +45,8 @@ function ChatContainer() {
   // 发送消息
   const handleSend = async (input) => {
     const { text, images } = input
+    const trimmedText = text.trim()
+    if (!trimmedText && (!images || images.length === 0)) return
 
     if (!mergedApiKey && currentProvider !== 'custom') {
       alert(`请先在设置中配置 ${provider?.name} 的 API Key`)
@@ -51,10 +55,16 @@ function ChatContainer() {
     }
 
     // 创建用户消息
+    const modePrefix = generationMode === 'chat'
+      ? ''
+      : generationMode === 'image'
+        ? '[Image Generation] '
+        : '[Video Generation] '
+
     const userMessage = {
       id: `msg-${Date.now()}`,
       role: 'user',
-      content: text,
+      content: `${modePrefix}${trimmedText}`,
       images,
       timestamp: Date.now()
     }
@@ -79,7 +89,7 @@ function ChatContainer() {
         role: msg.role,
         content: msg.content
       }))
-      messages.push({ role: 'user', content: text })
+      messages.push({ role: 'user', content: `${modePrefix}${trimmedText}` })
 
       const model = currentModel || provider.defaultModel
 
@@ -154,6 +164,21 @@ function ChatContainer() {
           <span className={`canvas-chip ${settings.streamingEnabled ? 'chip-on' : 'chip-off'}`}>
             流式 {settings.streamingEnabled ? '开启' : '关闭'}
           </span>
+          <div className="mode-switch">
+            {[
+              { id: 'chat', label: '对话' },
+              { id: 'image', label: '图片' },
+              { id: 'video', label: '视频' }
+            ].map(mode => (
+              <button
+                key={mode.id}
+                className={`mode-pill ${generationMode === mode.id ? 'active' : ''}`}
+                onClick={() => setGenerationMode(mode.id)}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -209,7 +234,7 @@ function ChatContainer() {
 
       {/* 输入区域 */}
       <div className="input-area-new">
-        <MultiModalInput onSend={handleSend} disabled={isLoading} />
+        <MultiModalInput onSend={handleSend} disabled={isLoading} mode={generationMode} />
       </div>
 
       {/* 设置面板 */}

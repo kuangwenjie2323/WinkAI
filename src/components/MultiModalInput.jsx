@@ -4,7 +4,7 @@ import { Upload, Send, X, Image as ImageIcon, Save } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import './MultiModalInput.css'
 
-function MultiModalInput({ onSend, disabled = false }) {
+function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
   const [text, setText] = useState('')
   const [images, setImages] = useState([])
   const textareaRef = useRef(null)
@@ -37,7 +37,8 @@ function MultiModalInput({ onSend, disabled = false }) {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']
     },
     noClick: true,
-    noKeyboard: true
+    noKeyboard: true,
+    disabled: mode === 'video'
   })
 
   // 移除图片
@@ -168,15 +169,17 @@ function MultiModalInput({ onSend, disabled = false }) {
       {/* 输入区域 */}
       <div className="input-wrapper">
         {/* 上传按钮 */}
-        <button
-          className="upload-btn"
-          onClick={openFilePicker}
-          disabled={disabled}
-          type="button"
-          title="上传图片"
-        >
-          <ImageIcon size={20} />
-        </button>
+        {mode !== 'video' && (
+          <button
+            className="upload-btn"
+            onClick={openFilePicker}
+            disabled={disabled}
+            type="button"
+            title="上传图片"
+          >
+            <ImageIcon size={20} />
+          </button>
+        )}
 
         {/* 文本输入框 */}
         <textarea
@@ -184,7 +187,13 @@ function MultiModalInput({ onSend, disabled = false }) {
           value={text}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
-          placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+          placeholder={
+            mode === 'image'
+              ? '描述想要生成的图片... (Enter 发送)'
+              : mode === 'video'
+                ? '描述想要生成的视频... (Enter 发送)'
+                : '输入消息... (Enter 发送, Shift+Enter 换行)'
+          }
           disabled={disabled}
           className="message-textarea"
           rows={1}

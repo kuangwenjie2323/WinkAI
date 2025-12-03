@@ -16,6 +16,11 @@ class AIService {
     }
   }
 
+  normalizeProxyUrl(url) {
+    if (!url) return ''
+    return url.endsWith('/') ? url : `${url}/`
+  }
+
   // 规范化 Endpoint，处理重复的 /v1 片段等
   normalizeEndpoint(provider, endpoint) {
     if (!endpoint) return endpoint
@@ -224,8 +229,11 @@ class AIService {
       throw new Error('自定义 API 地址未设置')
     }
 
-    // 应用 CORS 代理
-    const actualEndpoint = corsProxyUrl ? `${corsProxyUrl}${baseURL}` : baseURL
+    // 应用 CORS 代理（保持协议，防止缺少斜杠）
+    const normalizedBase = this.normalizeEndpoint('custom', baseURL)
+    const actualEndpoint = corsProxyUrl
+      ? `${this.normalizeProxyUrl(corsProxyUrl)}${normalizedBase}`
+      : normalizedBase
 
     try {
       const response = await fetch(`${actualEndpoint}/chat/completions`, {
@@ -472,8 +480,11 @@ class AIService {
     if (!apiKey) throw new Error('请提供 API Key')
     if (!endpoint) throw new Error('请提供 API 地址')
 
-    // 如果配置了 CORS 代理，使用用户提供的代理服务器
-    const actualEndpoint = corsProxyUrl ? `${corsProxyUrl}${endpoint}` : endpoint
+    // 如果配置了 CORS 代理，使用用户提供的代理服务器，并规范化斜杠
+    const normalizedEndpoint = this.normalizeEndpoint('custom', endpoint)
+    const actualEndpoint = corsProxyUrl
+      ? `${this.normalizeProxyUrl(corsProxyUrl)}${normalizedEndpoint}`
+      : normalizedEndpoint
 
     // 根据 API 类型路由到对应的测试方法
     const testConfig = {
