@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStore } from './store/useStore'
+import { Toaster } from 'react-hot-toast'
 import LeftSidebar from './components/LeftSidebar'
 import TopBar from './components/TopBar'
 import ChatContainer from './components/ChatContainer'
@@ -62,6 +63,12 @@ function App() {
 
   return (
     <div className={containerClasses}>
+      <Toaster position="top-center" toastOptions={{
+        style: {
+          background: settings.theme === 'dark' ? '#333' : '#fff',
+          color: settings.theme === 'dark' ? '#fff' : '#333',
+        }
+      }} />
       {/* 移动端遮罩层 */}
       {showOverlay && <div className="overlay" onClick={closeSidebars} />}
 

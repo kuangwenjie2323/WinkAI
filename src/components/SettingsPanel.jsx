@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store/useStore'
+import { toast } from 'react-hot-toast'
 import { X, Settings as SettingsIcon, Cpu, Sliders } from 'lucide-react'
 import aiService from '../services/aiService'
 import './SettingsPanel.css'
@@ -36,6 +37,7 @@ function SettingsPanel({ isOpen, onClose }) {
 
   const handleTestConnection = async (providerKey) => {
     setTesting(true)
+    const loadingToast = toast.loading('正在测试连接...')
 
     const mergedApiKey = aiService.getApiKey(providerKey)
     const mergedEndpoint = aiService.getApiEndpoint(providerKey)
@@ -51,8 +53,13 @@ function SettingsPanel({ isOpen, onClose }) {
       const result = await aiService.testConnection(providerKey, config)
       setTestResult(providerKey, result)
 
-      if (result.success && result.models && result.models.length > 0) {
-        setDynamicModels(providerKey, result.models)
+      if (result.success) {
+        toast.success('连接成功！', { id: loadingToast })
+        if (result.models && result.models.length > 0) {
+          setDynamicModels(providerKey, result.models)
+        }
+      } else {
+        toast.error(`连接失败: ${result.error}`, { id: loadingToast })
       }
     } catch (error) {
       setTestResult(providerKey, {
@@ -60,6 +67,7 @@ function SettingsPanel({ isOpen, onClose }) {
         error: error.message,
         models: []
       })
+      toast.error(`错误: ${error.message}`, { id: loadingToast })
     } finally {
       setTesting(false)
     }
