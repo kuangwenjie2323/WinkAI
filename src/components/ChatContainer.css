@@ -34,6 +34,41 @@
   flex-wrap: wrap;
 }
 
+.composer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.composer-title {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.composer-subtitle {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.composer-select {
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  min-width: 140px;
+}
+
 .canvas-chip {
   display: inline-flex;
   align-items: center;
@@ -298,11 +333,12 @@
 .input-area-new {
   position: sticky;
   bottom: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.6) 35%, rgba(0, 0, 0, 0.85) 100%);
+  background: var(--bg-primary);
   padding: var(--spacing-3) var(--spacing-4) var(--spacing-4);
   flex-shrink: 0;
   min-height: 80px;
   z-index: 10;
+  border-top: 1px solid var(--border-primary);
 }
 
 /* 响应式设计 */
@@ -366,7 +402,8 @@
     bottom: env(safe-area-inset-bottom, 0px);
     padding: var(--spacing-2) var(--spacing-3) calc(var(--spacing-3) + env(safe-area-inset-bottom, 0px));
     min-height: 68px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.9) 100%);
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-primary);
   }
 }
 

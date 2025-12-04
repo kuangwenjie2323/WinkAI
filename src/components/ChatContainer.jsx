@@ -17,6 +17,11 @@ function ChatContainer() {
     settings,
     generationMode,
     providers,
+    dynamicModels,
+    customModels,
+    setCurrentProvider,
+    setCurrentModel,
+    setGenerationMode,
     addMessage,
     updateMessage,
     deleteMessagesAfter
@@ -30,6 +35,17 @@ function ChatContainer() {
   const messagesEndRef = useRef(null)
   const session = getCurrentSession()
   const provider = getCurrentProvider()
+  const mergedModels = useMemo(() => {
+    const defaults = providers?.[currentProvider]?.models || []
+    const dynamic = dynamicModels?.[currentProvider] || []
+    const custom = customModels?.[currentProvider] || []
+    const all = [
+      ...defaults.map(id => ({ id, name: id })),
+      ...dynamic,
+      ...custom
+    ]
+    return Array.from(new Map(all.map(m => [m.id, m])).values())
+  }, [providers, dynamicModels, customModels, currentProvider])
   const mergedApiKey = aiService.getApiKey(currentProvider)
   const mergedEndpoint = aiService.getApiEndpoint(currentProvider)
   const providerConfig = {
@@ -248,6 +264,50 @@ function ChatContainer() {
 
   return (
     <div className="chat-container-wrapper">
+      <div className="composer-sticky">
+        <div className="composer-controls">
+          <div className="composer-info">
+            <div className="composer-title">模型与模式</div>
+            <div className="composer-subtitle">{provider?.name} · {currentModel || provider?.defaultModel}</div>
+          </div>
+          <div className="composer-actions">
+            <select
+              value={currentProvider}
+              onChange={(e) => setCurrentProvider(e.target.value)}
+              className="composer-select"
+            >
+              {Object.entries(providers || {}).map(([key, cfg]) => (
+                <option key={key} value={key}>{cfg.name}</option>
+              ))}
+            </select>
+            <select
+              value={currentModel || provider?.defaultModel || ''}
+              onChange={(e) => setCurrentModel(e.target.value)}
+              className="composer-select"
+            >
+              {mergedModels.map(m => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+            <div className="mode-switch">
+              {[
+                { id: 'chat', label: '对话' },
+                { id: 'image', label: '图片' },
+                { id: 'video', label: '视频' }
+              ].map(mode => (
+                <button
+                  key={mode.id}
+                  className={`mode-pill ${generationMode === mode.id ? 'active' : ''}`}
+                  onClick={() => setGenerationMode(mode.id)}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 消息区域 */}
       <div className="messages-area-new">
         {!session?.messages?.length ? (
