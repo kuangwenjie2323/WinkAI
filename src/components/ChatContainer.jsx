@@ -4,7 +4,6 @@ import aiService from '../services/aiService'
 import { MessageRenderer, MessageGroup } from './MessageRenderer'
 import MultiModalInput from './MultiModalInput'
 import SettingsPanel from './SettingsPanel'
-import { Settings } from 'lucide-react'
 import './ChatContainer.css'
 
 const MESSAGES_PER_GROUP = 25
@@ -279,14 +278,6 @@ function ChatContainer() {
     return "Hello, world!"`}
                 </pre>
               </div>
-            </div>
-
-            <div className="wire-input">
-              <input placeholder="Type something..." />
-              <button className="wire-send">
-                <Settings size={16} />
-                Run
-              </button>
             </div>
           </div>
         ) : (
