@@ -304,6 +304,10 @@
 }
 
 /* 消息列表 */
+.chat-container-wrapper {
+  --composer-height: 0px;
+}
+
 .messages-list-new {
   padding: var(--spacing-6);
   display: flex;
@@ -313,6 +317,7 @@
   margin: 0 auto;
   width: 100%;
   position: relative;
+  padding-bottom: calc(var(--spacing-6) + var(--composer-height));
 }
 
 /* 自定义滚动条 */
@@ -337,7 +342,8 @@
 /* 输入区域 */
 .input-area-new {
   background: transparent;
-  padding: var(--spacing-4) var(--spacing-1) var(--spacing-1);
+  padding: var(--spacing-3) var(--spacing-1) var(--spacing-1);
+  padding-bottom: calc(var(--spacing-2) + env(safe-area-inset-bottom));
 }
 
 /* 响应式设计 */
@@ -426,7 +432,10 @@
   }
 
   .input-area-new {
-    padding: var(--spacing-3) 0 0;
+    position: sticky;
+    bottom: env(safe-area-inset-bottom);
+    padding: var(--spacing-2) var(--spacing-1) calc(var(--spacing-2) + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 12%);
   }
 }
 
@@ -458,6 +467,7 @@
 
   .messages-list-new {
     padding: var(--spacing-3) var(--spacing-2);
+    padding-bottom: calc(var(--spacing-3) + var(--composer-height));
   }
 
   .feature-item {

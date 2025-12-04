@@ -29,6 +29,8 @@ function ChatContainer() {
   const [editContent, setEditContent] = useState('')
   const [expandedGroups, setExpandedGroups] = useState({})
   const messagesEndRef = useRef(null)
+  const inputAreaRef = useRef(null)
+  const chatWrapperRef = useRef(null)
   const session = getCurrentSession()
   const provider = getCurrentProvider()
   const mergedApiKey = aiService.getApiKey(currentProvider)
@@ -55,6 +57,22 @@ function ChatContainer() {
   useEffect(() => {
     scrollToBottom()
   }, [session?.messages])
+
+  useEffect(() => {
+    const updateComposerHeight = () => {
+      const composerHeight = inputAreaRef.current?.offsetHeight || 0
+      if (chatWrapperRef.current) {
+        chatWrapperRef.current.style.setProperty('--composer-height', `${composerHeight}px`)
+      }
+    }
+
+    updateComposerHeight()
+    window.addEventListener('resize', updateComposerHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateComposerHeight)
+    }
+  }, [session?.messages?.length, isLoading])
 
   // 切换分组展开状态
   const toggleGroupExpanded = (groupIndex) => {
@@ -248,7 +266,7 @@ function ChatContainer() {
   }
 
   return (
-    <div className="chat-container-wrapper">
+    <div className="chat-container-wrapper" ref={chatWrapperRef}>
       <div className="canvas-header">
         <div className="canvas-titles">
           <div className="eyebrow">Run</div>
@@ -366,7 +384,7 @@ function ChatContainer() {
       </div>
 
       {/* 输入区域 */}
-      <div className="input-area-new">
+      <div className="input-area-new" ref={inputAreaRef}>
         <MultiModalInput onSend={handleSend} disabled={isLoading} mode={generationMode} />
       </div>
 
