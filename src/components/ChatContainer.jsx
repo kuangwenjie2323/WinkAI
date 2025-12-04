@@ -255,32 +255,6 @@ function ChatContainer() {
           <h2 className="canvas-title">Gemini 调试面板</h2>
           <p className="canvas-subtitle">Google AI Studio 风格的多模态对话体验</p>
         </div>
-        <div className="canvas-chips">
-          <span className="canvas-chip">
-            提供商 · {provider?.name}
-          </span>
-          <span className="canvas-chip">
-            模型 · {currentModel || provider?.defaultModel}
-          </span>
-          <span className={`canvas-chip ${settings.streamingEnabled ? 'chip-on' : 'chip-off'}`}>
-            流式 {settings.streamingEnabled ? '开启' : '关闭'}
-          </span>
-          <div className="mode-switch">
-            {[
-              { id: 'chat', label: '对话' },
-              { id: 'image', label: '图片' },
-              { id: 'video', label: '视频' }
-            ].map(mode => (
-              <button
-                key={mode.id}
-                className={`mode-pill ${generationMode === mode.id ? 'active' : ''}`}
-                onClick={() => setGenerationMode(mode.id)}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* 消息区域 */}
@@ -365,9 +339,39 @@ function ChatContainer() {
         )}
       </div>
 
-      {/* 输入区域 */}
-      <div className="input-area-new">
-        <MultiModalInput onSend={handleSend} disabled={isLoading} mode={generationMode} />
+      {/* 控制与输入区域 */}
+      <div className="composer-sticky">
+        <div className="composer-controls">
+          <div className="canvas-chips">
+            <span className="canvas-chip">
+              提供商 · {provider?.name}
+            </span>
+            <span className="canvas-chip">
+              模型 · {currentModel || provider?.defaultModel}
+            </span>
+            <span className={`canvas-chip ${settings.streamingEnabled ? 'chip-on' : 'chip-off'}`}>
+              流式 {settings.streamingEnabled ? '开启' : '关闭'}
+            </span>
+          </div>
+          <div className="mode-switch">
+            {[
+              { id: 'chat', label: '对话' },
+              { id: 'image', label: '图片' },
+              { id: 'video', label: '视频' }
+            ].map(mode => (
+              <button
+                key={mode.id}
+                className={`mode-pill ${generationMode === mode.id ? 'active' : ''}`}
+                onClick={() => setGenerationMode(mode.id)}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="input-area-new">
+          <MultiModalInput onSend={handleSend} disabled={isLoading} mode={generationMode} />
+        </div>
       </div>
 
       {/* 设置面板 */}
