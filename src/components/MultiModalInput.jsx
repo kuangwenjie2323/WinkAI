@@ -50,6 +50,9 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
     disabled: mode === 'video'
   })
 
+  // Dropzone 根元素属性（去掉阻止点击的事件，避免移动端点击失效）
+  const { onClick: _dropzoneOnClick, ...dropzoneRootProps } = getRootProps()
+
   // 移除图片
   const removeImage = (id) => {
     setImages(images.filter((img) => img.id !== id))
@@ -138,7 +141,8 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
   }
 
   return (
-    <div className="multimodal-input-container" {...getRootProps()}>
+    <div className="multimodal-input-container" {...dropzoneRootProps}>
+      <input {...getInputProps()} style={{ display: 'none' }} />
       {isDragActive && (
         <div className="drag-overlay">
           <div className="drag-content">
