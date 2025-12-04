@@ -8,6 +8,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-3);
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
 }
 
 /* 左侧区域 */
