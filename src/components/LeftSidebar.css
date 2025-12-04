@@ -238,6 +238,10 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;
+  /* 确保 hover 时操作按钮可见 */
+  &:hover .session-actions {
+    opacity: 1;
+  }
 }
 
 .session-item:hover {
@@ -267,9 +271,40 @@
   text-align: left;
 }
 
-/* 删除按钮 */
-.delete-session-btn {
+/* 会话名称编辑输入框 */
+.session-name-input {
+  flex: 1;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  outline: none;
+  box-shadow: inset var(--shadow-xs);
+  margin-right: var(--spacing-1);
+}
+
+.session-name-input:focus {
+  border-color: var(--accent-primary);
+}
+
+/* 会话操作按钮容器 */
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
   flex-shrink: 0;
+}
+
+.session-item.active .session-actions {
+  opacity: 1; /* 活跃会话始终显示操作按钮 */
+}
+
+/* 重命名和删除按钮的通用样式 */
+.rename-session-btn, .delete-session-btn {
   background: transparent;
   border: none;
   color: var(--text-tertiary);
@@ -277,20 +312,27 @@
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
-  opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.session-item:hover .delete-session-btn {
-  opacity: 1;
+.rename-session-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
 }
 
 .delete-session-btn:hover {
   background: var(--error);
   color: white;
   transform: scale(1.1);
+}
+
+.delete-session-btn:disabled, .rename-session-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--text-tertiary);
 }
 
 /* 折叠状态：图标按钮列表 */

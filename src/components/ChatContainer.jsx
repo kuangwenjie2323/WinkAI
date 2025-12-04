@@ -52,7 +52,9 @@ function ChatContainer() {
   const providerConfig = {
     ...(provider || {}),
     apiKey: mergedApiKey,
-    baseURL: mergedEndpoint
+    baseURL: mergedEndpoint,
+    projectId: provider?.projectId,
+    location: provider?.location
   }
 
   // 计算消息分组

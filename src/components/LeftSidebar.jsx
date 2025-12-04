@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import {
   Plus,
@@ -5,9 +6,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  Image,
-  Video,
-  Code,
+  Pencil,
   Sparkles,
   BookOpen,
   FolderDown,
@@ -26,17 +25,27 @@ function LeftSidebar() {
     setCurrentSession,
     createSession,
     deleteSession,
+    updateSessionName, // 新增：用于更新会话名称
     setLeftSidebarOpen,
     setLeftActiveTab
   } = useStore()
 
   const isOpen = uiState.leftSidebarOpen
+  const [editingSessionId, setEditingSessionId] = useState(null)
+  const [editingSessionName, setEditingSessionName] = useState('')
+  const editInputRef = useRef(null)
+
+  useEffect(() => {
+    if (editingSessionId && editInputRef.current) {
+      editInputRef.current.focus()
+    }
+  }, [editingSessionId])
 
   const tabs = [
     { id: 'home', label: '概览', desc: '项目摘要', icon: MessageSquare },
     { id: 'prompts', label: '我的 Prompt', desc: '最近的对话与草稿', icon: BookOpen },
     { id: 'tuned', label: '微调模型', desc: '实验模型列表', icon: Sparkles },
-    { id: 'settings', label: '设置', desc: '偏好与存储', icon: Code }
+    { id: 'settings', label: '设置', desc: '偏好与存储', icon: Library } // 更改设置图标为 Library 以避免冲突
   ]
 
   const tabIds = tabs.map(t => t.id)
@@ -45,6 +54,7 @@ function LeftSidebar() {
   const handleNewChat = () => {
     const newId = createSession('新对话')
     setCurrentSession(newId)
+    setLeftActiveTab('prompts') // 确保切换到对话列表
   }
 
   const handleDeleteSession = (e, sessionId) => {
@@ -55,6 +65,40 @@ function LeftSidebar() {
     }
     if (window.confirm('确定要删除这个对话吗？')) {
       deleteSession(sessionId)
+    }
+  }
+
+  const handleStartRename = (e, session) => {
+    e.stopPropagation()
+    setEditingSessionId(session.id)
+    setEditingSessionName(session.name)
+  }
+
+  const handleRenameChange = (e) => {
+    setEditingSessionName(e.target.value)
+  }
+
+  const handleRenameSave = (sessionId) => {
+    const trimmedName = editingSessionName.trim()
+    if (trimmedName && trimmedName !== sessions.find(s => s.id === sessionId)?.name) {
+      updateSessionName(sessionId, trimmedName)
+    }
+    setEditingSessionId(null)
+    setEditingSessionName('')
+  }
+
+  const handleRenameCancel = () => {
+    setEditingSessionId(null)
+    setEditingSessionName('')
+  }
+
+  const handleKeyDown = (e, sessionId) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleRenameSave(sessionId)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      handleRenameCancel()
     }
   }
 
@@ -85,16 +129,42 @@ function LeftSidebar() {
               onClick={() => setCurrentSession(session.id)}
             >
               <MessageSquare size={16} className="session-icon" />
-              <span className="session-name">{session.name}</span>
-              {sessions.length > 1 && (
-                <button
-                  className="delete-session-btn"
-                  onClick={(e) => handleDeleteSession(e, session.id)}
-                  title="删除对话"
-                >
-                  <Trash2 size={14} />
-                </button>
+              {editingSessionId === session.id ? (
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  value={editingSessionName}
+                  onChange={handleRenameChange}
+                  onBlur={() => handleRenameSave(session.id)}
+                  onKeyDown={(e) => handleKeyDown(e, session.id)}
+                  className="session-name-input"
+                />
+              ) : (
+                <span className="session-name" title={session.name}>
+                  {session.name}
+                </span>
               )}
+              <div className="session-actions">
+                {editingSessionId !== session.id && (
+                  <button
+                    className="rename-session-btn"
+                    onClick={(e) => handleStartRename(e, session)}
+                    title="重命名对话"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {sessions.length > 1 && (
+                  <button
+                    className="delete-session-btn"
+                    onClick={(e) => handleDeleteSession(e, session.id)}
+                    title="删除对话"
+                    disabled={!!editingSessionId}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -12,6 +12,7 @@ class AIService {
       openai: 'https://api.openai.com/v1',
       anthropic: 'https://api.anthropic.com',
       google: 'https://generativelanguage.googleapis.com/v1beta',
+      vertex: 'https://us-central1-aiplatform.googleapis.com/v1beta',
       custom: ''
     }
   }
@@ -101,6 +102,11 @@ class AIService {
 
       case 'google':
         this.clients.google = new GoogleGenerativeAI(resolvedApiKey)
+        break
+
+      case 'vertex':
+        // Vertex 使用 REST，暂不创建 SDK 客户端
+        this.clients.vertex = { baseURL: resolvedBaseURL }
         break
 
       case 'custom':
@@ -652,6 +658,10 @@ class AIService {
         yield* this.streamChatGoogle(messages, model, options)
         break
 
+      case 'vertex':
+        yield* this.streamChatVertex(messages, model, options)
+        break
+
       case 'custom':
         yield* this.streamChatCustom(messages, model, config, options)
         break
@@ -659,6 +669,82 @@ class AIService {
       default:
         throw new Error(`不支持的提供商: ${provider}`)
     }
+  }
+
+  // Google Vertex AI（REST）流式/非流式
+  async *streamChatVertex(messages, model, options = {}) {
+    const apiKey = this.getApiKey('vertex')
+    const baseURL = this.getApiEndpoint('vertex')
+    const projectId = options.projectId || this.defaultProjectId || ''
+    const location = options.location || 'us-central1'
+    if (!apiKey) throw new Error('Vertex API Key 未配置')
+    if (!projectId) throw new Error('Vertex 项目ID未配置')
+
+    const temperature = options.temperature || 0.7
+    const maxOutputTokens = options.maxTokens || 2048
+    const lastMessage = messages[messages.length - 1]
+    const prompt = lastMessage?.content || ''
+    const history = messages.slice(0, -1).map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }))
+
+    // 拼接 endpoint
+    const modelPath = `projects/${projectId}/locations/${location}/${model}`
+    const url = `${baseURL}/${modelPath}:streamGenerateContent?alt=sse&key=${apiKey}`
+
+    const body = {
+      contents: [
+        ...history,
+        { role: 'user', parts: [{ text: prompt }] }
+      ],
+      generationConfig: {
+        temperature,
+        maxOutputTokens
+      }
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    if (!response.ok || !response.body) {
+      const errText = await response.text()
+      throw new Error(`Vertex 请求失败: ${response.status} ${errText}`)
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const parts = buffer.split('\n')
+      buffer = parts.pop() || ''
+      for (const line of parts) {
+        const trimmed = line.replace(/^data:\s*/, '').trim()
+        if (!trimmed) continue
+        if (trimmed === '[DONE]') {
+          yield { type: 'done', reason: 'stop' }
+          return
+        }
+        try {
+          const json = JSON.parse(trimmed)
+          const text = json?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || ''
+          if (text) {
+            yield { type: 'content', content: text }
+          }
+        } catch (e) {
+          console.warn('Vertex SSE parse error', e)
+        }
+      }
+    }
+
+    yield { type: 'done', reason: 'stop' }
   }
 
   // 非流式聊天（兼容接口）

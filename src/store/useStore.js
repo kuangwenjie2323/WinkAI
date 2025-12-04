@@ -52,6 +52,20 @@ export const useStore = create(
           supportsVision: true,
           supportsStreaming: true
         },
+        vertex: {
+          name: 'Google Vertex',
+          apiKey: '',
+          baseURL: 'https://us-central1-aiplatform.googleapis.com/v1beta',
+          models: [
+            'publishers/google/models/gemini-1.5-flash-001',
+            'publishers/google/models/gemini-1.5-pro-001'
+          ],
+          defaultModel: 'publishers/google/models/gemini-1.5-flash-001',
+          projectId: '',
+          location: 'us-central1',
+          supportsVision: true,
+          supportsStreaming: true
+        },
         custom: {
           name: '自定义 API',
           apiKey: '',
@@ -249,6 +263,14 @@ export const useStore = create(
         sessions: state.sessions.map(session =>
           session.id === sessionId
             ? { ...session, messages: [], updatedAt: Date.now() }
+            : session
+        )
+      })),
+
+      updateSessionName: (sessionId, newName) => set((state) => ({
+        sessions: state.sessions.map(session =>
+          session.id === sessionId
+            ? { ...session, name: newName, updatedAt: Date.now() }
             : session
         )
       })),
