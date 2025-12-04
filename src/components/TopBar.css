@@ -219,6 +219,28 @@
   display: none;
 }
 
+/* 配置菜单遮罩层 - 移动端使用 */
+.config-overlay {
+  display: none;
+}
+
+/* 配置菜单动画 */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .topbar {
@@ -255,24 +277,101 @@
     height: 16px;
   }
 
-  /* 配置下拉框移动端适配 */
+  /* 配置下拉框移动端适配 - Google AI Studio 风格 */
   .config-trigger {
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: var(--font-xs);
+    gap: var(--spacing-1);
+  }
+
+  .config-trigger svg {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
   }
 
   .config-summary {
-    max-width: 100px;
+    max-width: 120px;
   }
 
   .config-mode {
     display: none;
   }
 
+  /* 移动端遮罩层 */
+  .config-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* 移动端底部弹出菜单 - Bottom Sheet 风格 */
   .config-menu {
-    min-width: 260px;
+    position: fixed;
     left: 0;
-    right: auto;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    min-width: unset;
+    max-height: 70vh;
+    overflow-y: auto;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    padding: var(--spacing-4);
+    gap: var(--spacing-3);
+    z-index: 200;
+    animation: slideUp 0.25s ease;
+  }
+
+  /* 底部弹出菜单拖拽指示器 */
+  .config-menu::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border-primary);
+    border-radius: var(--radius-full);
+    margin: 0 auto var(--spacing-3);
+  }
+
+  .config-row {
+    gap: var(--spacing-2);
+  }
+
+  .config-row label {
+    font-size: var(--font-sm);
+    font-weight: 500;
+  }
+
+  .config-row select {
+    padding: var(--spacing-3);
+    font-size: var(--font-base);
+    min-height: 44px;
+  }
+
+  .toggle-list {
+    gap: var(--spacing-3);
+  }
+
+  .mini-toggle {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-sm);
+    min-height: 36px;
+  }
+
+  .mode-switch {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mode-pill {
+    flex: 1;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-sm);
+    text-align: center;
+    min-height: 36px;
   }
 }
 
@@ -300,33 +399,37 @@
     display: none;
   }
 
-  /* 配置下拉框超小屏幕适配 */
+  /* 配置触发器超小屏幕适配 */
   .config-trigger {
-    padding: 4px 6px;
+    padding: 4px 8px;
   }
 
   .config-summary {
-    max-width: 70px;
+    max-width: 90px;
     font-size: 11px;
   }
 
+  /* 底部菜单保持较大触控区域 */
   .config-menu {
-    min-width: 240px;
-    padding: var(--spacing-2);
+    padding: var(--spacing-3);
+    max-height: 75vh;
   }
 
   .config-row select {
-    padding: var(--spacing-1) var(--spacing-2);
-    font-size: var(--font-xs);
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-sm);
+    min-height: 40px;
   }
 
   .mini-toggle {
-    padding: 2px 6px;
-    font-size: 10px;
+    padding: var(--spacing-2);
+    font-size: var(--font-xs);
+    min-height: 32px;
   }
 
   .mode-pill {
-    padding: 2px 6px;
-    font-size: 10px;
+    padding: var(--spacing-2);
+    font-size: var(--font-xs);
+    min-height: 32px;
   }
 }

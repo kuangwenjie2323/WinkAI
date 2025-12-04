@@ -110,6 +110,8 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
             </span>
             <ChevronDown size={12} className={configOpen ? 'rotated' : ''} />
           </button>
+          {/* 移动端遮罩层 */}
+          {configOpen && <div className="config-overlay" onClick={() => setConfigOpen(false)} />}
           {configOpen && (
             <div className="config-menu">
               <div className="config-row">
