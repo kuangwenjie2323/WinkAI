@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
-import { Copy, Check, Edit2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Copy, Check, Edit2, RefreshCw, ChevronDown, ChevronUp, Code, Download, Eye } from 'lucide-react'
 import 'highlight.js/styles/github-dark.css'
 import './MessageRenderer.css'
 
@@ -207,12 +207,54 @@ function MessageRenderer({
                   code({ node, inline, className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '')
                     const codeString = String(children).replace(/\n$/, '')
+                    const language = match ? match[1] : 'code'
+
+                    // 下载代码文件
+                    const handleDownload = () => {
+                      const ext = language === 'javascript' ? 'js' :
+                                  language === 'typescript' ? 'ts' :
+                                  language === 'python' ? 'py' :
+                                  language === 'html' ? 'html' :
+                                  language === 'css' ? 'css' :
+                                  language === 'json' ? 'json' :
+                                  language === 'markdown' ? 'md' :
+                                  language === 'java' ? 'java' :
+                                  language === 'go' ? 'go' :
+                                  language === 'rust' ? 'rs' :
+                                  language === 'ruby' ? 'rb' :
+                                  language === 'php' ? 'php' :
+                                  language === 'swift' ? 'swift' :
+                                  language === 'kotlin' ? 'kt' :
+                                  language === 'shell' || language === 'bash' ? 'sh' :
+                                  'txt'
+                      const blob = new Blob([codeString], { type: 'text/plain' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `code-${Date.now()}.${ext}`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    }
 
                     return !inline ? (
                       <div className="code-block">
                         <div className="code-header">
-                          <span className="code-language">{match ? match[1] : 'code'}</span>
-                          <CopyButton text={codeString} />
+                          <div className="code-language-wrapper">
+                            <Code size={14} className="code-icon" />
+                            <span className="code-language">{language}</span>
+                          </div>
+                          <div className="code-actions">
+                            <button
+                              className="code-action-btn"
+                              onClick={handleDownload}
+                              title="下载代码"
+                            >
+                              <Download size={14} />
+                            </button>
+                            <CopyButton text={codeString} />
+                          </div>
                         </div>
                         <pre className={className}>
                           <code className={className} {...props}>

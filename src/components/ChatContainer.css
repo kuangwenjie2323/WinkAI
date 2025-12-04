@@ -296,11 +296,12 @@
 
 /* 输入区域 */
 .input-area-new {
-  background: transparent;
-  padding: 0;
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0.9) 100%);
+  padding: var(--spacing-3) var(--spacing-4) var(--spacing-4);
   flex-shrink: 0;
   min-height: 80px;
-  position: relative;
   z-index: 10;
 }
 
@@ -359,8 +360,9 @@
   }
 
   .input-area-new {
-    padding: 0;
+    padding: var(--spacing-2) var(--spacing-1) calc(var(--spacing-3) + env(safe-area-inset-bottom, 0px));
     min-height: 70px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.75) 40%, rgba(0, 0, 0, 0.95) 100%);
   }
 }
 
@@ -389,5 +391,7 @@
 
   .input-area-new {
     min-height: 60px;
+    padding: var(--spacing-2) var(--spacing-1) calc(var(--spacing-3) + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 35%, rgba(0, 0, 0, 0.98) 100%);
   }
 }

@@ -446,13 +446,13 @@
   border: 1px solid var(--border-primary);
 }
 
-/* 代码块 */
+/* 代码块 - Google AI Studio 风格 */
 .code-block {
   margin: var(--spacing-3) 0;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #0d1117;
-  border: 1px solid var(--border-primary);
+  background: #1e1f20;
+  border: 1px solid #444746;
 }
 
 .code-header {
@@ -460,29 +460,65 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-2) var(--spacing-3);
-  background: #161b22;
-  border-bottom: 1px solid var(--border-primary);
+  background: #2d2e2f;
+  border-bottom: 1px solid #444746;
+}
+
+.code-language-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.code-icon {
+  color: #9aa0a6;
+  opacity: 0.8;
 }
 
 .code-language {
   font-size: var(--font-xs);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  text-transform: capitalize;
+  color: #e3e3e3;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.code-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.code-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #9aa0a6;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.code-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e3e3e3;
 }
 
 .code-block pre {
   margin: 0;
   padding: var(--spacing-3);
   overflow-x: auto;
-  background: #0d1117;
+  background: #1e1f20;
 }
 
 .code-block code {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 0.875rem;
   line-height: 1.6;
+  color: #e3e3e3;
 }
 
 /* Markdown 图片 */
@@ -621,6 +657,24 @@
 
   .code-header {
     padding: var(--spacing-1) var(--spacing-2);
+  }
+
+  .code-language {
+    font-size: 10px;
+  }
+
+  .code-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .code-action-btn {
+    padding: 2px;
+  }
+
+  .code-action-btn svg {
+    width: 12px;
+    height: 12px;
   }
 
   .action-btn {
