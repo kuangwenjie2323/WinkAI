@@ -251,33 +251,15 @@ function ChatContainer() {
       {/* 消息区域 */}
       <div className="messages-area-new">
         {!session?.messages?.length ? (
-          <div className="ai-studio-wireframe">
-            <div className="wire-row">
-              <div className="wire-card">
-                <div className="wire-header">
-                  <span className="wire-label">System Instructions (Optional)</span>
-                  <button className="link-btn">Edit</button>
-                </div>
-                <p className="wire-body">You are a helpful coder that writes concise, well-documented code samples.</p>
-              </div>
-            </div>
-
-            <div className="wire-row two-col">
-              <div className="wire-card user">
-                <div className="wire-header">
-                  <span className="wire-label">User</span>
-                </div>
-                <p className="wire-body">Write a Python function that returns "Hello, world!".</p>
-              </div>
-              <div className="wire-card model">
-                <div className="wire-header">
-                  <span className="wire-label">Model Output</span>
-                </div>
-                <pre className="wire-code">
-{`def hello_world():
-    return "Hello, world!"`}
-                </pre>
-              </div>
+          <div className="welcome-screen">
+            <div className="welcome-icon">✨</div>
+            <h2>开始新对话</h2>
+            <p>在下方输入框中输入消息开始与 AI 对话</p>
+            <div className="feature-list">
+              <div className="feature-item">💬 多模型对话</div>
+              <div className="feature-item">🖼️ 图片生成</div>
+              <div className="feature-item">📷 图片理解</div>
+              <div className="feature-item">🎬 视频生成</div>
             </div>
           </div>
         ) : (
