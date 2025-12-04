@@ -56,7 +56,8 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-primary);
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
 }
 
 /* 遮罩层 */

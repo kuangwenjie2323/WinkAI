@@ -297,6 +297,10 @@
 .input-area-new {
   background: transparent;
   padding: 0;
+  flex-shrink: 0;
+  min-height: 80px;
+  position: relative;
+  z-index: 10;
 }
 
 /* 响应式设计 */
@@ -347,6 +351,7 @@
 
   .input-area-new {
     padding: 0;
+    min-height: 70px;
   }
 }
 
@@ -371,5 +376,9 @@
   .setup-btn {
     font-size: 0.875rem;
     padding: var(--spacing-2) var(--spacing-4);
+  }
+
+  .input-area-new {
+    min-height: 60px;
   }
 }

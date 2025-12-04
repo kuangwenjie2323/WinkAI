@@ -219,7 +219,7 @@
 }
 
 /* 上传按钮 - 在输入框内左侧 */
-.upload-btn.icon {
+.upload-btn {
   flex-shrink: 0;
   width: 32px;
   height: 32px;
@@ -234,12 +234,12 @@
   transition: all var(--transition-fast);
 }
 
-.upload-btn.icon:hover:not(:disabled) {
+.upload-btn:hover:not(:disabled) {
   background: var(--bg-hover);
   color: var(--accent-primary);
 }
 
-.upload-btn.icon:disabled {
+.upload-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -344,7 +344,7 @@
     padding-left: var(--spacing-1);
   }
 
-  .upload-btn.icon {
+  .upload-btn {
     width: 28px;
     height: 28px;
   }
@@ -383,7 +383,7 @@
     border-radius: 20px;
   }
 
-  .upload-btn.icon {
+  .upload-btn {
     width: 24px;
     height: 24px;
   }
