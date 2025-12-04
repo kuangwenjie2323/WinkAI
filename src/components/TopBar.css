@@ -225,9 +225,9 @@
 }
 
 /* 配置菜单动画 */
-@keyframes slideUp {
+@keyframes slideDown {
   from {
-    transform: translateY(100%);
+    transform: translateY(-10px);
     opacity: 0;
   }
   to {
@@ -307,33 +307,27 @@
     animation: fadeIn 0.2s ease;
   }
 
-  /* 移动端底部弹出菜单 - Bottom Sheet 风格 */
+  /* 移动端下拉菜单 - 从顶部下拉 */
   .config-menu {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    width: 100%;
+    left: var(--spacing-3);
+    right: var(--spacing-3);
+    top: 56px;
+    bottom: auto;
+    width: auto;
     min-width: unset;
     max-height: 70vh;
     overflow-y: auto;
-    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    border-radius: var(--radius-xl);
     padding: var(--spacing-4);
     gap: var(--spacing-3);
     z-index: 200;
-    animation: slideUp 0.25s ease;
+    animation: slideDown 0.2s ease;
   }
 
-  /* 底部弹出菜单拖拽指示器 */
+  /* 移除拖拽指示器 */
   .config-menu::before {
-    content: '';
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: var(--border-primary);
-    border-radius: var(--radius-full);
-    margin: 0 auto var(--spacing-3);
+    display: none;
   }
 
   .config-row {
@@ -409,8 +403,11 @@
     font-size: 11px;
   }
 
-  /* 底部菜单保持较大触控区域 */
+  /* 下拉菜单适配小屏幕 */
   .config-menu {
+    left: var(--spacing-2);
+    right: var(--spacing-2);
+    top: 52px;
     padding: var(--spacing-3);
     max-height: 75vh;
   }
