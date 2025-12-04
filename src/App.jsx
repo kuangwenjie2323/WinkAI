@@ -6,6 +6,7 @@ import TopBar from './components/TopBar'
 import ChatContainer from './components/ChatContainer'
 import RightPanel from './components/RightPanel'
 import SettingsPanel from './components/SettingsPanel'
+import ErrorBoundary from './components/ErrorBoundary' // 导入 ErrorBoundary
 import './App.css'
 
 function App() {
@@ -82,8 +83,10 @@ function App() {
           onThemeToggle={toggleTheme}
           onSettingsOpen={() => setSettingsOpen(true)}
         />
-
-        <ChatContainer />
+        {/* 使用 ErrorBoundary 包裹 ChatContainer */}
+        <ErrorBoundary>
+          <ChatContainer />
+        </ErrorBoundary>
       </div>
 
       {/* 右侧控制面板 */}

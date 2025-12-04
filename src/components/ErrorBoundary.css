@@ -1,0 +1,56 @@
+.error-boundary-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  background-color: var(--background-color-dark);
+  color: var(--text-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-medium);
+}
+
+.error-boundary-fallback h2 {
+  font-size: 2em;
+  color: var(--accent-color);
+  margin-bottom: 10px;
+}
+
+.error-boundary-fallback p {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  max-width: 600px;
+}
+
+.error-boundary-fallback details {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--background-color-light);
+  color: var(--text-color-secondary);
+  text-align: left;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.9em;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.error-boundary-fallback .refresh-button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.error-boundary-fallback .refresh-button:hover {
+  background-color: var(--accent-color-hover);
+}
