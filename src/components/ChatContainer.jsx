@@ -4,7 +4,7 @@ import aiService from '../services/aiService'
 import { MessageRenderer, MessageGroup } from './MessageRenderer'
 import MultiModalInput from './MultiModalInput'
 import SettingsPanel from './SettingsPanel'
-import { Settings } from 'lucide-react'
+import { Settings, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import './ChatContainer.css'
 
 const MESSAGES_PER_GROUP = 25
@@ -18,6 +18,12 @@ function ChatContainer() {
     settings,
     generationMode,
     setGenerationMode,
+    providers,
+    dynamicModels,
+    customModels,
+    setCurrentProvider,
+    setCurrentModel,
+    updateSettings,
     addMessage,
     updateMessage,
     deleteMessagesAfter
@@ -25,12 +31,25 @@ function ChatContainer() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [configOpen, setConfigOpen] = useState(false)
   const [editingMessageId, setEditingMessageId] = useState(null)
   const [editContent, setEditContent] = useState('')
   const [expandedGroups, setExpandedGroups] = useState({})
   const messagesEndRef = useRef(null)
+  const configRef = useRef(null)
   const session = getCurrentSession()
   const provider = getCurrentProvider()
+  const mergedModels = useMemo(() => {
+    const defaults = providers?.[currentProvider]?.models || []
+    const dynamic = dynamicModels?.[currentProvider] || []
+    const custom = customModels?.[currentProvider] || []
+    const all = [
+      ...defaults.map(id => ({ id, name: id })),
+      ...dynamic,
+      ...custom
+    ]
+    return Array.from(new Map(all.map(m => [m.id, m])).values())
+  }, [providers, dynamicModels, customModels, currentProvider])
   const mergedApiKey = aiService.getApiKey(currentProvider)
   const mergedEndpoint = aiService.getApiEndpoint(currentProvider)
   const providerConfig = {
@@ -55,6 +74,21 @@ function ChatContainer() {
   useEffect(() => {
     scrollToBottom()
   }, [session?.messages])
+
+  // 点击外部关闭配置菜单
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (configRef.current && !configRef.current.contains(event.target)) {
+        setConfigOpen(false)
+      }
+    }
+    if (configOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [configOpen])
 
   // 切换分组展开状态
   const toggleGroupExpanded = (groupIndex) => {
@@ -255,6 +289,85 @@ function ChatContainer() {
           <h2 className="canvas-title">Gemini 调试面板</h2>
           <p className="canvas-subtitle">Google AI Studio 风格的多模态对话体验</p>
         </div>
+        <div className="canvas-config" ref={configRef}>
+          <button className="config-trigger" onClick={() => setConfigOpen(!configOpen)}>
+            <SlidersHorizontal size={16} />
+            <span className="config-summary">
+              {provider?.name} · {currentModel || provider?.defaultModel}
+            </span>
+            <span className="config-mode">
+              {generationMode === 'chat' ? '对话' : generationMode === 'image' ? '图片' : '视频'}
+            </span>
+            <ChevronDown size={14} className={configOpen ? 'rotated' : ''} />
+          </button>
+          {configOpen && (
+            <div className="config-menu">
+              <div className="config-row">
+                <label>提供商</label>
+                <select
+                  value={currentProvider}
+                  onChange={(e) => setCurrentProvider(e.target.value)}
+                >
+                  {Object.entries(providers || {}).map(([key, cfg]) => (
+                    <option key={key} value={key}>{cfg.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="config-row">
+                <label>模型</label>
+                <select
+                  value={currentModel || provider?.defaultModel || ''}
+                  onChange={(e) => setCurrentModel(e.target.value)}
+                >
+                  {mergedModels.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="config-row">
+                <label>模式</label>
+                <div className="mode-switch">
+                  {[
+                    { id: 'chat', label: '对话' },
+                    { id: 'image', label: '图片' },
+                    { id: 'video', label: '视频' }
+                  ].map(mode => (
+                    <button
+                      key={mode.id}
+                      className={`mode-pill ${generationMode === mode.id ? 'active' : ''}`}
+                      onClick={() => setGenerationMode(mode.id)}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="config-row toggles">
+                <label>功能</label>
+                <div className="toggle-list">
+                  <button
+                    className={`mini-toggle ${settings.streamingEnabled ? 'on' : ''}`}
+                    onClick={() => updateSettings({ streamingEnabled: !settings.streamingEnabled })}
+                  >
+                    流式输出
+                  </button>
+                  <button
+                    className={`mini-toggle ${settings.enableThinking ? 'on' : ''}`}
+                    onClick={() => updateSettings({ enableThinking: !settings.enableThinking })}
+                  >
+                    思考模式
+                  </button>
+                  <button
+                    className={`mini-toggle ${settings.enableSearch ? 'on' : ''}`}
+                    onClick={() => updateSettings({ enableSearch: !settings.enableSearch })}
+                  >
+                    搜索
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 消息区域 */}
@@ -339,39 +452,9 @@ function ChatContainer() {
         )}
       </div>
 
-      {/* 控制与输入区域 */}
-      <div className="composer-sticky">
-        <div className="composer-controls">
-          <div className="canvas-chips">
-            <span className="canvas-chip">
-              提供商 · {provider?.name}
-            </span>
-            <span className="canvas-chip">
-              模型 · {currentModel || provider?.defaultModel}
-            </span>
-            <span className={`canvas-chip ${settings.streamingEnabled ? 'chip-on' : 'chip-off'}`}>
-              流式 {settings.streamingEnabled ? '开启' : '关闭'}
-            </span>
-          </div>
-          <div className="mode-switch">
-            {[
-              { id: 'chat', label: '对话' },
-              { id: 'image', label: '图片' },
-              { id: 'video', label: '视频' }
-            ].map(mode => (
-              <button
-                key={mode.id}
-                className={`mode-pill ${generationMode === mode.id ? 'active' : ''}`}
-                onClick={() => setGenerationMode(mode.id)}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="input-area-new">
-          <MultiModalInput onSend={handleSend} disabled={isLoading} mode={generationMode} />
-        </div>
+      {/* 输入区域 */}
+      <div className="input-area-new">
+        <MultiModalInput onSend={handleSend} disabled={isLoading} mode={generationMode} />
       </div>
 
       {/* 设置面板 */}
