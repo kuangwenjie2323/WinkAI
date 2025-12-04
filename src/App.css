@@ -56,8 +56,8 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-primary);
-  height: 100vh;
-  max-height: 100vh;
+  /* 移除固定高度，使用flex布局自动计算 */
+  min-height: 0;
   /* 允许fixed定位的子元素(如TopBar下拉菜单)超出边界显示 */
   position: relative;
 }

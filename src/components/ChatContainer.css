@@ -2,10 +2,11 @@
 .chat-container-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* 移除 height: 100%，使用 flex: 1 和 min-height: 0 来正确填充剩余空间 */
+  min-height: 0;
   background: radial-gradient(circle at 20% 20%, rgba(168, 199, 250, 0.14), transparent 35%), radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.06), transparent 40%), var(--bg-primary);
   padding: var(--spacing-4);
-  overflow: visible;
+  overflow: hidden;
   flex: 1;
   gap: var(--spacing-4);
 }
