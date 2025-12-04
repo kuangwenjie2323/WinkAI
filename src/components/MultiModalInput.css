@@ -271,38 +271,48 @@
   color: var(--text-tertiary);
 }
 
-/* 发送按钮 - 在输入框内右侧 */
-.send-btn {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--accent-primary);
-  color: #131314;
-  display: flex;
+/* Run 按钮 - 在输入框内右侧 */
+.run-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: var(--font-sm);
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   margin-left: var(--spacing-2);
 }
 
-.send-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: scale(1.05);
-  box-shadow: var(--shadow-md);
+.run-btn .shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+  font-weight: 500;
 }
 
-.send-btn:active:not(:disabled) {
-  transform: scale(0.95);
+.run-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
-.send-btn:disabled {
+.run-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.run-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  transform: scale(1);
   background: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+  transform: none;
 }
 
 /* 响应式 */
@@ -339,15 +349,21 @@
     height: 28px;
   }
 
-  .send-btn {
-    width: 36px;
-    height: 36px;
-  }
-
   .message-textarea {
     font-size: var(--font-sm);
     min-height: 32px;
     padding: 6px 8px;
+  }
+
+  .run-btn {
+    padding: 8px 12px;
+    font-size: var(--font-sm);
+    min-height: 36px;
+    gap: 6px;
+  }
+
+  .run-btn .shortcut {
+    display: none;
   }
 }
 
@@ -372,12 +388,6 @@
     height: 24px;
   }
 
-  .send-btn {
-    width: 32px;
-    height: 32px;
-    margin-left: var(--spacing-1);
-  }
-
   .message-textarea {
     font-size: 14px;
     min-height: 28px;
@@ -388,5 +398,11 @@
     width: 28px;
     height: 28px;
     border-radius: 8px;
+  }
+
+  .run-btn {
+    padding: 8px 10px;
+    min-height: 34px;
+    gap: 4px;
   }
 }

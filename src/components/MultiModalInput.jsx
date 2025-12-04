@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, Send, X, Image as ImageIcon, Save, Plus } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, Save, Plus, Play } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import './MultiModalInput.css'
 
@@ -211,15 +211,17 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
           rows={1}
         />
 
-        {/* 发送按钮 */}
+        {/* Run 按钮 - Google AI Studio 风格 */}
         <button
-          className="send-btn"
+          className="run-btn"
           onClick={handleSend}
           disabled={sendDisabled}
           type="button"
-          title="发送消息"
+          title="运行 (Enter)"
         >
-          <Send size={20} />
+          <Play size={16} />
+          <span>Run</span>
+          <span className="shortcut">⏎</span>
         </button>
       </div>
     </div>
