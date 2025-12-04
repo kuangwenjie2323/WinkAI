@@ -9,7 +9,7 @@
   justify-content: space-between;
   gap: var(--spacing-3);
   position: relative;
-  z-index: 50;
+  z-index: 200; /* 提高层级，确保在移动端浮动元素之上 */
   flex-shrink: 0;
 }
 

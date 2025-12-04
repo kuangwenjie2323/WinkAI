@@ -3,7 +3,7 @@
 ## 📊 项目概览
 
 **状态**: ✅ 核心功能完备 (Production Ready Core)
-**版本**: v1.0.0
+**版本**: v1.1.0
 **最后更新**: 2025-12-04
 
 WinkAI 目前已完成所有核心功能的开发，具备完整的现代 AI 聊天应用能力。项目已实现了多模型集成、多模态输入、实时流式响应以及完善的 Markdown/代码渲染。
@@ -14,6 +14,7 @@ WinkAI 目前已完成所有核心功能的开发，具备完整的现代 AI 聊
 - **多提供商支持**: 完整集成了 OpenAI, Anthropic (Claude), Google (Gemini) 以及自定义 OpenAI 兼容接口。
 - **连接测试**: 实时的 API 连接测试功能，支持响应时间检测和模型列表获取。
 - **自定义配置**: 支持为每个提供商独立配置 API Base URL、代理地址和模型列表。
+- **单元测试**: `aiService` 核心逻辑已覆盖自动化测试。
 
 ### 2. 强大的对话体验 (Complete)
 - **实时流式响应**: 实现了类似 ChatGPT 的打字机效果，流畅自然。
@@ -29,35 +30,37 @@ WinkAI 目前已完成所有核心功能的开发，具备完整的现代 AI 聊
 - **设置面板**: 完整的设置界面，支持调整 Temperature, Max Tokens, 流式开关等。
 - **响应式布局**: 完美适配桌面端和移动端。
 - **暗色模式**: 默认深色主题，保护视力。
+- **会话管理**: 
+  - 支持新建、切换、删除会话。
+  - **[New]** 支持重命名会话（双击或点击编辑图标）。
+- **交互反馈**:
+  - **[New]** 全局 Toast 通知 (react-hot-toast)，优雅展示错误和成功信息。
+  - **[New]** 错误边界 (Error Boundaries)，防止渲染错误导致应用崩溃。
 
 ### 4. 数据与状态管理 (Complete)
 - **本地持久化**: 使用 Zustand + LocalStorage 实现配置、API Key 和对话历史的自动保存。
 - **隐私安全**: 所有 API Key 仅存储在用户浏览器本地，不经由任何中间服务器。
+- **自动化测试**: `useStore` 状态管理逻辑已覆盖 100% 单元测试。
 
 ## 📦 技术架构
 
 - **核心框架**: React 19 + Vite 7
 - **状态管理**: Zustand (带持久化中间件)
-- **UI 组件**: Lucide React Icons
+- **UI 组件**: Lucide React Icons, React Hot Toast
 - **Markdown**: react-markdown + remark-gfm + rehype-highlight
 - **网络层**: Axios (流式请求封装)
+- **测试框架**: Vitest + React Testing Library
 
 ## 🚧 待优化与未来规划
 
-虽然核心功能已完备，但为了提升产品级的稳健性，仍有以下改进空间：
-
-### 1. 用户体验增强 (High Priority)
-- [ ] **全局错误提示**: 集成 Toast 组件 (如 `react-hot-toast`)，优雅地展示 API 错误、网络超时等信息。
-- [ ] **加载状态优化**: 在模型切换或初始加载时增加骨架屏 (Skeleton) 或更明显的加载动画。
-
-### 2. 工程化与健壮性 (High Priority)
-- [ ] **错误边界 (Error Boundaries)**: 防止单条消息渲染错误导致整个应用崩溃。
-- [ ] **单元测试**: 为 `aiService.js` 和 `useStore.js` 添加 Vitest 测试用例。
-
-### 3. 功能扩展 (Medium Priority)
-- [ ] **多会话管理 UI**: 完善侧边栏的会话列表，支持新建、重命名和删除会话 (逻辑已在 Store 中实现)。
+### 1. 功能扩展 (Medium Priority)
 - [ ] **国际化 (i18n)**: 支持中英文界面切换。
 - [ ] **对话导出**: 支持将对话记录导出为 Markdown 或 JSON 文件。
+- [ ] **会话搜索/排序**: 增强侧边栏的会话管理能力。
+
+### 2. 高级特性 (Low Priority)
+- [ ] **语音输入/输出**: 利用浏览器 Web Speech API 实现。
+- [ ] **Prompt 库**: 允许用户保存和复用常用的 Prompt。
 
 ## 📝 开发指南
 
@@ -74,4 +77,9 @@ VITE_GOOGLE_API_KEY=AIza...
 ```bash
 npm install
 npm run dev
+```
+
+### 运行测试
+```bash
+npm run test
 ```

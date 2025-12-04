@@ -27,7 +27,7 @@
 .app-container {
   display: grid;
   grid-template-columns: 270px 1fr 340px;
-  height: 100vh;
+  height: 100%; /* 使用百分比高度，避免移动端 100vh 问题 */
   width: 100%;
   background: var(--bg-primary);
   overflow: hidden;
@@ -105,7 +105,7 @@
     right: 0;
     top: 0;
     height: 100vh;
-    z-index: 100;
+    z-index: 300; /* 提高层级 */
     box-shadow: var(--shadow-xl);
   }
 
@@ -132,7 +132,7 @@
     left: 0;
     top: 0;
     height: 100vh;
-    z-index: 100;
+    z-index: 300; /* 提高层级，覆盖 TopBar (z-index: 200) */
     box-shadow: var(--shadow-xl);
     width: 280px;
     max-width: 85vw;
@@ -154,7 +154,7 @@
     right: 0;
     top: 0;
     height: 100vh;
-    z-index: 100;
+    z-index: 300; /* 提高层级 */
     box-shadow: var(--shadow-xl);
     max-width: 85vw;
     transform: translateX(100%);
