@@ -240,8 +240,8 @@
 }
 
 .input-wrapper:focus-within {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.1);
+  background: var(--bg-hover); /* 稍微加深背景 */
+  border-color: var(--border-secondary); /* 保持边框颜色不变或微调 */
 }
 
 .input-toolbar {

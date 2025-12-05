@@ -678,7 +678,12 @@ class AIService {
         // 定义优先级权重（越小越靠前）
         const getPriority = (id) => {
           if (id === 'gemini-3-pro-preview') return 0 // 绝对置顶
-          if (id.includes('gemini-3')) return 10
+          
+          // 降级特定类型模型
+          if (id.includes('embedding') || id.includes('robotics') || id.includes('tts')) return 90
+          if (id.includes('image')) return 5 // 图片专用模型排在通用模型之后
+
+          if (id.includes('gemini-3')) return 10 // 其他 Gemini 3 文本模型
           
           if (id.includes('gemini-2.5-pro')) return 20
           if (id.includes('gemini-2.5-flash')) return 21
@@ -692,7 +697,7 @@ class AIService {
           if (id.includes('gemini-1.0-pro')) return 50
           if (id.includes('imagen')) return 60
           
-          return 100 // 其他
+          return 80 // 其他普通模型
         }
         
         const priorityA = getPriority(a.id)
