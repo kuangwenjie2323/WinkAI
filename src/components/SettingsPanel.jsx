@@ -34,6 +34,7 @@ function SettingsPanel({ isOpen, onClose }) {
     openai: import.meta.env.VITE_OPENAI_API_KEY,
     anthropic: import.meta.env.VITE_ANTHROPIC_API_KEY,
     google: import.meta.env.VITE_GOOGLE_API_KEY,
+    vertex: import.meta.env.VITE_VERTEX_API_KEY,
     custom: import.meta.env.VITE_CUSTOM_API_KEY
   }
 
@@ -322,8 +323,11 @@ function SettingsPanel({ isOpen, onClose }) {
                   }
                   min="100"
                   max="32000"
-                  step="100"
+                  step="1000"
                 />
+                <p className="form-hint">
+                  {t('settings.max_tokens_hint') || 'Limit the length of each response (Default: 8192)'}
+                </p>
               </div>
 
               <h3 className="section-title">功能开关</h3>

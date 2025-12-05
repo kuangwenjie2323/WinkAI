@@ -77,7 +77,7 @@
     "model_label": "Model",
     "model_placeholder": "Select a model",
     "temp_label": "Temperature",
-    "max_tokens_label": "Max Tokens",
+    "max_tokens_label": "Max Output Tokens",
     "stream_label": "Enable Streaming",
     "thinking_label": "Show Thinking Process",
     "search_label": "Enable Search",

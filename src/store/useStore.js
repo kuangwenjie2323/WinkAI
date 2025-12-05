@@ -99,7 +99,7 @@ export const useStore = create(
       settings: {
         theme: 'dark',
         temperature: 0.7,
-        maxTokens: 128000,
+        maxTokens: 8192,
         enableSearch: true,
         enableThinking: true,
         streamingEnabled: true,
