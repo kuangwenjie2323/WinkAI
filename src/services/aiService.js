@@ -674,6 +674,27 @@ class AIService {
           name: modelId
         }
       })
+      .sort((a, b) => {
+        // 定义优先级权重（越小越靠前）
+        const getPriority = (id) => {
+          if (id.includes('gemini-2.0-flash-exp')) return 0 // 最新实验版
+          if (id.includes('gemini-1.5-pro')) return 1
+          if (id.includes('gemini-1.5-flash')) return 2
+          if (id.includes('gemini-1.0-pro')) return 3
+          if (id.includes('imagen')) return 4
+          return 10 // 其他
+        }
+        
+        const priorityA = getPriority(a.id)
+        const priorityB = getPriority(b.id)
+        
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB
+        }
+        
+        // 同优先级按字母倒序（通常意味着版本更新）
+        return b.id.localeCompare(a.id)
+      })
 
     return {
       models,

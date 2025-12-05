@@ -202,11 +202,22 @@ export const useStore = create(
 
       setCurrentProvider: (provider) => {
         const state = get()
-        const defaultModel = state.providers[provider]?.defaultModel || ''
-        set({ currentProvider: provider, currentModel: defaultModel })
+        const providerConfig = state.providers[provider]
+        // 优先使用上次使用的模型，否则使用默认模型
+        const targetModel = providerConfig?.lastUsedModel || providerConfig?.defaultModel || ''
+        set({ currentProvider: provider, currentModel: targetModel })
       },
 
-      setCurrentModel: (model) => set({ currentModel: model }),
+      setCurrentModel: (model) => set((state) => ({
+        currentModel: model,
+        providers: {
+          ...state.providers,
+          [state.currentProvider]: {
+            ...state.providers[state.currentProvider],
+            lastUsedModel: model
+          }
+        }
+      })),
       setGenerationMode: (mode) => set({ generationMode: mode }),
 
       addMessage: (sessionId, message) => set((state) => ({
