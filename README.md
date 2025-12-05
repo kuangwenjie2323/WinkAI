@@ -305,6 +305,6 @@ MIT License
 
 **当前版本**: v1.0.0
 **最后更新**: 2025-12-01
-**开发者**: Your Name
+**开发者**: Gemini、Claude、chatgpt、karewink联合开发
 
 如有问题或建议，请提交 Issue 或联系开发者。
