@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, Plus, Play, ChevronDown, Cpu, ImageIcon } from 'lucide-react'
+import { Upload, X, Plus, Play, ImageIcon } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import './MultiModalInput.css'
 
@@ -16,55 +16,12 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
   const { t } = useTranslation()
   const [text, setText] = useState('')
   const [images, setImages] = useState([])
-  const [modelMenuOpen, setModelMenuOpen] = useState(false)
   const textareaRef = useRef(null)
-  const modelMenuRef = useRef(null)
 
-  const {
-    addToImageLibrary,
-    currentProvider,
-    currentModel,
-    providers,
-    dynamicModels,
-    customModels,
-    setCurrentModel
-  } = useStore()
-
-  // 合并模型列表
-  const mergedModels = useMemo(() => {
-    const defaults = providers?.[currentProvider]?.models || []
-    const dynamic = dynamicModels?.[currentProvider] || []
-    const custom = customModels?.[currentProvider] || []
-    const all = [
-      ...defaults.map(id => ({ id, name: id })),
-      ...dynamic,
-      ...custom
-    ]
-    return Array.from(new Map(all.map(m => [m.id, m])).values())
-  }, [providers, dynamicModels, customModels, currentProvider])
-
-  const provider = providers?.[currentProvider]
-  const displayModel = currentModel || provider?.defaultModel || ''
-  // 截断显示的模型名称
-  const shortModelName = displayModel.length > 16 ? displayModel.slice(0, 14) + '...' : displayModel
+  const { addToImageLibrary } = useStore()
 
   const trimmedText = text.trim()
   const sendDisabled = disabled || (!trimmedText && images.length === 0)
-
-  // 点击外部关闭模型菜单
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (modelMenuRef.current && !modelMenuRef.current.contains(e.target)) {
-        setModelMenuOpen(false)
-      }
-    }
-    if (modelMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [modelMenuOpen])
 
   // 处理图片上传
   const onDrop = useCallback((acceptedFiles) => {
@@ -179,12 +136,6 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
     input.click()
   }
 
-  // 选择模型
-  const handleSelectModel = (modelId) => {
-    setCurrentModel(modelId)
-    setModelMenuOpen(false)
-  }
-
   return (
     <div className="multimodal-input-container" {...dropzoneRootProps}>
       <input {...getInputProps()} style={{ display: 'none' }} />
@@ -223,33 +174,6 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
 
       {/* 输入区域 */}
       <div className="input-wrapper">
-        {/* 模型选择按钮 */}
-        <div className="model-selector" ref={modelMenuRef}>
-          <button
-            className="model-trigger"
-            onClick={() => setModelMenuOpen(!modelMenuOpen)}
-            type="button"
-            title={displayModel}
-          >
-            <Cpu size={14} />
-            <span className="model-name">{shortModelName}</span>
-            <ChevronDown size={12} className={modelMenuOpen ? 'rotated' : ''} />
-          </button>
-          {modelMenuOpen && (
-            <div className="model-menu">
-              {mergedModels.map((m) => (
-                <button
-                  key={m.id}
-                  className={`model-option ${m.id === displayModel ? 'active' : ''}`}
-                  onClick={() => handleSelectModel(m.id)}
-                >
-                  {m.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* 上传按钮 */}
         {mode !== 'video' && (
           <button

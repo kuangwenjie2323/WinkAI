@@ -25,7 +25,10 @@
     "desc_tuned": "实验模型列表",
     "desc_settings": "偏好与存储",
     "delete_confirm": "确定要删除这个对话吗？",
-    "delete_last_warning": "至少需要保留一个对话"
+    "delete_last_warning": "至少需要保留一个对话",
+    "search_placeholder": "搜索对话...",
+    "search_results": "搜索结果",
+    "no_results": "未找到匹配的对话"
   },
   "topbar": {
     "clear_chat": "清空对话",

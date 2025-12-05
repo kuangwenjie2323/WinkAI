@@ -25,7 +25,10 @@
     "desc_tuned": "Experimental models",
     "desc_settings": "Preferences & Storage",
     "delete_confirm": "Are you sure you want to delete this chat?",
-    "delete_last_warning": "At least one chat must be kept"
+    "delete_last_warning": "At least one chat must be kept",
+    "search_placeholder": "Search chats...",
+    "search_results": "Search results",
+    "no_results": "No matching chats found"
   },
   "topbar": {
     "clear_chat": "Clear Chat",

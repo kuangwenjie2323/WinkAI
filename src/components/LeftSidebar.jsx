@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import {
@@ -11,7 +11,9 @@ import {
   Sparkles,
   BookOpen,
   FolderDown,
-  Library
+  Library,
+  Search,
+  X
 } from 'lucide-react'
 import ImageLibrary from './ImageLibrary'
 import VideoLibrary from './VideoLibrary'
@@ -29,13 +31,29 @@ function LeftSidebar() {
     deleteSession,
     updateSessionName, // 新增：用于更新会话名称
     setLeftSidebarOpen,
-    setLeftActiveTab
+    setLeftActiveTab,
+    setSearchQuery
   } = useStore()
 
   const isOpen = uiState.leftSidebarOpen
   const [editingSessionId, setEditingSessionId] = useState(null)
   const [editingSessionName, setEditingSessionName] = useState('')
   const editInputRef = useRef(null)
+
+  // 搜索过滤会话列表
+  const filteredSessions = useMemo(() => {
+    const query = uiState.searchQuery?.toLowerCase().trim()
+    if (!query) return sessions
+
+    return sessions.filter(session => {
+      // 匹配会话标题
+      if (session.name.toLowerCase().includes(query)) return true
+      // 匹配消息内容
+      return session.messages.some(msg =>
+        msg.content?.toLowerCase().includes(query)
+      )
+    })
+  }, [sessions, uiState.searchQuery])
 
   useEffect(() => {
     if (editingSessionId && editInputRef.current) {
@@ -123,8 +141,35 @@ function LeftSidebar() {
     if (activeTab === 'prompts') {
       return (
         <div className="sessions-list">
-          <div className="sessions-label">My Prompts</div>
-          {sessions.map((session) => (
+          {/* 搜索框 */}
+          <div className="search-box">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              className="search-input"
+              placeholder={t('sidebar.search_placeholder')}
+              value={uiState.searchQuery || ''}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {uiState.searchQuery && (
+              <button
+                className="search-clear-btn"
+                onClick={() => setSearchQuery('')}
+                type="button"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <div className="sessions-label">
+            {uiState.searchQuery
+              ? `${t('sidebar.search_results')} (${filteredSessions.length})`
+              : 'My Prompts'
+            }
+          </div>
+
+          {filteredSessions.map((session) => (
             <div
               key={session.id}
               className={`session-item ${session.id === currentSessionId ? 'active' : ''}`}
@@ -169,6 +214,13 @@ function LeftSidebar() {
               </div>
             </div>
           ))}
+
+          {/* 无结果提示 */}
+          {uiState.searchQuery && filteredSessions.length === 0 && (
+            <div className="no-results">
+              <span>{t('sidebar.no_results')}</span>
+            </div>
+          )}
         </div>
       )
     }

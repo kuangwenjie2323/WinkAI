@@ -45,9 +45,10 @@ export const useStore = create(
           baseURL: 'https://generativelanguage.googleapis.com/v1beta',
           models: [
             'gemini-3.0-pro-preview',
+            'gemini-2.5-pro',
+            'gemini-2.5-flash',
             'gemini-2.0-flash-exp',
-            'gemini-1.5-pro',
-            'gemini-1.5-flash'
+            'gemini-1.5-pro'
           ],
           defaultModel: 'gemini-3.0-pro-preview',
           supportsVision: true,
@@ -111,7 +112,8 @@ export const useStore = create(
       uiState: {
         leftSidebarOpen: true,
         leftActiveTab: 'prompts',  // 'home' | 'prompts' | 'tuned' | 'settings'
-        rightPanelOpen: true  // 右侧面板默认展开
+        rightPanelOpen: true,  // 右侧面板默认展开
+        searchQuery: ''  // 会话搜索关键词
       },
 
       // 水合状态（不持久化，用于检测状态是否已从 localStorage 恢复）
@@ -330,6 +332,10 @@ export const useStore = create(
 
       setRightPanelOpen: (open) => set((state) => ({
         uiState: { ...state.uiState, rightPanelOpen: open }
+      })),
+
+      setSearchQuery: (query) => set((state) => ({
+        uiState: { ...state.uiState, searchQuery: query }
       })),
 
       // 设置水合状态
