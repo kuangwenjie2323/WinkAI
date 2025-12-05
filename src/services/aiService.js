@@ -118,18 +118,52 @@ class AIService {
     }
   }
 
+  // 解析 Data URL
+  extractBase64(dataUrl) {
+    if (!dataUrl) return null
+    const matches = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/)
+    if (!matches || matches.length !== 3) {
+      return null
+    }
+    return {
+      mimeType: matches[1],
+      data: matches[2]
+    }
+  }
+
   // OpenAI 流式聊天
   async *streamChatOpenAI(messages, model, options = {}) {
     const client = this.clients.openai
     if (!client) throw new Error('OpenAI 客户端未初始化')
 
     try {
-      const stream = await client.chat.completions.create({
-        model,
-        messages: messages.map(msg => ({
+      const formattedMessages = messages.map(msg => {
+        // 如果有图片，构造多模态 content
+        if (msg.images && msg.images.length > 0) {
+          return {
+            role: msg.role,
+            content: [
+              { type: 'text', text: msg.content },
+              ...msg.images.map(imgUrl => ({
+                type: 'image_url',
+                image_url: {
+                  url: imgUrl, // OpenAI 直接支持 Data URL
+                  detail: 'auto'
+                }
+              }))
+            ]
+          }
+        }
+        // 纯文本消息
+        return {
           role: msg.role,
           content: msg.content
-        })),
+        }
+      })
+
+      const stream = await client.chat.completions.create({
+        model,
+        messages: formattedMessages,
         stream: true,
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 4096
@@ -161,15 +195,47 @@ class AIService {
       const systemMessage = messages.find(m => m.role === 'system')
       const chatMessages = messages.filter(m => m.role !== 'system')
 
+      const formattedMessages = chatMessages.map(msg => {
+        // 映射角色
+        const role = msg.role === 'assistant' ? 'assistant' : 'user'
+
+        // 如果有图片，构造多模态 content
+        if (msg.images && msg.images.length > 0) {
+          const imageBlocks = msg.images.map(imgUrl => {
+            const extracted = this.extractBase64(imgUrl)
+            if (!extracted) return null
+            return {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: extracted.mimeType,
+                data: extracted.data
+              }
+            }
+          }).filter(Boolean)
+
+          return {
+            role,
+            content: [
+              ...imageBlocks, // 图片放在前面通常效果更好
+              { type: 'text', text: msg.content }
+            ]
+          }
+        }
+
+        // 纯文本
+        return {
+          role,
+          content: msg.content
+        }
+      })
+
       const stream = await client.messages.stream({
         model,
         max_tokens: options.maxTokens || 4096,
         temperature: options.temperature || 0.7,
         system: systemMessage?.content || undefined,
-        messages: chatMessages.map(msg => ({
-          role: msg.role === 'assistant' ? 'assistant' : 'user',
-          content: msg.content
-        }))
+        messages: formattedMessages
       })
 
       for await (const event of stream) {
@@ -198,14 +264,12 @@ class AIService {
       const lastMessage = messages[messages.length - 1]
       const prompt = lastMessage?.content || ''
 
-      // 图片生成模式
+      // 图片生成模式 (保持原有逻辑)
       if (options.mode === 'image') {
         const isImagenModel = model.includes('imagen')
-        // 支持 gemini-2.0-flash-exp-image-generation 等带 image 关键词的模型
         const isGeminiImageModel = model.includes('image') && model.includes('gemini')
 
         if (isImagenModel) {
-          // Imagen 模型使用 predict API
           try {
             const apiKey = this.getApiKey('google')
             const response = await fetch(
@@ -215,10 +279,7 @@ class AIService {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   instances: [{ prompt }],
-                  parameters: {
-                    sampleCount: 1,
-                    aspectRatio: '16:9'
-                  }
+                  parameters: { sampleCount: 1, aspectRatio: '16:9' }
                 })
               }
             )
@@ -229,7 +290,6 @@ class AIService {
             }
 
             const data = await response.json()
-
             if (data.predictions && data.predictions.length > 0) {
               const prediction = data.predictions[0]
               if (prediction.bytesBase64Encoded) {
@@ -241,7 +301,6 @@ class AIService {
             } else {
               yield { type: 'content', content: '图片生成失败，请重试' }
             }
-
             yield { type: 'done', reason: 'stop' }
             return
           } catch (imgError) {
@@ -253,7 +312,6 @@ class AIService {
         }
 
         if (isGeminiImageModel) {
-          // Gemini 图片生成模型使用 generateContent API + responseModalities
           try {
             const apiKey = this.getApiKey('google')
             const response = await fetch(
@@ -263,9 +321,7 @@ class AIService {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{ parts: [{ text: prompt }] }],
-                  generationConfig: {
-                    responseModalities: ['TEXT', 'IMAGE']
-                  }
+                  generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
                 })
               }
             )
@@ -277,7 +333,6 @@ class AIService {
 
             const data = await response.json()
             const parts = data.candidates?.[0]?.content?.parts || []
-
             let hasImage = false
             for (const part of parts) {
               if (part.inlineData?.data) {
@@ -289,11 +344,9 @@ class AIService {
                 yield { type: 'content', content: part.text }
               }
             }
-
             if (!hasImage && parts.length === 0) {
               yield { type: 'content', content: '图片生成失败，请重试' }
             }
-
             yield { type: 'done', reason: 'stop' }
             return
           } catch (imgError) {
@@ -304,19 +357,34 @@ class AIService {
           }
         }
 
-        // 非图片生成模型，提示用户选择正确的模型
-        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。\n\n请选择支持图片生成的模型:\n- gemini-2.0-flash-exp-image-generation\n- imagen-4.0-generate-001\n\n或者切换到「对话」模式使用当前模型。` }
+        yield { type: 'content', content: `⚠️ 当前模型 \`${model}\` 不支持图片生成。` }
         yield { type: 'done', reason: 'stop' }
         return
       }
 
       const genModel = client.getGenerativeModel({ model })
 
-      // 文本对话：保留历史，使用 chat 模式
-      const history = messages.slice(0, -1).map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }))
+      // 构建多模态历史
+      const history = messages.slice(0, -1).map(msg => {
+        const parts = [{ text: msg.content }]
+        if (msg.images && msg.images.length > 0) {
+          msg.images.forEach(imgUrl => {
+            const extracted = this.extractBase64(imgUrl)
+            if (extracted) {
+              parts.push({
+                inlineData: {
+                  mimeType: extracted.mimeType,
+                  data: extracted.data
+                }
+              })
+            }
+          })
+        }
+        return {
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts
+        }
+      })
 
       const chat = genModel.startChat({
         history,
@@ -326,7 +394,23 @@ class AIService {
         }
       })
 
-      const result = await chat.sendMessageStream(prompt)
+      // 构建当前多模态消息
+      let currentParts = [{ text: prompt }]
+      if (lastMessage.images && lastMessage.images.length > 0) {
+        lastMessage.images.forEach(imgUrl => {
+          const extracted = this.extractBase64(imgUrl)
+          if (extracted) {
+            currentParts.push({
+              inlineData: {
+                mimeType: extracted.mimeType,
+                data: extracted.data
+              }
+            })
+          }
+        })
+      }
+
+      const result = await chat.sendMessageStream(currentParts)
 
       for await (const chunk of result.stream) {
         const text = chunk.text()

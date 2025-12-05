@@ -129,9 +129,10 @@ function ChatContainer() {
       const baseMessages = messageHistory || session.messages
       const messages = baseMessages.map((msg) => ({
         role: msg.role,
-        content: msg.content
+        content: msg.content,
+        images: msg.images
       }))
-      messages.push({ role: 'user', content: `${modePrefix}${trimmedText}` })
+      messages.push({ role: 'user', content: `${modePrefix}${trimmedText}`, images })
 
       const model = currentModel || provider.defaultModel
 

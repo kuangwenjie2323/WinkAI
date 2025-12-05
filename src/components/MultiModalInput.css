@@ -449,46 +449,40 @@
   color: var(--text-tertiary);
 }
 
-/* Run 按钮 - 在输入框内右侧 */
+/* Run 按钮 - Google AI Studio 风格圆形按钮 */
 .run-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  border: 1px solid var(--border-primary);
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-size: var(--font-sm);
-  font-weight: 600;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: none;
+  background: var(--accent-primary);
+  color: var(--accent-text);
+  border-radius: 50%;
   cursor: pointer;
   transition: all var(--transition-fast);
   margin-left: var(--spacing-2);
-}
-
-.run-btn .shortcut {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-tertiary);
-  font-weight: 500;
+  box-shadow: var(--shadow-sm);
 }
 
 .run-btn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  border-color: var(--accent-primary);
-  transform: translateY(-1px);
+  background: var(--accent-hover);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 .run-btn:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 .run-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
   background: var(--bg-tertiary);
-  border-color: var(--border-secondary);
+  color: var(--text-tertiary);
+  box-shadow: none;
   transform: none;
 }
 

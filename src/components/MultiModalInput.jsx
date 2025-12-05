@@ -280,17 +280,15 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
           rows={1}
         />
 
-        {/* Run 按钮 */}
+        {/* Run 按钮 - Google AI Studio 风格 */}
         <button
           className="run-btn"
           onClick={handleSend}
           disabled={sendDisabled}
           type="button"
-          title="Run (Enter)"
+          title={t('chat.run_tooltip') || 'Run (Enter)'}
         >
-          <Play size={16} />
-          <span>Run</span>
-          <span className="shortcut">⏎</span>
+          <Play size={20} fill="currentColor" />
         </button>
       </div>
     </div>

@@ -304,9 +304,6 @@ function MessageRenderer({
               >
                 {textContent || content}
               </ReactMarkdown>
-
-              {/* 流式输出光标 */}
-              {isStreaming && <span className="streaming-cursor"></span>}
             </div>
           )}
 

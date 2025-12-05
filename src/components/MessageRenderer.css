@@ -611,28 +611,6 @@
   margin: var(--spacing-2) 0;
 }
 
-/* 流式输出光标 - 优化动效 */
-.streaming-cursor {
-  display: inline-block;
-  width: 8px;
-  height: 1.2em;
-  background: var(--accent-primary);
-  margin-left: 2px;
-  vertical-align: text-bottom;
-  border-radius: 2px;
-  animation: cursorBlink 1s ease-in-out infinite, cursorPulse 2s ease-in-out infinite;
-}
-
-@keyframes cursorBlink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.3; }
-}
-
-@keyframes cursorPulse {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.1); }
-}
-
 /* 消息底部 */
 .message-footer {
   display: flex;

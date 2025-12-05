@@ -120,4 +120,120 @@ describe('AIService', () => {
         expect(result.error).toContain('401')
     })
   })
+
+  describe('Multi-modal Support', () => {
+    const mockImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+    
+    it('OpenAI: 应该正确构造多模态消息', async () => {
+      const createMock = vi.fn().mockResolvedValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { choices: [{ delta: { content: 'Image received' } }] }
+        }
+      })
+      
+      aiService.clients.openai = {
+        chat: { completions: { create: createMock } }
+      }
+
+      const messages = [{ role: 'user', content: 'Analyze this', images: [mockImage] }]
+      const iterator = aiService.streamChatOpenAI(messages, 'gpt-4o')
+      await iterator.next()
+
+      expect(createMock).toHaveBeenCalledWith(expect.objectContaining({
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analyze this' },
+              { type: 'image_url', image_url: { url: mockImage, detail: 'auto' } }
+            ]
+          }
+        ]
+      }))
+    })
+
+    it('Anthropic: 应该正确构造多模态消息', async () => {
+        const streamMock = vi.fn().mockResolvedValue({
+          [Symbol.asyncIterator]: async function* () {
+            yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'Image received' } }
+          }
+        })
+        
+        aiService.clients.anthropic = {
+          messages: { stream: streamMock }
+        }
+  
+        const messages = [{ role: 'user', content: 'Analyze this', images: [mockImage] }]
+        const iterator = aiService.streamChatAnthropic(messages, 'claude-3-5-sonnet')
+        await iterator.next()
+  
+        expect(streamMock).toHaveBeenCalledWith(expect.objectContaining({
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { 
+                  type: 'image', 
+                  source: { 
+                    type: 'base64', 
+                    media_type: 'image/png', 
+                    data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' 
+                  } 
+                },
+                { type: 'text', text: 'Analyze this' }
+              ]
+            }
+          ]
+        }))
+      })
+
+      it('Google: 应该正确构造多模态消息', async () => {
+        const sendMessageStreamMock = vi.fn().mockResolvedValue({
+            stream: {
+                [Symbol.asyncIterator]: async function* () {
+                    yield { text: () => 'Image received' }
+                }
+            }
+        })
+        
+        const startChatMock = vi.fn().mockReturnValue({
+            sendMessageStream: sendMessageStreamMock
+        })
+
+        aiService.clients.google = {
+            getGenerativeModel: vi.fn().mockReturnValue({
+                startChat: startChatMock
+            })
+        }
+  
+        // 构造历史消息（带图片）和当前消息（带图片）
+        const messages = [
+            { role: 'user', content: 'Previous image', images: [mockImage] },
+            { role: 'assistant', content: 'Okay' },
+            { role: 'user', content: 'Current image', images: [mockImage] }
+        ]
+        
+        const iterator = aiService.streamChatGoogle(messages, 'gemini-1.5-pro')
+        await iterator.next()
+  
+        // 验证历史消息中的图片
+        expect(startChatMock).toHaveBeenCalledWith(expect.objectContaining({
+            history: expect.arrayContaining([
+                expect.objectContaining({
+                    role: 'user',
+                    parts: expect.arrayContaining([
+                        { text: 'Previous image' },
+                        { inlineData: { mimeType: 'image/png', data: expect.any(String) } }
+                    ])
+                })
+            ])
+        }))
+
+        // 验证当前消息中的图片
+        expect(sendMessageStreamMock).toHaveBeenCalledWith(expect.arrayContaining([
+            { text: 'Current image' },
+            { inlineData: { mimeType: 'image/png', data: expect.any(String) } }
+        ]))
+      })
+  })
 })
