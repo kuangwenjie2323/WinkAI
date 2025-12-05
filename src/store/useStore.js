@@ -44,7 +44,7 @@ export const useStore = create(
           apiKey: '',
           baseURL: 'https://generativelanguage.googleapis.com/v1beta',
           models: [], // 初始为空，等待 API 获取
-          defaultModel: '',
+          defaultModel: 'gemini-3-pro-preview',
           supportsVision: true,
           supportsStreaming: true
         },

@@ -440,6 +440,12 @@
   line-height: 1.5;
 }
 
+.message-textarea:focus {
+  outline: none;
+  box-shadow: none;
+  border: none;
+}
+
 .message-textarea:disabled {
   opacity: 0.6;
   cursor: not-allowed;
