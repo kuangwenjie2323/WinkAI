@@ -677,7 +677,8 @@ class AIService {
       .sort((a, b) => {
         // 定义优先级权重（越小越靠前）
         const getPriority = (id) => {
-          if (id.includes('gemini-2.0-flash-exp')) return 0 // 最新实验版
+          if (id.includes('gemini-3')) return -1 // Gemini 3 系列最优先
+          if (id.includes('gemini-2.0-flash-exp')) return 0
           if (id.includes('gemini-1.5-pro')) return 1
           if (id.includes('gemini-1.5-flash')) return 2
           if (id.includes('gemini-1.0-pro')) return 3

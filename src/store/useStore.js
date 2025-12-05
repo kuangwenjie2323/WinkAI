@@ -44,11 +44,12 @@ export const useStore = create(
           apiKey: '',
           baseURL: 'https://generativelanguage.googleapis.com/v1beta',
           models: [
+            'gemini-3.0-pro-preview',
             'gemini-2.0-flash-exp',
             'gemini-1.5-pro',
             'gemini-1.5-flash'
           ],
-          defaultModel: 'gemini-2.0-flash-exp',
+          defaultModel: 'gemini-3.0-pro-preview',
           supportsVision: true,
           supportsStreaming: true
         },
