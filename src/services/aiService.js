@@ -539,6 +539,9 @@ class AIService {
         case 'google':
           result = await this._testGoogle(mergedConfig)
           break
+        case 'vertex':
+          result = await this._testVertex(mergedConfig)
+          break
         case 'custom':
           result = await this._testCustom(mergedConfig)
           break
@@ -730,6 +733,55 @@ class AIService {
     return {
       models,
       message: `成功获取 ${models.length} 个模型`
+    }
+  }
+
+  async _testVertex(config) {
+    const apiKey = config.apiKey
+    const vertexConfig = this.getVertexConfig()
+    const projectId = vertexConfig.projectId
+    const location = vertexConfig.location || 'us-central1'
+
+    if (!apiKey) throw new Error('请提供 Vertex API Key')
+    if (!projectId) throw new Error('请在环境变量中配置 VITE_VERTEX_PROJECT_ID')
+
+    // Vertex AI 使用静态模型列表（API 需要 OAuth，不支持 API Key 列出模型）
+    const models = [
+      { id: 'publishers/google/models/gemini-2.0-flash-001', name: 'Gemini 2.0 Flash' },
+      { id: 'publishers/google/models/gemini-1.5-flash-001', name: 'Gemini 1.5 Flash' },
+      { id: 'publishers/google/models/gemini-1.5-pro-001', name: 'Gemini 1.5 Pro' }
+    ]
+
+    // 测试调用 - 使用 generateContent 端点
+    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-1.5-flash-001:generateContent`
+
+    const testResponse = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'test' }] }],
+        generationConfig: { maxOutputTokens: 5 }
+      })
+    })
+
+    if (!testResponse.ok) {
+      const errorText = await testResponse.text()
+      let errorMessage = `Vertex API 错误: ${testResponse.status}`
+      try {
+        const errorJson = JSON.parse(errorText)
+        errorMessage += ` - ${errorJson.error?.message || errorText}`
+      } catch {
+        errorMessage += ` - ${errorText}`
+      }
+      throw new Error(errorMessage)
+    }
+
+    return {
+      models,
+      message: `Vertex AI 连接成功，可用 ${models.length} 个模型`
     }
   }
 
