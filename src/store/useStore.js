@@ -77,8 +77,8 @@ export const useStore = create(
       },
 
       // 当前选择的提供商
-      currentProvider: 'openai',
-      currentModel: '',
+      currentProvider: 'google',
+      currentModel: 'gemini-3-pro-preview',
       generationMode: 'chat', // chat | image | video
 
       // 聊天会话
