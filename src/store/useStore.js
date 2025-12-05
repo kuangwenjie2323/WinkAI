@@ -46,9 +46,7 @@ export const useStore = create(
           models: [
             'gemini-3-pro-preview',
             'gemini-2.5-pro',
-            'gemini-2.5-flash',
-            'gemini-2.0-flash-exp',
-            'gemini-1.5-pro'
+            'gemini-2.5-flash'
           ],
           defaultModel: 'gemini-3-pro-preview',
           supportsVision: true,
@@ -101,7 +99,7 @@ export const useStore = create(
       settings: {
         theme: 'dark',
         temperature: 0.7,
-        maxTokens: 8192,
+        maxTokens: 128000,
         enableSearch: true,
         enableThinking: true,
         streamingEnabled: true,
