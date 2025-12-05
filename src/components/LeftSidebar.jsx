@@ -277,15 +277,10 @@ function LeftSidebar() {
         <>
           <div className="sidebar-header">
             <div className="quick-actions">
-              {quickActions.map((action) => {
-                const Icon = action.icon
-                return (
-                  <button key={action.label} className="quick-btn" onClick={action.onClick}>
-                    <Icon size={16} />
-                    <span>{action.label}</span>
-                  </button>
-                )
-              })}
+              <button className="quick-btn" onClick={handleNewChat}>
+                <Plus size={16} />
+                <span>{t('sidebar.new_chat')}</span>
+              </button>
             </div>
           </div>
 
