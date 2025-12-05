@@ -16,9 +16,9 @@
     "new_chat": "New Chat",
     "import_file": "Import File",
     "examples": "Examples",
-    "tab_home": "Overview",
-    "tab_prompts": "My Prompts",
-    "tab_tuned": "Tuned Models",
+    "tab_chat": "Chat",
+    "tab_image": "Image",
+    "tab_video": "Video",
     "tab_settings": "Settings",
     "desc_home": "Project Summary",
     "desc_prompts": "Recent chats & drafts",
@@ -27,7 +27,7 @@
     "delete_confirm": "Are you sure you want to delete this chat?",
     "delete_last_warning": "At least one chat must be kept",
     "search_placeholder": "Search chats...",
-    "search_results": "Search results",
+    "search_results": "Search Results",
     "no_results": "No matching chats found"
   },
   "topbar": {

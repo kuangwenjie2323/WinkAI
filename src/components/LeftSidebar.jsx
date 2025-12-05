@@ -9,14 +9,12 @@ import {
   ChevronRight,
   Pencil,
   Sparkles,
-  BookOpen,
-  FolderDown,
-  Library,
+  Image,
+  Video,
+  Settings,
   Search,
   X
 } from 'lucide-react'
-import ImageLibrary from './ImageLibrary'
-import VideoLibrary from './VideoLibrary'
 import CodeSnippets from './CodeSnippets'
 import './LeftSidebar.css'
 
@@ -29,7 +27,7 @@ function LeftSidebar() {
     setCurrentSession,
     createSession,
     deleteSession,
-    updateSessionName, // 新增：用于更新会话名称
+    updateSessionName,
     setLeftSidebarOpen,
     setLeftActiveTab,
     setSearchQuery
@@ -46,9 +44,7 @@ function LeftSidebar() {
     if (!query) return sessions
 
     return sessions.filter(session => {
-      // 匹配会话标题
       if (session.name.toLowerCase().includes(query)) return true
-      // 匹配消息内容
       return session.messages.some(msg =>
         msg.content?.toLowerCase().includes(query)
       )
@@ -62,19 +58,19 @@ function LeftSidebar() {
   }, [editingSessionId])
 
   const tabs = [
-    { id: 'home', label: t('sidebar.tab_home'), desc: t('sidebar.desc_home'), icon: MessageSquare },
-    { id: 'prompts', label: t('sidebar.tab_prompts'), desc: t('sidebar.desc_prompts'), icon: BookOpen },
-    { id: 'tuned', label: t('sidebar.tab_tuned'), desc: t('sidebar.desc_tuned'), icon: Sparkles },
-    { id: 'settings', label: t('sidebar.tab_settings'), desc: t('sidebar.desc_settings'), icon: Library } 
+    { id: 'chat', label: t('sidebar.tab_chat') || 'Chat', desc: 'All conversations', icon: MessageSquare },
+    { id: 'image', label: t('sidebar.tab_image') || 'Image', desc: 'Image generation', icon: Image },
+    { id: 'video', label: t('sidebar.tab_video') || 'Video', desc: 'Video generation', icon: Video },
+    { id: 'settings', label: t('sidebar.tab_settings') || 'Settings', desc: 'App settings', icon: Settings }
   ]
 
   const tabIds = tabs.map(t => t.id)
-  const activeTab = tabIds.includes(uiState.leftActiveTab) ? uiState.leftActiveTab : 'prompts'
+  const activeTab = tabIds.includes(uiState.leftActiveTab) ? uiState.leftActiveTab : 'chat'
 
   const handleNewChat = () => {
     const newId = createSession(t('sidebar.new_chat'))
     setCurrentSession(newId)
-    setLeftActiveTab('prompts') // 确保切换到对话列表
+    setLeftActiveTab('chat')
   }
 
   const handleDeleteSession = (e, sessionId) => {
@@ -130,15 +126,9 @@ function LeftSidebar() {
     setLeftActiveTab(tabId)
   }
 
-  const quickActions = [
-    { label: t('sidebar.new_chat'), icon: Plus, onClick: handleNewChat },
-    { label: t('sidebar.import_file'), icon: FolderDown, onClick: () => alert('导入功能待实现') },
-    { label: t('sidebar.examples'), icon: Library, onClick: () => setLeftActiveTab('home') }
-  ]
-
   // 渲染Tab内容
   const renderTabContent = () => {
-    if (activeTab === 'prompts') {
+    if (activeTab === 'chat') {
       return (
         <div className="sessions-list">
           {/* 搜索框 */}
@@ -165,7 +155,7 @@ function LeftSidebar() {
           <div className="sessions-label">
             {uiState.searchQuery
               ? `${t('sidebar.search_results')} (${filteredSessions.length})`
-              : 'My Prompts'
+              : 'Chats'
             }
           </div>
 
@@ -225,12 +215,12 @@ function LeftSidebar() {
       )
     }
 
-    if (activeTab === 'home') {
-      return <ImageLibrary />
+    if (activeTab === 'image') {
+      return <div className="sidebar-placeholder">Image History (Coming Soon)</div>
     }
 
-    if (activeTab === 'tuned') {
-      return <VideoLibrary />
+    if (activeTab === 'video') {
+      return <div className="sidebar-placeholder">Video History (Coming Soon)</div>
     }
 
     if (activeTab === 'settings') {

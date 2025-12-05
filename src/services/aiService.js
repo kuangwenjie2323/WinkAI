@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { useStore } from '../store/useStore'
+import googleAuthService from './googleAuth'
 
 // 统一的 AI 服务类
 class AIService {
@@ -80,7 +81,7 @@ class AIService {
     
     return {
       projectId: import.meta.env.VITE_VERTEX_PROJECT_ID || vertexConfig.projectId,
-      location: import.meta.env.VITE_VERTEX_LOCATION || vertexConfig.location || 'us-central1'
+      location: import.meta.env.VITE_VERTEX_LOCATION || vertexConfig.location || 'asia-southeast1'
     }
   }
 
@@ -277,12 +278,14 @@ class AIService {
       const lastMessage = messages[messages.length - 1]
       const prompt = lastMessage?.content || ''
 
-      // 图片生成模式 (保持原有逻辑)
-      if (options.mode === 'image') {
+      // 图片/视频生成模式
+      if (options.mode === 'image' || options.mode === 'video' || model.includes('imagen') || model.includes('veo')) {
         const isImagenModel = model.includes('imagen')
+        const isVeoModel = model.includes('veo')
         const isGeminiImageModel = model.includes('image') && model.includes('gemini')
 
-        if (isImagenModel) {
+        if (isImagenModel || isVeoModel) {
+          // Imagen/Veo 模型使用 predict API
           try {
             const apiKey = this.getApiKey('google')
             const response = await fetch(
@@ -292,7 +295,10 @@ class AIService {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   instances: [{ prompt }],
-                  parameters: { sampleCount: 1, aspectRatio: '16:9' }
+                  parameters: {
+                    sampleCount: 1,
+                    // Veo 可能需要不同的参数，这里暂时使用通用参数
+                  }
                 })
               }
             )
@@ -303,22 +309,35 @@ class AIService {
             }
 
             const data = await response.json()
+
             if (data.predictions && data.predictions.length > 0) {
               const prediction = data.predictions[0]
+              
+              // 处理图片
               if (prediction.bytesBase64Encoded) {
-                const imageUrl = `data:image/png;base64,${prediction.bytesBase64Encoded}`
-                yield { type: 'content', content: `![生成的图片](${imageUrl})` }
-              } else {
-                yield { type: 'content', content: '图片生成成功但未返回图片数据' }
+                const mimeType = isVeoModel ? 'video/mp4' : 'image/png'
+                const url = `data:${mimeType};base64,${prediction.bytesBase64Encoded}`
+                const markdown = isVeoModel 
+                  ? `<video controls src="${url}" width="100%"></video>`
+                  : `![生成的图片](${url})`
+                yield { type: 'content', content: markdown }
+              } 
+              // 处理视频 (Veo 可能返回 videoUri 或其他字段)
+              else if (prediction.videoUri) {
+                 yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%"></video>\n\n[下载视频](${prediction.videoUri})` }
+              }
+              else {
+                yield { type: 'content', content: '生成成功但未识别到返回数据格式' }
               }
             } else {
-              yield { type: 'content', content: '图片生成失败，请重试' }
+              yield { type: 'content', content: '生成失败，请重试' }
             }
+
             yield { type: 'done', reason: 'stop' }
             return
-          } catch (imgError) {
-            console.error('Imagen 生成错误:', imgError)
-            yield { type: 'content', content: `图片生成失败: ${imgError.message}` }
+          } catch (err) {
+            console.error('生成错误:', err)
+            yield { type: 'content', content: `生成失败: ${err.message}\n\n注意: Veo 模型可能需要 Vertex AI 权限或尚未在当前 API 开放。` }
             yield { type: 'done', reason: 'stop' }
             return
           }
@@ -679,13 +698,22 @@ class AIService {
 
     const modelsData = await modelsResponse.json()
     const models = modelsData.models
+      .filter(m => {
+        const name = m.name.toLowerCase()
+        // 排除非对话/生成模型
+        if (name.includes('embedding') || name.includes('robotics') || name.includes('tts')) return false
+        
+        // 允许 gemini, imagen, veo
+        return name.includes('gemini') || name.includes('imagen') || name.includes('veo')
+      })
       .map(m => {
         // 模型 ID：去掉 'models/' 前缀
         const modelId = m.name.replace('models/', '')
+        // 优先使用 API 返回的友好名称 (displayName)，如果没有则使用 ID
+        const displayName = m.displayName || modelId
         return {
           id: modelId,
-          // 显示名：优先使用模型 ID，因为 displayName 可能不准确
-          name: modelId
+          name: displayName
         }
       })
       .sort((a, b) => {
@@ -693,21 +721,23 @@ class AIService {
         const getPriority = (id) => {
           if (id === 'gemini-3-pro-preview') return 0 // 绝对置顶
           
-          // 降级特定类型模型 (Embedding/Robotics/TTS 最底端)
+          if (id.includes('veo')) return 2 // 视频模型也很重要
+          
+          // 降级特定类型模型
           if (id.includes('embedding') || id.includes('robotics') || id.includes('tts')) return 90
           
-          // Gemini 3 系列优先级
+          // Gemini 3 系列
           if (id.includes('gemini-3') && !id.includes('image')) return 10
           
-          // Gemini 2.5 系列优先级
+          // Gemini 2.5 系列
           if (id.includes('gemini-2.5-pro')) return 20
           if (id.includes('gemini-2.5-flash')) return 21
           if (id.includes('gemini-2.5')) return 22
 
-          // 图片专用模型排在所有通用文本模型之后
+          // 图片专用模型 (Nano Banana 等)
           if (id.includes('image') || id.includes('imagen')) return 80 
           
-          return 100 // 其他 (包括 2.0, 1.5 等)
+          return 100 // 其他
         }
         
         const priorityA = getPriority(a.id)
@@ -717,7 +747,6 @@ class AIService {
           return priorityA - priorityB
         }
         
-        // 同优先级按字母倒序（通常意味着版本更新）
         return b.id.localeCompare(a.id)
       })
 
@@ -737,16 +766,26 @@ class AIService {
   }
 
   async _testVertex(config) {
-    const apiKey = config.apiKey
     const vertexConfig = this.getVertexConfig()
     const projectId = vertexConfig.projectId
     const location = vertexConfig.location || 'us-central1'
 
-    if (!apiKey) throw new Error('请提供 Vertex API Key')
     if (!projectId) throw new Error('请在环境变量中配置 VITE_VERTEX_PROJECT_ID')
 
-    // Vertex AI 使用静态模型列表（API 需要 OAuth，不支持 API Key 列出模型）
+    // 优先使用 OAuth Token，回退到 API Key
+    let accessToken = googleAuthService.getAccessToken()
+    const apiKey = config.apiKey
+
+    if (!accessToken && !apiKey) {
+      throw new Error('请登录 Google 账户或提供 Vertex API Key')
+    }
+
+    // Vertex AI 模型列表（包含 Veo 和 Imagen）
     const models = [
+      { id: 'publishers/google/models/veo-3.0-generate-preview', name: 'Veo 3.0 (视频生成)' },
+      { id: 'publishers/google/models/veo-2.0-generate-001', name: 'Veo 2.0 (视频生成)' },
+      { id: 'publishers/google/models/imagen-3.0-generate-002', name: 'Imagen 3.0 (图片生成)' },
+      { id: 'publishers/google/models/imagen-3.0-fast-generate-001', name: 'Imagen 3.0 Fast' },
       { id: 'publishers/google/models/gemini-2.0-flash-001', name: 'Gemini 2.0 Flash' },
       { id: 'publishers/google/models/gemini-1.5-flash-001', name: 'Gemini 1.5 Flash' },
       { id: 'publishers/google/models/gemini-1.5-pro-001', name: 'Gemini 1.5 Pro' }
@@ -755,12 +794,21 @@ class AIService {
     // 测试调用 - 使用 generateContent 端点
     const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-1.5-flash-001:generateContent`
 
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+
+    // 优先使用 OAuth Token
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    } else {
+      // 回退到 API Key（可能会失败，因为 Vertex 需要 OAuth）
+      headers['Authorization'] = `Bearer ${apiKey}`
+    }
+
     const testResponse = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: 'test' }] }],
         generationConfig: { maxOutputTokens: 5 }
@@ -772,7 +820,12 @@ class AIService {
       let errorMessage = `Vertex API 错误: ${testResponse.status}`
       try {
         const errorJson = JSON.parse(errorText)
-        errorMessage += ` - ${errorJson.error?.message || errorText}`
+        const msg = errorJson.error?.message || errorText
+        if (msg.includes('OAuth') || msg.includes('authentication')) {
+          errorMessage = '认证失败，请登录 Google 账户获取 OAuth Token'
+        } else {
+          errorMessage += ` - ${msg}`
+        }
       } catch {
         errorMessage += ` - ${errorText}`
       }
@@ -781,7 +834,7 @@ class AIService {
 
     return {
       models,
-      message: `Vertex AI 连接成功，可用 ${models.length} 个模型`
+      message: `Vertex AI 连接成功 (${accessToken ? 'OAuth' : 'API Key'})，可用 ${models.length} 个模型`
     }
   }
 
@@ -861,25 +914,55 @@ class AIService {
 
   // Google Vertex AI（REST）流式/非流式
   async *streamChatVertex(messages, model, options = {}) {
-    const apiKey = this.getApiKey('vertex')
-    const baseURL = this.getApiEndpoint('vertex')
     const { projectId, location } = this.getVertexConfig()
-    
-    if (!apiKey) throw new Error('Vertex API Key 未配置')
+
     if (!projectId) throw new Error('Vertex 项目ID未配置')
 
-    const temperature = options.temperature || 0.7
-    const maxOutputTokens = options.maxTokens || 2048
+    // 优先使用 OAuth Token，回退到 API Key
+    let accessToken = googleAuthService.getAccessToken()
+    const apiKey = this.getApiKey('vertex')
+
+    if (!accessToken && !apiKey) {
+      throw new Error('请登录 Google 账户或提供 Vertex API Key')
+    }
+
     const lastMessage = messages[messages.length - 1]
     const prompt = lastMessage?.content || ''
+
+    // 检查是否是 Veo 视频生成模型
+    const isVeoModel = model.includes('veo')
+    // 检查是否是 Imagen 图片生成模型
+    const isImagenModel = model.includes('imagen')
+
+    // Veo 视频生成
+    if (isVeoModel) {
+      yield* this._generateVertexVideo(projectId, location, model, prompt, accessToken || apiKey)
+      return
+    }
+
+    // Imagen 图片生成
+    if (isImagenModel) {
+      yield* this._generateVertexImage(projectId, location, model, prompt, accessToken || apiKey)
+      return
+    }
+
+    // Gemini 对话模型
+    const temperature = options.temperature || 0.7
+    const maxOutputTokens = options.maxTokens || 2048
     const history = messages.slice(0, -1).map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
     }))
 
     // 拼接 endpoint
+    const baseURL = `https://${location}-aiplatform.googleapis.com/v1`
     const modelPath = `projects/${projectId}/locations/${location}/${model}`
-    const url = `${baseURL}/${modelPath}:streamGenerateContent?alt=sse&key=${apiKey}`
+    const url = `${baseURL}/${modelPath}:streamGenerateContent?alt=sse`
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken || apiKey}`
+    }
 
     const body = {
       contents: [
@@ -894,7 +977,7 @@ class AIService {
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body)
     })
 
@@ -930,6 +1013,110 @@ class AIService {
           console.warn('Vertex SSE parse error', e)
         }
       }
+    }
+
+    yield { type: 'done', reason: 'stop' }
+  }
+
+  // Vertex AI Veo 视频生成
+  async *_generateVertexVideo(projectId, location, model, prompt, token) {
+    yield { type: 'content', content: '🎬 正在生成视频，请稍候...\n\n' }
+
+    const modelName = model.replace('publishers/google/models/', '')
+    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelName}:predict`
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          instances: [{ prompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: '16:9',
+            durationSeconds: 5
+          }
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        yield { type: 'content', content: `视频生成失败: ${response.status} - ${errorText}` }
+        yield { type: 'done', reason: 'error' }
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.predictions && data.predictions.length > 0) {
+        const prediction = data.predictions[0]
+
+        if (prediction.bytesBase64Encoded) {
+          const videoUrl = `data:video/mp4;base64,${prediction.bytesBase64Encoded}`
+          yield { type: 'content', content: `<video controls src="${videoUrl}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n` }
+        } else if (prediction.videoUri) {
+          yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${prediction.videoUri})` }
+        } else {
+          yield { type: 'content', content: '视频生成成功但未识别到返回数据格式' }
+        }
+      } else {
+        yield { type: 'content', content: '视频生成失败，请重试' }
+      }
+    } catch (error) {
+      yield { type: 'content', content: `视频生成错误: ${error.message}` }
+    }
+
+    yield { type: 'done', reason: 'stop' }
+  }
+
+  // Vertex AI Imagen 图片生成
+  async *_generateVertexImage(projectId, location, model, prompt, token) {
+    yield { type: 'content', content: '🖼️ 正在生成图片，请稍候...\n\n' }
+
+    const modelName = model.replace('publishers/google/models/', '')
+    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelName}:predict`
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          instances: [{ prompt }],
+          parameters: {
+            sampleCount: 1
+          }
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        yield { type: 'content', content: `图片生成失败: ${response.status} - ${errorText}` }
+        yield { type: 'done', reason: 'error' }
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.predictions && data.predictions.length > 0) {
+        const prediction = data.predictions[0]
+
+        if (prediction.bytesBase64Encoded) {
+          const imageUrl = `data:image/png;base64,${prediction.bytesBase64Encoded}`
+          yield { type: 'content', content: `![生成的图片](${imageUrl})\n\n` }
+        } else {
+          yield { type: 'content', content: '图片生成成功但未识别到返回数据格式' }
+        }
+      } else {
+        yield { type: 'content', content: '图片生成失败，请重试' }
+      }
+    } catch (error) {
+      yield { type: 'content', content: `图片生成错误: ${error.message}` }
     }
 
     yield { type: 'done', reason: 'stop' }

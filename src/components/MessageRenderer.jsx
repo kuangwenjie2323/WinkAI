@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { Copy, Check, Edit2, RefreshCw, ChevronDown, ChevronUp, Code, Download, Eye } from 'lucide-react'
+import { UserAvatar, AIAvatar } from './Avatar'
 import 'highlight.js/styles/github-dark.css'
 import './MessageRenderer.css'
 
@@ -94,7 +95,7 @@ function MessageRenderer({
       <div className="message-role-header">
         <div className="message-header-left">
           <div className={`message-avatar ${role}`}>
-            <span className="avatar-symbol">{role === 'assistant' ? '✨' : '👤'}</span>
+            {role === 'assistant' ? <AIAvatar size={36} /> : <UserAvatar size={36} />}
           </div>
           <div className="message-author">
             <div className="author-name-row">

@@ -53,18 +53,27 @@ export const useStore = create(
           supportsStreaming: true
         },
         vertex: {
-          name: 'Google Vertex',
+          name: 'Google Vertex AI',
           apiKey: '',
-          baseURL: 'https://us-central1-aiplatform.googleapis.com/v1beta',
+          baseURL: 'https://asia-southeast1-aiplatform.googleapis.com/v1',
           models: [
+            // 视频生成模型
+            'publishers/google/models/veo-3.0-generate-preview',
+            'publishers/google/models/veo-2.0-generate-001',
+            // 图片生成模型
+            'publishers/google/models/imagen-3.0-generate-002',
+            'publishers/google/models/imagen-3.0-fast-generate-001',
+            // 对话模型
+            'publishers/google/models/gemini-2.0-flash-001',
             'publishers/google/models/gemini-1.5-flash-001',
             'publishers/google/models/gemini-1.5-pro-001'
           ],
-          defaultModel: 'publishers/google/models/gemini-1.5-flash-001',
+          defaultModel: 'publishers/google/models/gemini-2.0-flash-001',
           projectId: '',
-          location: 'us-central1',
+          location: 'asia-southeast1',
           supportsVision: true,
-          supportsStreaming: true
+          supportsStreaming: true,
+          supportsVideo: true  // 支持视频生成
         },
         custom: {
           name: '自定义 API',
@@ -109,7 +118,7 @@ export const useStore = create(
       // UI状态（持久化到localStorage）
       uiState: {
         leftSidebarOpen: true,
-        leftActiveTab: 'prompts',  // 'home' | 'prompts' | 'tuned' | 'settings'
+        leftActiveTab: 'chat',  // 'chat' | 'image' | 'video' | 'settings'
         rightPanelOpen: true,  // 右侧面板默认展开
         searchQuery: ''  // 会话搜索关键词
       },
@@ -131,7 +140,14 @@ export const useStore = create(
         openai: null,
         anthropic: null,
         google: null,
+        vertex: null,
         custom: null
+      },
+
+      // Google OAuth 状态（不持久化，Token 会过期）
+      googleOAuth: {
+        isLoggedIn: false,
+        tokenExpiry: null
       },
 
       // 动态获取的模型列表（不持久化）
@@ -378,6 +394,11 @@ export const useStore = create(
       setTestResult: (provider, result) => set((state) => ({
         testResults: { ...state.testResults, [provider]: result }
       })),
+
+      // Google OAuth 状态管理
+      setGoogleOAuthStatus: (isLoggedIn, tokenExpiry = null) => set({
+        googleOAuth: { isLoggedIn, tokenExpiry }
+      }),
 
       setDynamicModels: (provider, models) => set((state) => ({
         dynamicModels: { ...state.dynamicModels, [provider]: models }

@@ -1,0 +1,32 @@
+.image-gen-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  padding: 20px;
+}
+
+.gallery-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.empty-gallery {
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.empty-gallery h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.image-input-area {
+  margin-top: 20px;
+  position: sticky;
+  bottom: 0;
+}

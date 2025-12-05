@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import { toast } from 'react-hot-toast'
-import { X, Settings as SettingsIcon, Cpu, Sliders } from 'lucide-react'
+import { X, Settings as SettingsIcon, Cpu, Sliders, LogIn, LogOut, Video } from 'lucide-react'
 import aiService from '../services/aiService'
+import googleAuthService from '../services/googleAuth'
 import './SettingsPanel.css'
 
 function SettingsPanel({ isOpen, onClose }) {
@@ -22,12 +23,58 @@ function SettingsPanel({ isOpen, onClose }) {
     updateSettings,
     testResults,
     setTestResult,
-    setDynamicModels
+    setDynamicModels,
+    googleOAuth,
+    setGoogleOAuthStatus
   } = useStore()
 
   const [activeTab, setActiveTab] = useState('providers')
   const [showApiKey, setShowApiKey] = useState({})
   const [testing, setTesting] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
+
+  // 初始化和监控 Google OAuth 状态
+  useEffect(() => {
+    // 初始化 Google Auth Service
+    googleAuthService.init().catch(console.error)
+
+    // 定时检查 Token 状态
+    const checkInterval = setInterval(() => {
+      const status = googleAuthService.getStatus()
+      if (googleOAuth.isLoggedIn !== status.isLoggedIn) {
+        setGoogleOAuthStatus(status.isLoggedIn, status.tokenExpiry)
+      }
+    }, 10000)
+
+    return () => clearInterval(checkInterval)
+  }, [googleOAuth.isLoggedIn, setGoogleOAuthStatus])
+
+  // Google OAuth 登录
+  const handleGoogleLogin = async () => {
+    setOauthLoading(true)
+    try {
+      const token = await googleAuthService.requestAccessToken()
+      if (token) {
+        const status = googleAuthService.getStatus()
+        setGoogleOAuthStatus(true, status.tokenExpiry)
+        toast.success('Google 登录成功！')
+      }
+    } catch (error) {
+      toast.error(`Google 登录失败: ${error.message}`)
+    } finally {
+      setOauthLoading(false)
+    }
+  }
+
+  // Google OAuth 登出
+  const handleGoogleLogout = async () => {
+    await googleAuthService.revokeToken()
+    setGoogleOAuthStatus(false, null)
+    toast.success('已退出 Google 账户')
+  }
+
+  // 检查 OAuth Client ID 是否配置
+  const isOAuthConfigured = !!import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID
 
   // 获取环境变量
   const envKeys = {
@@ -139,9 +186,16 @@ function SettingsPanel({ isOpen, onClose }) {
                       {key === 'openai' && '🤖'}
                       {key === 'anthropic' && '🧠'}
                       {key === 'google' && '🔷'}
+                      {key === 'vertex' && '🎬'}
                       {key === 'custom' && '⚙️'}
                     </div>
                     <div className="provider-name">{providers[key].name}</div>
+                    {key === 'vertex' && (
+                      <div className="provider-badge">
+                        <Video size={12} />
+                        <span>Veo</span>
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -153,7 +207,8 @@ function SettingsPanel({ isOpen, onClose }) {
                   <span className="label-hint">
                     {currentProvider === 'openai' && ' (platform.openai.com)'}
                     {currentProvider === 'anthropic' && ' (console.anthropic.com)'}
-                    {currentProvider === 'google' && ' (makersuite.google.com)'}
+                    {currentProvider === 'google' && ' (aistudio.google.com)'}
+                    {currentProvider === 'vertex' && ' (console.cloud.google.com)'}
                   </span>
                 </label>
                 <div className="api-key-group">
@@ -215,6 +270,64 @@ function SettingsPanel({ isOpen, onClose }) {
                   </div>
                 )}
               </div>
+
+              {/* Vertex AI Google OAuth 登录 */}
+              {currentProvider === 'vertex' && (
+                <div className="form-group vertex-oauth-section">
+                  <label>
+                    Google 账户认证
+                    <span className="label-hint">(Vertex AI 需要 OAuth 认证)</span>
+                  </label>
+
+                  {!isOAuthConfigured ? (
+                    <div className="oauth-warning">
+                      <p>⚠️ 未配置 OAuth Client ID</p>
+                      <p className="hint">请在环境变量中配置 <code>VITE_GOOGLE_OAUTH_CLIENT_ID</code></p>
+                      <p className="hint">在 Google Cloud Console 创建 OAuth 2.0 客户端 ID (Web 应用类型)</p>
+                    </div>
+                  ) : googleOAuth.isLoggedIn ? (
+                    <div className="oauth-status logged-in">
+                      <div className="status-info">
+                        <span className="status-icon">✓</span>
+                        <span>已登录 Google 账户</span>
+                        {googleOAuth.tokenExpiry && (
+                          <span className="token-expiry">
+                            (Token 有效至: {new Date(googleOAuth.tokenExpiry).toLocaleTimeString()})
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        className="oauth-btn logout"
+                        onClick={handleGoogleLogout}
+                      >
+                        <LogOut size={16} />
+                        退出登录
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="oauth-status logged-out">
+                      <p className="hint">登录 Google 账户以获取 Vertex AI 访问权限（支持 Veo 视频生成）</p>
+                      <button
+                        className="oauth-btn login google-login-btn"
+                        onClick={handleGoogleLogin}
+                        disabled={oauthLoading}
+                      >
+                        <LogIn size={16} />
+                        {oauthLoading ? '登录中...' : '使用 Google 账户登录'}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="vertex-info">
+                    <p>💡 Vertex AI 支持的功能：</p>
+                    <ul>
+                      <li><Video size={14} /> Veo 3.0 / 2.0 视频生成</li>
+                      <li>🖼️ Imagen 3.0 图片生成</li>
+                      <li>💬 Gemini 2.0 / 1.5 对话</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
 
               {/* 自定义 API URL */}
               {currentProvider === 'custom' && (

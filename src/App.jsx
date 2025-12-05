@@ -4,9 +4,11 @@ import { Toaster } from 'react-hot-toast'
 import LeftSidebar from './components/LeftSidebar'
 import TopBar from './components/TopBar'
 import ChatContainer from './components/ChatContainer'
+import ImageGenContainer from './components/ImageGenContainer'
+import VideoGenContainer from './components/VideoGenContainer'
 import RightPanel from './components/RightPanel'
 import SettingsPanel from './components/SettingsPanel'
-import ErrorBoundary from './components/ErrorBoundary' // 导入 ErrorBoundary
+import ErrorBoundary from './components/ErrorBoundary'
 import './App.css'
 
 function App() {
@@ -62,6 +64,20 @@ function App() {
     isMobile && 'mobile'
   ].filter(Boolean).join(' ')
 
+  // 渲染主内容
+  const renderMainContent = () => {
+    switch (uiState.leftActiveTab) {
+      case 'image':
+        return <ImageGenContainer />
+      case 'video':
+        return <VideoGenContainer />
+      case 'chat':
+      case 'settings':
+      default:
+        return <ChatContainer />
+    }
+  }
+
   return (
     <div className={containerClasses}>
       <Toaster position="top-center" toastOptions={{
@@ -83,17 +99,19 @@ function App() {
           onThemeToggle={toggleTheme}
           onSettingsOpen={() => setSettingsOpen(true)}
         />
-        {/* 使用 ErrorBoundary 包裹 ChatContainer */}
+        {/* 使用 ErrorBoundary 包裹主内容 */}
         <ErrorBoundary>
-          <ChatContainer />
+          {renderMainContent()}
         </ErrorBoundary>
       </div>
 
-      {/* 右侧控制面板 */}
-      <RightPanel
-        isOpen={uiState.rightPanelOpen}
-        onClose={() => setRightPanelOpen(false)}
-      />
+      {/* 右侧控制面板 - 仅在 Chat 模式下显示 */}
+      {(uiState.leftActiveTab === 'chat' || uiState.leftActiveTab === 'settings') && (
+        <RightPanel
+          isOpen={uiState.rightPanelOpen}
+          onClose={() => setRightPanelOpen(false)}
+        />
+      )}
 
       {/* 设置面板（模态） */}
       <SettingsPanel
