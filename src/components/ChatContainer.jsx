@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import { toast } from 'react-hot-toast'
 import aiService from '../services/aiService'
@@ -10,6 +11,7 @@ import './ChatContainer.css'
 const MESSAGES_PER_GROUP = 25
 
 function ChatContainer() {
+  const { t } = useTranslation()
   const {
     getCurrentSession,
     getCurrentProvider,
@@ -88,7 +90,7 @@ function ChatContainer() {
     if (!trimmedText && (!images || images.length === 0)) return
 
     if (!mergedApiKey && currentProvider !== 'custom') {
-      toast.error(`请先在设置中配置 ${provider?.name} 的 API Key`)
+      toast.error(t('settings.api_key_placeholder', { provider: provider?.name }))
       setSettingsOpen(true)
       return
     }
@@ -178,9 +180,9 @@ function ChatContainer() {
       }
     } catch (error) {
       console.error('AI调用失败:', error)
-      toast.error(`AI 请求失败: ${error.message}`)
+      toast.error(`${t('common.error')}: ${error.message}`)
       updateMessage(session.id, aiMessageId, {
-        content: `❌ 错误: ${error.message}`,
+        content: `❌ ${t('common.error')}: ${error.message}`,
         isStreaming: false,
         isError: true
       })
@@ -273,13 +275,13 @@ function ChatContainer() {
         {!session?.messages?.length ? (
           <div className="welcome-screen">
             <div className="welcome-icon">✨</div>
-            <h2>开始新对话</h2>
-            <p>在下方输入框中输入消息开始与 AI 对话</p>
+            <h2>{t('chat.welcome_title')}</h2>
+            <p>{t('chat.welcome_desc')}</p>
             <div className="feature-list">
-              <div className="feature-item">💬 多模型对话</div>
-              <div className="feature-item">🖼️ 图片生成</div>
-              <div className="feature-item">📷 图片理解</div>
-              <div className="feature-item">🎬 视频生成</div>
+              <div className="feature-item">💬 {t('chat.feature_chat')}</div>
+              <div className="feature-item">🖼️ {t('chat.feature_image_gen')}</div>
+              <div className="feature-item">📷 {t('chat.feature_image_vision')}</div>
+              <div className="feature-item">🎬 {t('chat.feature_video')}</div>
             </div>
           </div>
         ) : (
@@ -334,5 +336,3 @@ function ChatContainer() {
     </div>
   )
 }
-
-export default ChatContainer

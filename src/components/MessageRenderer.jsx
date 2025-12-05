@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -28,6 +29,7 @@ function parseGeneratedImages(content) {
 
 // 复制按钮组件
 function CopyButton({ text, className = '' }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(async () => {
@@ -44,10 +46,10 @@ function CopyButton({ text, className = '' }) {
     <button
       className={`copy-btn ${copied ? 'copied' : ''} ${className}`}
       onClick={handleCopy}
-      title={copied ? '已复制' : '复制'}
+      title={copied ? t('chat.copied') : t('chat.copy_code')}
     >
       {copied ? <Check size={14} /> : <Copy size={14} />}
-      <span>{copied ? '已复制' : '复制'}</span>
+      <span>{copied ? t('chat.copied') : t('chat.copy_code')}</span>
     </button>
   )
 }
@@ -63,6 +65,7 @@ function MessageRenderer({
   onEditSave,
   onEditCancel
 }) {
+  const { t } = useTranslation()
   const { role, content, images, thinking, isStreaming, isError } = message
 
   // 解析生成的图片
@@ -80,7 +83,7 @@ function MessageRenderer({
           <span></span>
           <span></span>
         </div>
-        {!compact && <span className="streaming-text">正在生成...</span>}
+        {!compact && <span className="streaming-text">{t('common.loading')}</span>}
       </div>
     )
   }
@@ -106,7 +109,7 @@ function MessageRenderer({
         </div>
         <div className="message-header-actions">
           <span className="message-time">
-            {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+            {new Date(message.timestamp).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit'
             })}
@@ -116,7 +119,7 @@ function MessageRenderer({
             <button
               className="action-btn"
               onClick={() => onEdit(message)}
-              title="编辑消息"
+              title={t('common.edit')}
             >
               <Edit2 size={14} />
             </button>
@@ -129,7 +132,7 @@ function MessageRenderer({
                 <button
                   className="action-btn"
                   onClick={() => onRegenerate(message)}
-                  title="重新生成"
+                  title={t('chat.regenerate')}
                 >
                   <RefreshCw size={14} />
                 </button>
@@ -150,10 +153,10 @@ function MessageRenderer({
           />
           <div className="edit-actions">
             <button className="edit-cancel-btn" onClick={onEditCancel}>
-              取消
+              {t('common.cancel')}
             </button>
             <button className="edit-save-btn" onClick={onEditSave}>
-              保存并重新生成
+              {t('common.save')}
             </button>
           </div>
         </div>
@@ -164,7 +167,7 @@ function MessageRenderer({
             <div className="thinking-block">
               <div className="thinking-header">
                 <span className="thinking-icon">💭</span>
-                <span>思考过程</span>
+                <span>{t('settings.thinking_label')}</span>
               </div>
               <div className="thinking-content">{thinking}</div>
             </div>
@@ -177,7 +180,7 @@ function MessageRenderer({
                 <img
                   key={idx}
                   src={img}
-                  alt={`上传的图片 ${idx + 1}`}
+                  alt={`Image ${idx + 1}`}
                   className="uploaded-image"
                 />
               ))}
@@ -191,7 +194,7 @@ function MessageRenderer({
                 <div key={idx} className="generated-image-container">
                   <img
                     src={img.src}
-                    alt={img.alt || '生成的图片'}
+                    alt={img.alt || 'Generated Image'}
                     className="generated-image"
                   />
                   <div className="image-actions">
@@ -200,7 +203,7 @@ function MessageRenderer({
                       download={`generated-image-${Date.now()}.png`}
                       className="download-btn"
                     >
-                      下载
+                      {t('common.export')}
                     </a>
                   </div>
                 </div>
@@ -260,7 +263,7 @@ function MessageRenderer({
                             <button
                               className="code-action-btn"
                               onClick={handleDownload}
-                              title="下载代码"
+                              title={t('common.export')}
                             >
                               <Download size={14} />
                             </button>
@@ -291,7 +294,7 @@ function MessageRenderer({
                     if (src && src.startsWith('data:image/')) {
                       return (
                         <div className="generated-image-container inline">
-                          <img src={src} alt={alt || '图片'} className="generated-image" />
+                          <img src={src} alt={alt || 'Image'} className="generated-image" />
                         </div>
                       )
                     }
@@ -321,6 +324,7 @@ function MessageRenderer({
 
 // 消息分组组件 - 25条消息为一组
 function MessageGroup({ messages, groupIndex, totalGroups, isExpanded, onToggle, ...messageProps }) {
+  const { t } = useTranslation()
   const startIndex = groupIndex * 25
   const endIndex = Math.min(startIndex + 25, messages.length)
   const groupMessages = messages.slice(startIndex, endIndex)
@@ -332,7 +336,7 @@ function MessageGroup({ messages, groupIndex, totalGroups, isExpanded, onToggle,
       <div className="message-group collapsed">
         <button className="group-toggle" onClick={onToggle}>
           <ChevronDown size={16} />
-          <span>显示第 {startIndex + 1} - {endIndex} 条消息 ({groupMessages.length} 条)</span>
+          <span>Show messages {startIndex + 1} - {endIndex} ({groupMessages.length})</span>
         </button>
       </div>
     )
@@ -343,7 +347,7 @@ function MessageGroup({ messages, groupIndex, totalGroups, isExpanded, onToggle,
       {!isLatestGroup && (
         <button className="group-toggle expanded" onClick={onToggle}>
           <ChevronUp size={16} />
-          <span>收起第 {startIndex + 1} - {endIndex} 条消息</span>
+          <span>Hide messages {startIndex + 1} - {endIndex}</span>
         </button>
       )}
       {groupMessages.map((message) => (

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import aiService from '../services/aiService'
 import { exportToMarkdown } from '../utils/exportUtils'
@@ -18,6 +19,7 @@ import {
 import './TopBar.css'
 
 function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
+  const { t } = useTranslation()
   const {
     uiState,
     toggleRightPanel,
@@ -72,7 +74,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
   }, [configOpen])
 
   const handleClear = () => {
-    if (session?.messages?.length && window.confirm('确定要清空当前对话吗？')) {
+    if (session?.messages?.length && window.confirm(t('topbar.clear_confirm'))) {
       clearSession(session.id)
     }
   }
@@ -94,7 +96,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
         <button
           className="icon-btn menu-btn"
           onClick={toggleLeftSidebar}
-          title="菜单"
+          title={t('topbar.menu')}
         >
           <Menu size={20} />
         </button>
@@ -114,7 +116,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
               {provider?.name} · {currentModel || provider?.defaultModel}
             </span>
             <span className="config-mode">
-              {generationMode === 'chat' ? '对话' : generationMode === 'image' ? '图片' : '视频'}
+              {generationMode === 'chat' ? t('chat.model_mode_chat') : generationMode === 'image' ? t('chat.model_mode_image') : t('chat.model_mode_video')}
             </span>
             <ChevronDown size={12} className={configOpen ? 'rotated' : ''} />
           </button>
@@ -123,7 +125,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           {configOpen && (
             <div className="config-menu">
               <div className="config-row">
-                <label>提供商</label>
+                <label>{t('settings.tab_providers')}</label>
                 <select
                   value={currentProvider}
                   onChange={(e) => setCurrentProvider(e.target.value)}
@@ -134,7 +136,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
                 </select>
               </div>
               <div className="config-row">
-                <label>模型</label>
+                <label>{t('settings.model_label')}</label>
                 <select
                   value={currentModel || provider?.defaultModel || ''}
                   onChange={(e) => setCurrentModel(e.target.value)}
@@ -145,12 +147,12 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
                 </select>
               </div>
               <div className="config-row">
-                <label>模式</label>
+                <label>{t('chat.feature_chat')}</label> {/* 这里可能复用 label 或专门建一个 mode label */}
                 <div className="mode-switch">
                   {[
-                    { id: 'chat', label: '对话' },
-                    { id: 'image', label: '图片' },
-                    { id: 'video', label: '视频' }
+                    { id: 'chat', label: t('chat.model_mode_chat') },
+                    { id: 'image', label: t('chat.model_mode_image') },
+                    { id: 'video', label: t('chat.model_mode_video') }
                   ].map(mode => (
                     <button
                       key={mode.id}
@@ -163,25 +165,25 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
                 </div>
               </div>
               <div className="config-row toggles">
-                <label>功能</label>
+                <label>{t('settings.tab_general')}</label>
                 <div className="toggle-list">
                   <button
                     className={`mini-toggle ${settings.streamingEnabled ? 'on' : ''}`}
                     onClick={() => updateSettings({ streamingEnabled: !settings.streamingEnabled })}
                   >
-                    流式
+                    {t('settings.stream_label')}
                   </button>
                   <button
                     className={`mini-toggle ${settings.enableThinking ? 'on' : ''}`}
                     onClick={() => updateSettings({ enableThinking: !settings.enableThinking })}
                   >
-                    思考
+                    {t('settings.thinking_label')}
                   </button>
                   <button
                     className={`mini-toggle ${settings.enableSearch ? 'on' : ''}`}
                     onClick={() => updateSettings({ enableSearch: !settings.enableSearch })}
                   >
-                    搜索
+                    {t('settings.search_label')}
                   </button>
                 </div>
               </div>
@@ -195,7 +197,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           className="icon-btn"
           onClick={handleExport}
           disabled={!session?.messages?.length}
-          title="导出为 Markdown"
+          title={t('topbar.export_markdown')}
         >
           <Download size={18} />
         </button>
@@ -204,7 +206,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
           className="icon-btn"
           onClick={handleClear}
           disabled={!session?.messages?.length}
-          title="清空对话"
+          title={t('topbar.clear_chat')}
         >
           <Trash2 size={18} />
         </button>
@@ -212,7 +214,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
         <button
           className="icon-btn"
           onClick={toggleRightPanel}
-          title={uiState.rightPanelOpen ? '关闭控制面板' : '打开控制面板'}
+          title={uiState.rightPanelOpen ? t('topbar.close_panel') : t('topbar.open_panel')}
         >
           {uiState.rightPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
         </button>
@@ -220,7 +222,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
         <button
           className="icon-btn"
           onClick={onThemeToggle}
-          title={theme === 'light' ? '切换到暗色模式' : '切换到亮色模式'}
+          title={t('topbar.toggle_theme')}
         >
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
@@ -228,7 +230,7 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
         <button
           className="icon-btn"
           onClick={onSettingsOpen}
-          title="设置"
+          title={t('topbar.settings')}
         >
           <Settings size={18} />
         </button>

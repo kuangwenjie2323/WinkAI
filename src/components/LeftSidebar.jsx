@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import {
   Plus,
@@ -18,6 +19,7 @@ import CodeSnippets from './CodeSnippets'
 import './LeftSidebar.css'
 
 function LeftSidebar() {
+  const { t } = useTranslation()
   const {
     sessions,
     currentSessionId,
@@ -42,17 +44,17 @@ function LeftSidebar() {
   }, [editingSessionId])
 
   const tabs = [
-    { id: 'home', label: '概览', desc: '项目摘要', icon: MessageSquare },
-    { id: 'prompts', label: '我的 Prompt', desc: '最近的对话与草稿', icon: BookOpen },
-    { id: 'tuned', label: '微调模型', desc: '实验模型列表', icon: Sparkles },
-    { id: 'settings', label: '设置', desc: '偏好与存储', icon: Library } // 更改设置图标为 Library 以避免冲突
+    { id: 'home', label: t('sidebar.tab_home'), desc: t('sidebar.desc_home'), icon: MessageSquare },
+    { id: 'prompts', label: t('sidebar.tab_prompts'), desc: t('sidebar.desc_prompts'), icon: BookOpen },
+    { id: 'tuned', label: t('sidebar.tab_tuned'), desc: t('sidebar.desc_tuned'), icon: Sparkles },
+    { id: 'settings', label: t('sidebar.tab_settings'), desc: t('sidebar.desc_settings'), icon: Library } 
   ]
 
   const tabIds = tabs.map(t => t.id)
   const activeTab = tabIds.includes(uiState.leftActiveTab) ? uiState.leftActiveTab : 'prompts'
 
   const handleNewChat = () => {
-    const newId = createSession('新对话')
+    const newId = createSession(t('sidebar.new_chat'))
     setCurrentSession(newId)
     setLeftActiveTab('prompts') // 确保切换到对话列表
   }
@@ -60,10 +62,10 @@ function LeftSidebar() {
   const handleDeleteSession = (e, sessionId) => {
     e.stopPropagation()
     if (sessions.length <= 1) {
-      alert('至少需要保留一个对话')
+      alert(t('sidebar.delete_last_warning'))
       return
     }
-    if (window.confirm('确定要删除这个对话吗？')) {
+    if (window.confirm(t('sidebar.delete_confirm'))) {
       deleteSession(sessionId)
     }
   }
@@ -111,9 +113,9 @@ function LeftSidebar() {
   }
 
   const quickActions = [
-    { label: '新对话', icon: Plus, onClick: handleNewChat },
-    { label: '导入文件', icon: FolderDown, onClick: () => alert('导入功能待实现') },
-    { label: '示例库', icon: Library, onClick: () => setLeftActiveTab('home') }
+    { label: t('sidebar.new_chat'), icon: Plus, onClick: handleNewChat },
+    { label: t('sidebar.import_file'), icon: FolderDown, onClick: () => alert('导入功能待实现') },
+    { label: t('sidebar.examples'), icon: Library, onClick: () => setLeftActiveTab('home') }
   ]
 
   // 渲染Tab内容
@@ -149,7 +151,7 @@ function LeftSidebar() {
                   <button
                     className="rename-session-btn"
                     onClick={(e) => handleStartRename(e, session)}
-                    title="重命名对话"
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -158,7 +160,7 @@ function LeftSidebar() {
                   <button
                     className="delete-session-btn"
                     onClick={(e) => handleDeleteSession(e, session.id)}
-                    title="删除对话"
+                    title={t('common.delete')}
                     disabled={!!editingSessionId}
                   >
                     <Trash2 size={14} />
@@ -215,14 +217,14 @@ function LeftSidebar() {
         </div>
         {isOpen && (
           <div className="brand-text">
-            <div className="brand-title">WinkAI Studio</div>
-            <div className="brand-subtitle">Google AI风格工作台</div>
+            <div className="brand-title">{t('sidebar.brand_title')}</div>
+            <div className="brand-subtitle">{t('sidebar.brand_subtitle')}</div>
           </div>
         )}
         <button
           className="collapse-toggle"
           onClick={toggleSidebar}
-          title={isOpen ? '折叠侧边栏' : '展开侧边栏'}
+          title={isOpen ? 'Collapse' : 'Expand'}
         >
           {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
@@ -270,7 +272,7 @@ function LeftSidebar() {
       ) : (
         <div className="sidebar-header">
           {activeTab === 'prompts' && (
-            <button className="new-chat-icon-btn" onClick={handleNewChat} title="新对话">
+            <button className="new-chat-icon-btn" onClick={handleNewChat} title={t('sidebar.new_chat')}>
               <Plus size={20} />
             </button>
           )}

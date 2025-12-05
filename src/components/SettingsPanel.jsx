@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import { toast } from 'react-hot-toast'
 import { X, Settings as SettingsIcon, Cpu, Sliders } from 'lucide-react'
@@ -6,6 +7,7 @@ import aiService from '../services/aiService'
 import './SettingsPanel.css'
 
 function SettingsPanel({ isOpen, onClose }) {
+  const { t, i18n } = useTranslation()
   const {
     providers,
     currentProvider,
@@ -37,7 +39,7 @@ function SettingsPanel({ isOpen, onClose }) {
 
   const handleTestConnection = async (providerKey) => {
     setTesting(true)
-    const loadingToast = toast.loading('正在测试连接...')
+    const loadingToast = toast.loading(t('settings.testing'))
 
     const mergedApiKey = aiService.getApiKey(providerKey)
     const mergedEndpoint = aiService.getApiEndpoint(providerKey)
@@ -54,12 +56,12 @@ function SettingsPanel({ isOpen, onClose }) {
       setTestResult(providerKey, result)
 
       if (result.success) {
-        toast.success('连接成功！', { id: loadingToast })
+        toast.success(t('settings.test_success'), { id: loadingToast })
         if (result.models && result.models.length > 0) {
           setDynamicModels(providerKey, result.models)
         }
       } else {
-        toast.error(`连接失败: ${result.error}`, { id: loadingToast })
+        toast.error(`${t('settings.test_fail')}: ${result.error}`, { id: loadingToast })
       }
     } catch (error) {
       setTestResult(providerKey, {
@@ -67,10 +69,14 @@ function SettingsPanel({ isOpen, onClose }) {
         error: error.message,
         models: []
       })
-      toast.error(`错误: ${error.message}`, { id: loadingToast })
+      toast.error(`${t('common.error')}: ${error.message}`, { id: loadingToast })
     } finally {
       setTesting(false)
     }
+  }
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng)
   }
 
   if (!isOpen) return null
@@ -89,7 +95,7 @@ function SettingsPanel({ isOpen, onClose }) {
         <div className="settings-header">
           <div className="settings-title">
             <SettingsIcon size={24} />
-            <h2>设置</h2>
+            <h2>{t('settings.title')}</h2>
           </div>
           <button className="close-btn" onClick={onClose}>
             <X size={24} />
@@ -103,14 +109,14 @@ function SettingsPanel({ isOpen, onClose }) {
             onClick={() => setActiveTab('providers')}
           >
             <Cpu size={18} />
-            AI 提供商
+            {t('settings.tab_providers')}
           </button>
           <button
             className={`tab-btn ${activeTab === 'general' ? 'active' : ''}`}
             onClick={() => setActiveTab('general')}
           >
             <Sliders size={18} />
-            通用设置
+            {t('settings.tab_general')}
           </button>
         </div>
 
@@ -118,7 +124,7 @@ function SettingsPanel({ isOpen, onClose }) {
         <div className="settings-content">
           {activeTab === 'providers' && (
             <div className="settings-section">
-              <h3>选择 AI 提供商</h3>
+              <h3>{t('settings.provider_select')}</h3>
 
               {/* 提供商选择 */}
               <div className="provider-grid">
@@ -142,11 +148,11 @@ function SettingsPanel({ isOpen, onClose }) {
               {/* API Key 配置 */}
               <div className="form-group">
                 <label>
-                  API Key
+                  {t('settings.api_key_label')}
                   <span className="label-hint">
-                    {currentProvider === 'openai' && ' (从 platform.openai.com 获取)'}
-                    {currentProvider === 'anthropic' && ' (从 console.anthropic.com 获取)'}
-                    {currentProvider === 'google' && ' (从 makersuite.google.com 获取)'}
+                    {currentProvider === 'openai' && ' (platform.openai.com)'}
+                    {currentProvider === 'anthropic' && ' (console.anthropic.com)'}
+                    {currentProvider === 'google' && ' (makersuite.google.com)'}
                   </span>
                 </label>
                 <div className="api-key-group">
@@ -155,7 +161,7 @@ function SettingsPanel({ isOpen, onClose }) {
                       type={showApiKey[currentProvider] ? 'text' : 'password'}
                       value={envKeys[currentProvider] || provider.apiKey || ''}
                       onChange={(e) => setProviderApiKey(currentProvider, e.target.value)}
-                      placeholder={envKeys[currentProvider] ? '使用环境变量配置' : `输入 ${provider.name} API Key`}
+                      placeholder={envKeys[currentProvider] ? t('settings.api_key_env') : t('settings.api_key_placeholder', { provider: provider.name })}
                       className="api-key-input"
                       disabled={currentProvider !== 'custom' && !!envKeys[currentProvider]}
                     />
@@ -172,12 +178,12 @@ function SettingsPanel({ isOpen, onClose }) {
                     onClick={() => handleTestConnection(currentProvider)}
                     disabled={(currentProvider !== 'custom' && !effectiveApiKey) || testing}
                   >
-                    {testing ? '测试中...' : '测试'}
+                    {testing ? t('settings.testing') : t('settings.test_connection')}
                   </button>
                 </div>
                 {envKeys[currentProvider] && (
                   <div className="env-hint">
-                    🔒 使用环境变量配置
+                    🔒 {t('settings.api_key_env')}
                   </div>
                 )}
                 {testResults[currentProvider] && (
@@ -199,7 +205,7 @@ function SettingsPanel({ isOpen, onClose }) {
                       </>
                     ) : (
                       <div className="test-error">
-                        <div style={{ fontWeight: 600, marginBottom: '4px' }}>✗ 连接失败</div>
+                        <div style={{ fontWeight: 600, marginBottom: '4px' }}>✗ {t('settings.test_fail')}</div>
                         <div style={{ fontSize: '0.875rem', opacity: 0.9, wordBreak: 'break-word' }}>
                           {testResults[currentProvider].error}
                         </div>
@@ -213,18 +219,17 @@ function SettingsPanel({ isOpen, onClose }) {
               {currentProvider === 'custom' && (
                 <>
                   <div className="form-group">
-                    <label>API 地址</label>
+                    <label>{t('settings.custom_url')}</label>
                     <input
                       type="url"
                       value={provider.baseURL || ''}
                       onChange={(e) => setProviderBaseURL(currentProvider, e.target.value)}
                       placeholder="https://api.example.com/v1"
                     />
-                    <p className="form-hint">自定义 API 接口地址</p>
                   </div>
 
                   <div className="form-group">
-                    <label>API 类型</label>
+                    <label>{t('settings.custom_type')}</label>
                     <select
                       value={provider.apiType || 'openai'}
                       onChange={(e) => setProviderApiType(currentProvider, e.target.value)}
@@ -234,29 +239,23 @@ function SettingsPanel({ isOpen, onClose }) {
                       <option value="anthropic">Anthropic Claude</option>
                       <option value="google">Google Gemini</option>
                     </select>
-                    <p className="form-hint">
-                      选择自定义 API 使用的协议格式
-                    </p>
                   </div>
 
                   <div className="form-group">
-                    <label>CORS 代理地址（可选）</label>
+                    <label>{t('settings.cors_proxy')}</label>
                     <input
                       type="url"
                       value={provider.corsProxyUrl || ''}
                       onChange={(e) => setProviderCorsProxyUrl(currentProvider, e.target.value)}
                       placeholder="https://your-proxy.com/"
                     />
-                    <p className="form-hint">
-                      如果遇到 CORS 跨域问题，请配置你自己的代理服务器地址。格式: https://proxy.com/
-                    </p>
                   </div>
                 </>
               )}
 
               {/* 模型选择 */}
               <div className="form-group">
-                <label>模型</label>
+                <label>{t('settings.model_label')}</label>
                 <select
                   value={currentModel || provider.defaultModel || ''}
                   onChange={(e) => setCurrentModel(e.target.value)}
@@ -269,25 +268,34 @@ function SettingsPanel({ isOpen, onClose }) {
                       </option>
                     ))
                   ) : (
-                    <option value="">请先配置自定义模型</option>
+                    <option value="">{t('settings.model_placeholder')}</option>
                   )}
                 </select>
-                <p className="form-hint">
-                  {provider.supportsVision && '✓ 支持图片识别'}
-                  {provider.supportsStreaming && ' · ✓ 支持流式输出'}
-                </p>
               </div>
             </div>
           )}
 
           {activeTab === 'general' && (
             <div className="settings-section">
-              <h3>模型参数</h3>
+              <h3>{t('settings.tab_general')}</h3>
+
+              {/* 语言选择 */}
+              <div className="form-group">
+                <label>{t('settings.language_label')}</label>
+                <select
+                  value={i18n.language}
+                  onChange={(e) => changeLanguage(e.target.value)}
+                  className="model-select"
+                >
+                  <option value="en">English</option>
+                  <option value="zh">中文 (Chinese)</option>
+                </select>
+              </div>
 
               {/* Temperature */}
               <div className="form-group">
                 <label>
-                  Temperature
+                  {t('settings.temp_label')}
                   <span className="setting-value">{settings.temperature.toFixed(1)}</span>
                 </label>
                 <input
@@ -301,14 +309,11 @@ function SettingsPanel({ isOpen, onClose }) {
                   }
                   className="slider"
                 />
-                <p className="form-hint">
-                  较低值更确定性，较高值更随机 (推荐: 0.7)
-                </p>
               </div>
 
               {/* Max Tokens */}
               <div className="form-group">
-                <label>Max Tokens</label>
+                <label>{t('settings.max_tokens_label')}</label>
                 <input
                   type="number"
                   value={settings.maxTokens}
@@ -319,9 +324,6 @@ function SettingsPanel({ isOpen, onClose }) {
                   max="32000"
                   step="100"
                 />
-                <p className="form-hint">
-                  单次响应的最大长度 (推荐: 4096)
-                </p>
               </div>
 
               <h3 className="section-title">功能开关</h3>
@@ -336,9 +338,8 @@ function SettingsPanel({ isOpen, onClose }) {
                       updateSettings({ streamingEnabled: e.target.checked })
                     }
                   />
-                  <span>启用流式输出</span>
+                  <span>{t('settings.stream_label')}</span>
                 </label>
-                <p className="form-hint">实时显示 AI 响应，提升体验</p>
               </div>
 
               {/* 思考模式 */}
@@ -351,9 +352,8 @@ function SettingsPanel({ isOpen, onClose }) {
                       updateSettings({ enableThinking: e.target.checked })
                     }
                   />
-                  <span>显示思考过程</span>
+                  <span>{t('settings.thinking_label')}</span>
                 </label>
-                <p className="form-hint">展示 AI 的推理步骤（部分模型支持）</p>
               </div>
 
               {/* 自动保存 */}
@@ -366,9 +366,8 @@ function SettingsPanel({ isOpen, onClose }) {
                       updateSettings({ autoSaveHistory: e.target.checked })
                     }
                   />
-                  <span>自动保存对话历史</span>
+                  <span>{t('settings.autosave_label')}</span>
                 </label>
-                <p className="form-hint">将对话保存到本地存储</p>
               </div>
             </div>
           )}
@@ -377,7 +376,7 @@ function SettingsPanel({ isOpen, onClose }) {
         {/* 底部信息 */}
         <div className="settings-footer">
           <p className="footer-note">
-            💡 API Key 仅保存在浏览器本地，不会上传到服务器
+            {t('settings.local_storage_note')}
           </p>
         </div>
       </div>
