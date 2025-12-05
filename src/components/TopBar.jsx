@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useStore } from '../store/useStore'
 import aiService from '../services/aiService'
+import { exportToMarkdown } from '../utils/exportUtils'
 import {
   Settings,
   Sun,
@@ -11,7 +12,8 @@ import {
   Sparkles,
   Menu,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Download
 } from 'lucide-react'
 import './TopBar.css'
 
@@ -72,6 +74,12 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
   const handleClear = () => {
     if (session?.messages?.length && window.confirm('确定要清空当前对话吗？')) {
       clearSession(session.id)
+    }
+  }
+
+  const handleExport = () => {
+    if (session?.messages?.length) {
+      exportToMarkdown(session.messages, session.name)
     }
   }
 
@@ -183,6 +191,15 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
       </div>
 
       <div className="topbar-right">
+        <button
+          className="icon-btn"
+          onClick={handleExport}
+          disabled={!session?.messages?.length}
+          title="导出为 Markdown"
+        >
+          <Download size={18} />
+        </button>
+
         <button
           className="icon-btn"
           onClick={handleClear}
