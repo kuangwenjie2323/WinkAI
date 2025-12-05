@@ -568,7 +568,6 @@ class AIService {
 
     const modelsData = await modelsResponse.json()
     const models = modelsData.data
-      .filter(m => m.id.includes('gpt'))
       .map(m => ({ id: m.id, name: m.id, created: m.created }))
       .sort((a, b) => b.created - a.created)
 
@@ -664,14 +663,6 @@ class AIService {
 
     const modelsData = await modelsResponse.json()
     const models = modelsData.models
-      .filter(m => {
-        const name = m.name.toLowerCase()
-        // 排除非对话模型
-        if (name.includes('embedding') || name.includes('robotics') || name.includes('tts')) return false
-        
-        // 只保留 gemini 和 imagen 系列
-        return name.includes('gemini') || name.includes('imagen')
-      })
       .map(m => {
         // 模型 ID：去掉 'models/' 前缀
         const modelId = m.name.replace('models/', '')
