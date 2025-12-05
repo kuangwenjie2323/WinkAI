@@ -42,6 +42,7 @@ class AIService {
       openai: import.meta.env.VITE_OPENAI_API_KEY,
       anthropic: import.meta.env.VITE_ANTHROPIC_API_KEY,
       google: import.meta.env.VITE_GOOGLE_API_KEY,
+      vertex: import.meta.env.VITE_VERTEX_API_KEY,
       custom: import.meta.env.VITE_CUSTOM_API_KEY
     }[provider]
 
@@ -59,6 +60,7 @@ class AIService {
       openai: import.meta.env.VITE_OPENAI_API_ENDPOINT,
       anthropic: import.meta.env.VITE_ANTHROPIC_API_ENDPOINT,
       google: import.meta.env.VITE_GOOGLE_API_ENDPOINT,
+      vertex: import.meta.env.VITE_VERTEX_API_ENDPOINT,
       custom: import.meta.env.VITE_CUSTOM_API_ENDPOINT
     }[provider]
 
@@ -69,6 +71,17 @@ class AIService {
     const storedEndpoint = providers?.[provider]?.baseURL
 
     return this.normalizeEndpoint(provider, storedEndpoint || this.defaultEndpoints[provider])
+  }
+
+  // 获取 Vertex 配置
+  getVertexConfig() {
+    const { providers } = useStore.getState()
+    const vertexConfig = providers?.vertex || {}
+    
+    return {
+      projectId: import.meta.env.VITE_VERTEX_PROJECT_ID || vertexConfig.projectId,
+      location: import.meta.env.VITE_VERTEX_LOCATION || vertexConfig.location || 'us-central1'
+    }
   }
 
   // 初始化客户端
@@ -798,8 +811,8 @@ class AIService {
   async *streamChatVertex(messages, model, options = {}) {
     const apiKey = this.getApiKey('vertex')
     const baseURL = this.getApiEndpoint('vertex')
-    const projectId = options.projectId || this.defaultProjectId || ''
-    const location = options.location || 'us-central1'
+    const { projectId, location } = this.getVertexConfig()
+    
     if (!apiKey) throw new Error('Vertex API Key 未配置')
     if (!projectId) throw new Error('Vertex 项目ID未配置')
 
