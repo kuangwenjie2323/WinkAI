@@ -199,3 +199,5 @@ function VideoGenContainer() {
     </div>
   )
 }
+
+export default VideoGenContainer
