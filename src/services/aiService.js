@@ -664,7 +664,14 @@ class AIService {
 
     const modelsData = await modelsResponse.json()
     const models = modelsData.models
-      .filter(m => m.name.includes('gemini') || m.name.includes('imagen'))
+      .filter(m => {
+        const name = m.name.toLowerCase()
+        // 排除非对话模型
+        if (name.includes('embedding') || name.includes('robotics') || name.includes('tts')) return false
+        
+        // 只保留 gemini 和 imagen 系列
+        return name.includes('gemini') || name.includes('imagen')
+      })
       .map(m => {
         // 模型 ID：去掉 'models/' 前缀
         const modelId = m.name.replace('models/', '')
@@ -679,25 +686,21 @@ class AIService {
         const getPriority = (id) => {
           if (id === 'gemini-3-pro-preview') return 0 // 绝对置顶
           
-          // 降级特定类型模型
+          // 降级特定类型模型 (Embedding/Robotics/TTS 最底端)
           if (id.includes('embedding') || id.includes('robotics') || id.includes('tts')) return 90
-          if (id.includes('image')) return 5 // 图片专用模型排在通用模型之后
-
-          if (id.includes('gemini-3')) return 10 // 其他 Gemini 3 文本模型
           
+          // Gemini 3 系列优先级
+          if (id.includes('gemini-3') && !id.includes('image')) return 10
+          
+          // Gemini 2.5 系列优先级
           if (id.includes('gemini-2.5-pro')) return 20
           if (id.includes('gemini-2.5-flash')) return 21
           if (id.includes('gemini-2.5')) return 22
 
-          if (id.includes('gemini-2.0-flash-exp')) return 30
+          // 图片专用模型排在所有通用文本模型之后
+          if (id.includes('image') || id.includes('imagen')) return 80 
           
-          if (id.includes('gemini-1.5-pro')) return 40
-          if (id.includes('gemini-1.5-flash')) return 41
-          
-          if (id.includes('gemini-1.0-pro')) return 50
-          if (id.includes('imagen')) return 60
-          
-          return 80 // 其他普通模型
+          return 100 // 其他 (包括 2.0, 1.5 等)
         }
         
         const priorityA = getPriority(a.id)
@@ -710,6 +713,15 @@ class AIService {
         // 同优先级按字母倒序（通常意味着版本更新）
         return b.id.localeCompare(a.id)
       })
+
+    // 强制添加 gemini-3-pro-preview (如果 API 没返回，但我们确信它可用或想尝试)
+    const topModelId = 'gemini-3-pro-preview'
+    if (!models.some(m => m.id === topModelId)) {
+      models.unshift({
+        id: topModelId,
+        name: topModelId
+      })
+    }
 
     return {
       models,
