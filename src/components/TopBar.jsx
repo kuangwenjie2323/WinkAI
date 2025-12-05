@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import aiService from '../services/aiService'
-import { exportToMarkdown } from '../utils/exportUtils'
+import { exportToMarkdown, exportToJson } from '../utils/exportUtils'
 import {
   Settings,
   Sun,
@@ -14,7 +14,8 @@ import {
   Menu,
   SlidersHorizontal,
   ChevronDown,
-  Download
+  Download,
+  FileJson
 } from 'lucide-react'
 import './TopBar.css'
 
@@ -79,9 +80,15 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
     }
   }
 
-  const handleExport = () => {
+  const handleExportMarkdown = () => {
     if (session?.messages?.length) {
       exportToMarkdown(session.messages, session.name)
+    }
+  }
+
+  const handleExportJson = () => {
+    if (session?.messages?.length) {
+      exportToJson(session.messages, session.name)
     }
   }
 
@@ -195,7 +202,16 @@ function TopBar({ onThemeToggle, onSettingsOpen, theme }) {
       <div className="topbar-right">
         <button
           className="icon-btn"
-          onClick={handleExport}
+          onClick={handleExportJson}
+          disabled={!session?.messages?.length}
+          title={t('topbar.export_json')}
+        >
+          <FileJson size={18} />
+        </button>
+
+        <button
+          className="icon-btn"
+          onClick={handleExportMarkdown}
           disabled={!session?.messages?.length}
           title={t('topbar.export_markdown')}
         >

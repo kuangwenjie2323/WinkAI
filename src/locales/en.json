@@ -30,6 +30,7 @@
   "topbar": {
     "clear_chat": "Clear Chat",
     "export_markdown": "Export to Markdown",
+    "export_json": "Export to JSON",
     "open_panel": "Open Control Panel",
     "close_panel": "Close Control Panel",
     "toggle_theme": "Toggle Theme",

@@ -30,6 +30,7 @@
   "topbar": {
     "clear_chat": "清空对话",
     "export_markdown": "导出 Markdown",
+    "export_json": "导出 JSON",
     "open_panel": "打开控制面板",
     "close_panel": "关闭控制面板",
     "toggle_theme": "切换主题",
