@@ -70,17 +70,17 @@ function MessageRenderer({
   const hasGeneratedImages = generatedImages.length > 0
 
   // 生成状态显示
-  const renderStreamingStatus = () => {
+  const renderStreamingStatus = (compact = false) => {
     if (!isStreaming) return null
 
     return (
-      <div className="streaming-status">
+      <div className={`streaming-status ${compact ? 'compact' : ''}`}>
         <div className="streaming-dots">
           <span></span>
           <span></span>
           <span></span>
         </div>
-        <span className="streaming-text">正在生成...</span>
+        {!compact && <span className="streaming-text">正在生成...</span>}
       </div>
     )
   }
@@ -89,9 +89,20 @@ function MessageRenderer({
     <div className={`message-item ${role} ${isError ? 'error' : ''} ${isStreaming ? 'streaming' : ''}`}>
       {/* 角色标签 */}
       <div className="message-role-header">
-        <div className="role-info">
-          <span className="role-label">{role === 'user' ? 'User' : 'Model'}</span>
-          {isStreaming && renderStreamingStatus()}
+        <div className="message-header-left">
+          <div className={`message-avatar ${role}`}>
+            <span className="avatar-symbol">{role === 'assistant' ? '✨' : '👤'}</span>
+          </div>
+          <div className="message-author">
+            <div className="author-name-row">
+              <span className="author-name">{role === 'user' ? 'User' : 'Wink AI'}</span>
+              {role === 'assistant' && <span className="author-badge">APP</span>}
+            </div>
+            <div className="author-meta">
+              <span className="role-label">{role === 'user' ? 'User' : 'Assistant'}</span>
+              {isStreaming && renderStreamingStatus(true)}
+            </div>
+          </div>
         </div>
         <div className="message-header-actions">
           <span className="message-time">
