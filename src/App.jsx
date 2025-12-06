@@ -105,8 +105,8 @@ function App() {
         </ErrorBoundary>
       </div>
 
-      {/* 右侧控制面板 - 仅在 Chat 模式下显示 */}
-      {(uiState.leftActiveTab === 'chat' || uiState.leftActiveTab === 'settings') && (
+      {/* Right control panel - Shown for Chat, Image, Video, and Settings */}
+      {['chat', 'image', 'video', 'settings'].includes(uiState.leftActiveTab) && (
         <RightPanel
           isOpen={uiState.rightPanelOpen}
           onClose={() => setRightPanelOpen(false)}

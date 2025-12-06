@@ -7,7 +7,7 @@ import './VideoGenContainer.css'
 
 function VideoGenContainer() {
   const { t } = useTranslation()
-  const { providers, currentProvider, dynamicModels } = useStore()
+  const { providers, currentProvider, dynamicModels, addToVideoLibrary } = useStore()
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [videoUrl, setVideoUrl] = useState(null)
@@ -150,8 +150,17 @@ function VideoGenContainer() {
           if (chunk.content.includes('<video')) {
              const srcMatch = chunk.content.match(/src="([^"]+)"/)
              if (srcMatch && srcMatch[1]) {
-               setVideoUrl(srcMatch[1])
+               const url = srcMatch[1]
+               setVideoUrl(url)
                videoFound = true
+               
+               // 保存到历史记录
+               addToVideoLibrary({
+                 url,
+                 prompt,
+                 model,
+                 createdAt: Date.now()
+               })
              }
           } else {
             fullText += chunk.content

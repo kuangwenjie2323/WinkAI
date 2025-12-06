@@ -8,7 +8,7 @@ import './ImageGenContainer.css'
 
 function ImageGenContainer() {
   const { t } = useTranslation()
-  const { providers, currentProvider, dynamicModels } = useStore()
+  const { providers, currentProvider, dynamicModels, addToImageLibrary } = useStore()
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [imageUrl, setImageUrl] = useState(null)
@@ -110,8 +110,17 @@ function ImageGenContainer() {
           if (chunk.content.includes('data:image')) {
              const srcMatch = chunk.content.match(/\((data:image\/[^)]+)\)/)
              if (srcMatch && srcMatch[1]) {
-               setImageUrl(srcMatch[1])
+               const url = srcMatch[1]
+               setImageUrl(url)
                imgFound = true
+
+               // 保存到历史记录
+               addToImageLibrary({
+                 url,
+                 prompt,
+                 model,
+                 createdAt: Date.now()
+               })
              }
           } else {
             fullText += chunk.content

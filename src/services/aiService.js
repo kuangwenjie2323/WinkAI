@@ -368,7 +368,7 @@ class AIService {
             return
           } catch (err) {
             console.error('生成错误:', err)
-            yield { type: 'content', content: `生成失败: ${err.message}\n\n注意: Veo 模型可能需要 Vertex AI 权限或尚未在当前 API 开放。` }
+            yield { type: 'content', content: `生成失败: ${err.message}\n\n**排查建议:**\n1. Veo/Imagen 模型在 AI Studio (API Key) 上可能受限或需申请白名单。\n2. 尝试切换到 **Google Vertex AI** 提供商 (需配置 GCP 项目和 OAuth)。\n3. 检查 API Key 是否有权限访问该模型。` }
             yield { type: 'done', reason: 'stop' }
             return
           }
