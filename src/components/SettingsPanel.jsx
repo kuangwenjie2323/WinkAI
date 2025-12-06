@@ -282,7 +282,7 @@ function SettingsPanel({ isOpen, onClose }) {
                     </label>
                     <input
                       type="text"
-                      value={import.meta.env.VITE_VERTEX_PROJECT_ID || provider.projectId || ''}
+                      value={provider.projectId || import.meta.env.VITE_VERTEX_PROJECT_ID || ''}
                       onChange={(e) => {
                         const { providers: p } = useStore.getState()
                         useStore.setState({
@@ -294,10 +294,9 @@ function SettingsPanel({ isOpen, onClose }) {
                       }}
                       placeholder="your-project-id"
                       className="api-key-input"
-                      disabled={!!import.meta.env.VITE_VERTEX_PROJECT_ID}
                     />
-                    {import.meta.env.VITE_VERTEX_PROJECT_ID && (
-                      <div className="env-hint">🔒 已通过环境变量配置</div>
+                    {import.meta.env.VITE_VERTEX_PROJECT_ID && !provider.projectId && (
+                      <div className="env-hint">ℹ️ 默认使用环境变量配置</div>
                     )}
                     {(provider.projectId || '').includes('apps.googleusercontent.com') && (
                       <div className="error-hint" style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px' }}>
@@ -313,7 +312,7 @@ function SettingsPanel({ isOpen, onClose }) {
                       <span className="label-hint">(服务器位置，推荐 us-central1)</span>
                     </label>
                     <select
-                      value={import.meta.env.VITE_VERTEX_LOCATION || provider.location || 'us-central1'}
+                      value={provider.location || import.meta.env.VITE_VERTEX_LOCATION || 'us-central1'}
                       onChange={(e) => {
                         const { providers: p } = useStore.getState()
                         useStore.setState({
@@ -324,7 +323,6 @@ function SettingsPanel({ isOpen, onClose }) {
                         })
                       }}
                       className="model-select"
-                      disabled={!!import.meta.env.VITE_VERTEX_LOCATION}
                       style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                     >
                       <option value="us-central1">us-central1 (美国中部 - 推荐)</option>
@@ -332,8 +330,8 @@ function SettingsPanel({ isOpen, onClose }) {
                       <option value="asia-northeast1">asia-northeast1 (东京)</option>
                       <option value="europe-west1">europe-west1 (比利时)</option>
                     </select>
-                    {import.meta.env.VITE_VERTEX_LOCATION && (
-                      <div className="env-hint">🔒 已通过环境变量配置</div>
+                    {import.meta.env.VITE_VERTEX_LOCATION && !provider.location && (
+                      <div className="env-hint">ℹ️ 默认使用环境变量配置</div>
                     )}
                   </div>
 
