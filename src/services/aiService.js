@@ -288,17 +288,44 @@ class AIService {
           // Imagen/Veo 模型使用 predict API
           try {
             const apiKey = this.getApiKey('google')
+            
+            // 准备参数
+            const imageParams = options.imageParams || {}
+            const videoParams = options.videoParams || {}
+            
+            // 构建 payload
+            const instance = { prompt }
+            // 支持参考图 (仅视频模式)
+            if (isVeoModel && videoParams.referenceImage) {
+              instance.image = { bytesBase64Encoded: videoParams.referenceImage }
+            }
+
+            const parameters = {
+              sampleCount: 1
+            }
+
+            // 添加特定参数
+            if (isImagenModel) {
+              parameters.aspectRatio = imageParams.aspectRatio || '1:1'
+            }
+            if (isVeoModel) {
+              parameters.aspectRatio = videoParams.aspectRatio || '16:9'
+              if (videoParams.duration) {
+                parameters.durationSeconds = parseInt(videoParams.duration, 10)
+              }
+              if (videoParams.withAudio) {
+                parameters.includeAudio = true
+              }
+            }
+
             const response = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`,
               {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  instances: [{ prompt }],
-                  parameters: {
-                    sampleCount: 1,
-                    // Veo 可能需要不同的参数，这里暂时使用通用参数
-                  }
+                  instances: [instance],
+                  parameters
                 })
               }
             )

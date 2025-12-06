@@ -303,3 +303,57 @@
   font-size: 11px;
   color: #444;
 }
+
+@media (max-width: 768px) {
+  .video-studio-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .video-preview-stage {
+    padding-bottom: 240px;
+  }
+
+  .video-controls-bar {
+    width: 96%;
+    bottom: 12px;
+    gap: 8px;
+  }
+
+  .params-row {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 12px;
+    padding: 12px;
+    justify-content: space-between;
+  }
+
+  .param-group {
+    flex: 1 1 45%; /* Two items per row */
+  }
+
+  .param-separator {
+    display: none;
+  }
+
+  .video-input-wrapper {
+    flex-wrap: wrap;
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .video-input-wrapper input {
+    min-width: 100%; /* Force input to new line on small screens */
+    order: 3; /* Move input to bottom */
+    margin: 8px 0;
+    height: 40px;
+  }
+
+  .mode-selector { order: 1; }
+  .settings-btn { order: 2; margin-left: auto; } /* Push settings to right */
+  .generate-btn { order: 4; margin-left: auto; } /* Generate btn at bottom right */
+  
+  /* Specific tweak for the reference image button */
+  .video-input-wrapper > button[title="Add Reference Image"] {
+    order: 2;
+  }
+}

@@ -81,13 +81,21 @@ function ImageGenContainer() {
       const messages = [{ role: 'user', content: prompt }]
       const providerConfig = providers[currentProvider] || {}
       
-      const iterator = aiService.streamChatVertex(messages, model, {
-        projectId: providerConfig.projectId,
-        location: providerConfig.location,
-        imageParams: {
-          aspectRatio
+      const iterator = aiService.streamChat(
+        currentProvider,
+        messages, 
+        model, 
+        {
+          projectId: providerConfig.projectId,
+          location: providerConfig.location,
+          apiKey: providerConfig.apiKey
+        },
+        {
+          imageParams: {
+            aspectRatio
+          }
         }
-      })
+      )
       
       for await (const chunk of iterator) {
         if (chunk.type === 'content') {

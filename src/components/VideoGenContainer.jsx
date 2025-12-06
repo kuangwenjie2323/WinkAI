@@ -117,17 +117,25 @@ function VideoGenContainer() {
       const messages = [{ role: 'user', content: prompt }]
       const providerConfig = providers[currentProvider] || {}
       
-      const iterator = aiService.streamChatVertex(messages, model, {
-        projectId: providerConfig.projectId,
-        location: providerConfig.location,
-        videoParams: {
-          aspectRatio,
-          resolution,
-          duration,
-          withAudio,
-          referenceImage // 传入参考图
+      const iterator = aiService.streamChat(
+        currentProvider,
+        messages, 
+        model, 
+        {
+          projectId: providerConfig.projectId,
+          location: providerConfig.location,
+          apiKey: providerConfig.apiKey
+        },
+        {
+          videoParams: {
+            aspectRatio,
+            resolution,
+            duration,
+            withAudio,
+            referenceImage // 传入参考图
+          }
         }
-      })
+      )
       
       for await (const chunk of iterator) {
         if (chunk.type === 'content') {
