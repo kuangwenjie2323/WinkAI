@@ -1042,7 +1042,7 @@ class AIService {
 
     // Imagen 图片生成
     if (isImagenModel) {
-      yield* this._generateVertexImage(projectId, location, model, prompt, accessToken || apiKey)
+      yield* this._generateVertexImage(projectId, location, model, prompt, accessToken || apiKey, options.imageParams)
       return
     }
 
@@ -1180,7 +1180,7 @@ class AIService {
   }
 
   // Vertex AI Imagen 图片生成
-  async *_generateVertexImage(projectId, location, model, prompt, token) {
+  async *_generateVertexImage(projectId, location, model, prompt, token, imageParams = {}) {
     yield { type: 'content', content: '🖼️ 正在生成图片，请稍候...\n\n' }
 
     const modelName = model.replace('publishers/google/models/', '')
@@ -1196,7 +1196,8 @@ class AIService {
         body: JSON.stringify({
           instances: [{ prompt }],
           parameters: {
-            sampleCount: 1
+            sampleCount: 1,
+            aspectRatio: imageParams.aspectRatio || '1:1'
           }
         })
       })
