@@ -336,7 +336,8 @@ class AIService {
 
             if (!response.ok) {
               const errorText = await response.text()
-              throw new Error(`API 错误 ${response.status}: ${errorText}`)
+              const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict`
+              throw new Error(`API 错误 ${response.status} (${endpoint}): ${errorText}`)
             }
 
             const data = await response.json()
@@ -1195,7 +1196,8 @@ class AIService {
 
       if (!response.ok) {
         const errorText = await response.text()
-        yield { type: 'content', content: `视频生成失败: ${response.status} - ${errorText}` }
+        console.error(`Vertex Video Gen Failed. Endpoint: ${endpoint}, Status: ${response.status}, Error: ${errorText}`)
+        yield { type: 'content', content: `视频生成失败 (Vertex): ${response.status} - ${errorText}\n\n请求地址: \`${endpoint}\`` }
         yield { type: 'done', reason: 'error' }
         return
       }

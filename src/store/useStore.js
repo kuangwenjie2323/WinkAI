@@ -70,7 +70,7 @@ export const useStore = create(
           ],
           defaultModel: 'publishers/google/models/gemini-2.0-flash-001',
           projectId: '',
-          location: 'asia-southeast1',
+          location: 'us-central1',
           supportsVision: true,
           supportsStreaming: true,
           supportsVideo: true  // 支持视频生成
