@@ -278,14 +278,18 @@ class AIService {
       const lastMessage = messages[messages.length - 1]
       const prompt = lastMessage?.content || ''
 
-      // 图片/视频生成模式
-      if (options.mode === 'image' || options.mode === 'video' || model.includes('imagen') || model.includes('veo')) {
-        const isImagenModel = model.includes('imagen')
-        const isVeoModel = model.includes('veo')
-        const isGeminiImageModel = model.includes('image') && model.includes('gemini')
+      // 图片/视频生成模式判断
+      // Google AI Studio 支持：Imagen 4、Veo 3、Nano Banana Pro、Gemini Flash Image 等
+      const isImagenModel = model.toLowerCase().includes('imagen')
+      const isVeoModel = model.toLowerCase().includes('veo')
+      const isNanoBanana = model.toLowerCase().includes('nano') || model.includes('gemini-3-pro-image')
+      // Gemini 图片生成模型：包含 'image' 或 'flash'
+      const isGeminiImageModel = model.includes('gemini') && (model.includes('flash') || model.includes('image'))
 
+      if (options.mode === 'image' || options.mode === 'video' || isImagenModel || isVeoModel || isNanoBanana || (options.imageParams && isGeminiImageModel)) {
+
+        // Imagen/Veo 使用 predict API (Google AI Studio 也支持)
         if (isImagenModel || isVeoModel) {
-          // Imagen/Veo 模型使用 predict API
           try {
             const apiKey = this.getApiKey('google')
             
@@ -370,9 +374,22 @@ class AIService {
           }
         }
 
-        if (isGeminiImageModel) {
+        // Nano Banana Pro 和 Gemini 图片生成模型使用 generateContent API
+        if (isNanoBanana || isGeminiImageModel) {
           try {
             const apiKey = this.getApiKey('google')
+            const imageParams = options.imageParams || {}
+
+            // 构建 generationConfig，包含 imageConfig
+            const generationConfig = {
+              responseModalities: ['TEXT', 'IMAGE'],
+              // imageConfig 用于控制图片生成参数
+              imageConfig: {
+                aspectRatio: imageParams.aspectRatio || '1:1',
+                imageSize: imageParams.resolution || '1K'  // 支持 1K, 2K, 4K
+              }
+            }
+
             const response = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
               {
@@ -380,7 +397,7 @@ class AIService {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{ parts: [{ text: prompt }] }],
-                  generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+                  generationConfig
                 })
               }
             )

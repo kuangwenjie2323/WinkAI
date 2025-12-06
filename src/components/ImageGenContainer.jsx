@@ -37,20 +37,24 @@ function ImageGenContainer() {
 
   // 动态获取图片模型列表
   const getImageModels = () => {
-    // 默认回退列表
+    // 默认回退列表 - Google AI Studio 支持的图片生成模型
     const fallbackModels = [
       { id: 'gemini-3-pro-image-preview', name: 'Nano Banana Pro' },
-      { id: 'imagen-3.0-generate-002', name: 'Imagen 3.0' },
-      { id: 'imagen-3.0-fast-generate-001', name: 'Imagen 3.0 Fast' }
+      { id: 'gemini-2.0-flash-exp-image-generation', name: 'Gemini 2.0 Flash Image' },
+      { id: 'imagen-4', name: 'Imagen 4' },
+      { id: 'imagen-4-ultra', name: 'Imagen 4 Ultra' },
+      { id: 'imagen-4-fast', name: 'Imagen 4 Fast' },
+      { id: 'imagen-3.0-generate-002', name: 'Imagen 3.0' }
     ]
 
     // 获取当前提供商的动态模型
     const models = dynamicModels?.[currentProvider] || []
-    
-    // 过滤出图片模型 (包含 'imagen' 或 'image-preview')
-    const dynamicImageModels = models.filter(m => 
-      m.id.toLowerCase().includes('imagen') || m.id.toLowerCase().includes('image-preview')
-    ).map(m => ({
+
+    // 过滤出图片模型 (包含 'imagen' 或 'image' 或 'nano')
+    const dynamicImageModels = models.filter(m => {
+      const id = m.id.toLowerCase()
+      return id.includes('imagen') || id.includes('image') || id.includes('nano')
+    }).map(m => ({
       id: m.id,
       name: m.name || m.id
     }))
