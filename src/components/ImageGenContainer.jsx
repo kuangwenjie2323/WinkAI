@@ -76,6 +76,8 @@ function ImageGenContainer() {
     if (!prompt.trim()) return
     setIsGenerating(true)
     setImageUrl(null)
+    let fullText = ''
+    let imgFound = false
 
     try {
       const messages = [{ role: 'user', content: prompt }]
@@ -105,9 +107,16 @@ function ImageGenContainer() {
              const srcMatch = chunk.content.match(/\((data:image\/[^)]+)\)/)
              if (srcMatch && srcMatch[1]) {
                setImageUrl(srcMatch[1])
+               imgFound = true
              }
+          } else {
+            fullText += chunk.content
           }
         }
+      }
+
+      if (!imgFound && fullText.trim()) {
+        alert('生成未返回图片，可能是模型拒绝或返回了纯文本: \n' + fullText)
       }
     } catch (error) {
       console.error('Image generation failed:', error)

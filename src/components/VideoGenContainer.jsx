@@ -112,6 +112,8 @@ function VideoGenContainer() {
     if (!prompt.trim() && !referenceImage) return
     setIsGenerating(true)
     setVideoUrl(null)
+    let fullText = ''
+    let videoFound = false
 
     try {
       const messages = [{ role: 'user', content: prompt }]
@@ -147,9 +149,16 @@ function VideoGenContainer() {
              const srcMatch = chunk.content.match(/src="([^"]+)"/)
              if (srcMatch && srcMatch[1]) {
                setVideoUrl(srcMatch[1])
+               videoFound = true
              }
+          } else {
+            fullText += chunk.content
           }
         }
+      }
+
+      if (!videoFound && fullText.trim()) {
+        alert('生成未返回视频，可能是模型拒绝或返回了纯文本: \n' + fullText)
       }
     } catch (error) {
       console.error('Video generation failed:', error)
