@@ -80,8 +80,9 @@ class AIService {
     const vertexConfig = providers?.vertex || {}
     
     return {
-      projectId: import.meta.env.VITE_VERTEX_PROJECT_ID || vertexConfig.projectId,
-      location: import.meta.env.VITE_VERTEX_LOCATION || vertexConfig.location || 'us-central1'
+      // 优先使用用户在设置面板配置的值，其次才是环境变量
+      projectId: vertexConfig.projectId || import.meta.env.VITE_VERTEX_PROJECT_ID,
+      location: vertexConfig.location || import.meta.env.VITE_VERTEX_LOCATION || 'us-central1'
     }
   }
 
