@@ -274,7 +274,34 @@ function SettingsPanel({ isOpen, onClose }) {
               {/* Vertex AI Google OAuth 登录 */}
               {currentProvider === 'vertex' && (
                 <div className="form-group vertex-oauth-section">
-                  <label>
+                  {/* Project ID 配置 */}
+                  <div className="vertex-config">
+                    <label>
+                      Project ID
+                      <span className="label-hint">(Google Cloud 项目ID，必填)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={import.meta.env.VITE_VERTEX_PROJECT_ID || provider.projectId || ''}
+                      onChange={(e) => {
+                        const { providers: p, setProviderApiKey: s } = useStore.getState()
+                        useStore.setState({
+                          providers: {
+                            ...p,
+                            vertex: { ...p.vertex, projectId: e.target.value }
+                          }
+                        })
+                      }}
+                      placeholder="your-project-id"
+                      className="api-key-input"
+                      disabled={!!import.meta.env.VITE_VERTEX_PROJECT_ID}
+                    />
+                    {import.meta.env.VITE_VERTEX_PROJECT_ID && (
+                      <div className="env-hint">🔒 已通过环境变量配置</div>
+                    )}
+                  </div>
+
+                  <label style={{ marginTop: '16px' }}>
                     Google 账户认证
                     <span className="label-hint">(Vertex AI 需要 OAuth 认证)</span>
                   </label>

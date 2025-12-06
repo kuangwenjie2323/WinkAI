@@ -81,7 +81,7 @@ class AIService {
     
     return {
       projectId: import.meta.env.VITE_VERTEX_PROJECT_ID || vertexConfig.projectId,
-      location: import.meta.env.VITE_VERTEX_LOCATION || vertexConfig.location || 'asia-southeast1'
+      location: import.meta.env.VITE_VERTEX_LOCATION || vertexConfig.location || 'us-central1'
     }
   }
 
@@ -698,14 +698,7 @@ class AIService {
 
     const modelsData = await modelsResponse.json()
     const models = modelsData.models
-      .filter(m => {
-        const name = m.name.toLowerCase()
-        // 排除非对话/生成模型
-        if (name.includes('embedding') || name.includes('robotics') || name.includes('tts')) return false
-        
-        // 允许 gemini, imagen, veo
-        return name.includes('gemini') || name.includes('imagen') || name.includes('veo')
-      })
+      // 不进行任何过滤，保留所有可用模型
       .map(m => {
         // 模型 ID：去掉 'models/' 前缀
         const modelId = m.name.replace('models/', '')
@@ -768,16 +761,23 @@ class AIService {
   async _testVertex(config) {
     const vertexConfig = this.getVertexConfig()
     const projectId = vertexConfig.projectId
-    const location = vertexConfig.location || 'us-central1'
+    let location = vertexConfig.location || 'asia-southeast1'
 
-    if (!projectId) throw new Error('请在环境变量中配置 VITE_VERTEX_PROJECT_ID')
+    if (!projectId) {
+      throw new Error('请配置 Vertex AI 项目ID (VITE_VERTEX_PROJECT_ID 环境变量)')
+    }
 
     // 优先使用 OAuth Token，回退到 API Key
     let accessToken = googleAuthService.getAccessToken()
     const apiKey = config.apiKey
 
+    console.log('[Vertex Test] OAuth Token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'null')
+    console.log('[Vertex Test] API Key:', apiKey ? '已配置' : '未配置')
+    console.log('[Vertex Test] Project ID:', projectId)
+    console.log('[Vertex Test] Location:', location)
+
     if (!accessToken && !apiKey) {
-      throw new Error('请登录 Google 账户或提供 Vertex API Key')
+      throw new Error('请先点击"使用 Google 账户登录"按钮获取 OAuth Token')
     }
 
     // Vertex AI 模型列表（包含 Veo 和 Imagen）
@@ -791,9 +791,6 @@ class AIService {
       { id: 'publishers/google/models/gemini-1.5-pro-001', name: 'Gemini 1.5 Pro' }
     ]
 
-    // 测试调用 - 使用 generateContent 端点
-    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-1.5-flash-001:generateContent`
-
     const headers = {
       'Content-Type': 'application/json'
     }
@@ -806,35 +803,71 @@ class AIService {
       headers['Authorization'] = `Bearer ${apiKey}`
     }
 
-    const testResponse = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: 'test' }] }],
-        generationConfig: { maxOutputTokens: 5 }
+    // 定义测试函数
+    const tryTest = async (testLocation) => {
+      const endpoint = `https://${testLocation}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${testLocation}/publishers/google/models/gemini-1.5-flash-001:generateContent`
+      console.log('[Vertex Test] Endpoint:', endpoint)
+      return await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: 'test' }] }],
+          generationConfig: { maxOutputTokens: 5 }
+        })
       })
-    })
+    }
+
+    // 第一次尝试
+    let testResponse = await tryTest(location)
+
+    // 如果 404 且当前不是 us-central1，自动重试 us-central1
+    if (!testResponse.ok && testResponse.status === 404 && location !== 'us-central1') {
+      console.warn(`[Vertex Test] Location ${location} failed with 404. Retrying with us-central1...`)
+      const retryResponse = await tryTest('us-central1')
+      // 只有重试成功才覆盖结果，否则保留原始错误（或者保留重试的错误？）
+      // 通常如果重试成功，我们就认为成功。如果重试也失败，可能需要看是哪种失败。
+      // 这里简单起见：如果重试并非 404，或者重试成功，就使用重试的结果。
+      // 但为了让用户知道原始错误，如果重试也失败，可能显示原始错误更好？
+      // 不，如果重试失败，应该显示重试的错误（说明 us-central1 也不行）。
+      testResponse = retryResponse
+      if (testResponse.ok) {
+        location = 'us-central1' // 更新位置以便显示
+      }
+    }
 
     if (!testResponse.ok) {
       const errorText = await testResponse.text()
-      let errorMessage = `Vertex API 错误: ${testResponse.status}`
+      console.error('[Vertex Test] Error Response:', errorText)
+
+      let errorMessage = `Vertex API 错误 (${testResponse.status})`
       try {
         const errorJson = JSON.parse(errorText)
         const msg = errorJson.error?.message || errorText
-        if (msg.includes('OAuth') || msg.includes('authentication')) {
-          errorMessage = '认证失败，请登录 Google 账户获取 OAuth Token'
+        const code = errorJson.error?.code || testResponse.status
+
+        // 根据错误码提供更具体的提示
+        if (code === 401 || code === 403 || msg.includes('UNAUTHENTICATED') || msg.includes('PERMISSION_DENIED')) {
+          if (msg.includes('OAuth')) {
+            errorMessage = '认证失败: OAuth Token 无效或已过期，请重新登录 Google 账户'
+          } else if (msg.includes('PERMISSION_DENIED')) {
+            errorMessage = `权限不足: 请确保:\n1. 在 Google Cloud Console 启用了 Vertex AI API\n2. 当前账户有访问项目 "${projectId}" 的权限\n3. OAuth 同意屏幕已添加您的账户为测试用户`
+          } else {
+            errorMessage = `认证失败 (${code}): ${msg}`
+          }
+        } else if (code === 404) {
+          errorMessage = `项目不存在或区域不支持: 请检查项目ID "${projectId}" 和区域 "${location}" 是否正确`
         } else {
-          errorMessage += ` - ${msg}`
+          errorMessage += `: ${msg}`
         }
       } catch {
-        errorMessage += ` - ${errorText}`
+        errorMessage += `: ${errorText}`
       }
       throw new Error(errorMessage)
     }
 
     return {
       models,
-      message: `Vertex AI 连接成功 (${accessToken ? 'OAuth' : 'API Key'})，可用 ${models.length} 个模型`
+      message: `Vertex AI 连接成功 (${accessToken ? 'OAuth Token' : 'API Key'})，项目: ${projectId}，区域: ${location}`
     }
   }
 
