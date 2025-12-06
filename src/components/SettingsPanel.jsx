@@ -284,7 +284,7 @@ function SettingsPanel({ isOpen, onClose }) {
                       type="text"
                       value={import.meta.env.VITE_VERTEX_PROJECT_ID || provider.projectId || ''}
                       onChange={(e) => {
-                        const { providers: p, setProviderApiKey: s } = useStore.getState()
+                        const { providers: p } = useStore.getState()
                         useStore.setState({
                           providers: {
                             ...p,
@@ -297,6 +297,42 @@ function SettingsPanel({ isOpen, onClose }) {
                       disabled={!!import.meta.env.VITE_VERTEX_PROJECT_ID}
                     />
                     {import.meta.env.VITE_VERTEX_PROJECT_ID && (
+                      <div className="env-hint">🔒 已通过环境变量配置</div>
+                    )}
+                    {(provider.projectId || '').includes('apps.googleusercontent.com') && (
+                      <div className="error-hint" style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px' }}>
+                        ⚠️ 您似乎输入了 Client ID。Project ID 通常是类似 "my-project-123" 的短字符串。
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Region 配置 */}
+                  <div className="vertex-config" style={{ marginTop: '12px' }}>
+                    <label>
+                      Region (区域)
+                      <span className="label-hint">(服务器位置，推荐 us-central1)</span>
+                    </label>
+                    <select
+                      value={import.meta.env.VITE_VERTEX_LOCATION || provider.location || 'us-central1'}
+                      onChange={(e) => {
+                        const { providers: p } = useStore.getState()
+                        useStore.setState({
+                          providers: {
+                            ...p,
+                            vertex: { ...p.vertex, location: e.target.value }
+                          }
+                        })
+                      }}
+                      className="model-select"
+                      disabled={!!import.meta.env.VITE_VERTEX_LOCATION}
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                    >
+                      <option value="us-central1">us-central1 (美国中部 - 推荐)</option>
+                      <option value="asia-southeast1">asia-southeast1 (新加坡)</option>
+                      <option value="asia-northeast1">asia-northeast1 (东京)</option>
+                      <option value="europe-west1">europe-west1 (比利时)</option>
+                    </select>
+                    {import.meta.env.VITE_VERTEX_LOCATION && (
                       <div className="env-hint">🔒 已通过环境变量配置</div>
                     )}
                   </div>

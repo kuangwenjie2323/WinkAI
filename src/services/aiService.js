@@ -1036,7 +1036,7 @@ class AIService {
 
     // Veo 视频生成
     if (isVeoModel) {
-      yield* this._generateVertexVideo(projectId, location, model, prompt, accessToken || apiKey)
+      yield* this._generateVertexVideo(projectId, location, model, prompt, accessToken || apiKey, options.videoParams)
       return
     }
 
@@ -1119,13 +1119,19 @@ class AIService {
   }
 
   // Vertex AI Veo 视频生成
-  async *_generateVertexVideo(projectId, location, model, prompt, token) {
+  async *_generateVertexVideo(projectId, location, model, prompt, token, videoParams = {}) {
     yield { type: 'content', content: '🎬 正在生成视频，请稍候...\n\n' }
 
     const modelName = model.replace('publishers/google/models/', '')
     const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelName}:predict`
 
     try {
+      const instance = { prompt }
+      // 如果有参考图，添加到 payload
+      if (videoParams.referenceImage) {
+        instance.image = { bytesBase64Encoded: videoParams.referenceImage }
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -1133,11 +1139,12 @@ class AIService {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          instances: [{ prompt }],
+          instances: [instance],
           parameters: {
             sampleCount: 1,
-            aspectRatio: '16:9',
-            durationSeconds: 5
+            aspectRatio: videoParams.aspectRatio || '16:9',
+            durationSeconds: parseInt(videoParams.duration || '5', 10),
+            includeAudio: !!videoParams.withAudio
           }
         })
       })
