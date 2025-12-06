@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
-import { Play, Settings2, Type, Image as ImageIcon, Film, ChevronDown, Check, X, Upload } from 'lucide-react'
+import { Play, Settings2, Type, Image as ImageIcon, Film, ChevronDown, Check, X, Upload, Download } from 'lucide-react'
 import aiService from '../services/aiService'
 import './VideoGenContainer.css'
 
@@ -66,6 +66,17 @@ function VideoGenContainer() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  // 下载视频
+  const handleDownload = (url) => {
+    if (!url) return
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `video-${Date.now()}.mp4`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
   // 动态获取视频模型列表
@@ -197,7 +208,33 @@ function VideoGenContainer() {
       {/* 主预览区 */}
       <div className="video-preview-stage">
         {videoUrl ? (
-          <video src={videoUrl} controls autoPlay loop className="generated-video" />
+          <div className="video-wrapper" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <video src={videoUrl} controls autoPlay loop className="generated-video" />
+            <button 
+              className="download-btn-overlay"
+              onClick={() => handleDownload(videoUrl)}
+              title="Download Video"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(0,0,0,0.6)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backdropFilter: 'blur(4px)',
+                zIndex: 10
+              }}
+            >
+              <Download size={16} />
+              <span style={{ fontSize: '12px', fontWeight: 500 }}>Download</span>
+            </button>
+          </div>
         ) : (
           <div className="empty-state">
             <p>Type in the prompt box to start</p>

@@ -35,6 +35,16 @@ function ImageGenContainer() {
     }
   }, [modeMenuOpen])
 
+  const handleDownload = (url) => {
+    if (!url) return
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `image-${Date.now()}.png`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
   // 动态获取图片模型列表
   const getImageModels = () => {
     // 默认回退列表 - Google AI Studio 支持的图片生成模型
@@ -149,8 +159,32 @@ function ImageGenContainer() {
       {/* 主预览区 */}
       <div className="video-preview-stage">
         {imageUrl ? (
-          <div className="generated-image-wrapper" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="generated-image-wrapper" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <img src={imageUrl} alt="Generated" style={{ maxHeight: '100%', maxWidth: '100%', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }} />
+            <button 
+              className="download-btn-overlay"
+              onClick={() => handleDownload(imageUrl)}
+              title="Download Image"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(0,0,0,0.6)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backdropFilter: 'blur(4px)',
+                zIndex: 10
+              }}
+            >
+              <Download size={16} />
+              <span style={{ fontSize: '12px', fontWeight: 500 }}>Download</span>
+            </button>
           </div>
         ) : (
           <div className="empty-state">

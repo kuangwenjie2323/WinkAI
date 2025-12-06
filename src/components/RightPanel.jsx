@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useStore } from '../store/useStore'
-import { X, Settings as SettingsIcon, Trash2, Clock, Copy, Check } from 'lucide-react'
+import { X, Settings as SettingsIcon, Trash2, Clock, Copy, Check, Download } from 'lucide-react'
 import { useState } from 'react'
 import './RightPanel.css'
 
@@ -28,6 +28,16 @@ function RightPanel({ isOpen, onClose }) {
     navigator.clipboard.writeText(text)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleDownload = (url, type) => {
+    if (!url) return
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${type}-${Date.now()}.${type === 'video' ? 'mp4' : 'png'}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
   const provider = providers[currentProvider]
@@ -204,6 +214,13 @@ function RightPanel({ isOpen, onClose }) {
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button 
                     className="delete-btn" 
+                    onClick={() => handleDownload(img.url, 'image')}
+                    title="下载图片"
+                  >
+                    <Download size={14} />
+                  </button>
+                  <button 
+                    className="delete-btn" 
                     onClick={() => handleCopy(img.prompt, img.id)}
                     title="复制提示词"
                   >
@@ -244,6 +261,13 @@ function RightPanel({ isOpen, onClose }) {
               <div className="history-actions">
                 <span className="history-date">{new Date(vid.createdAt).toLocaleTimeString()}</span>
                 <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    className="delete-btn" 
+                    onClick={() => handleDownload(vid.url, 'video')}
+                    title="下载视频"
+                  >
+                    <Download size={14} />
+                  </button>
                   <button 
                     className="delete-btn" 
                     onClick={() => handleCopy(vid.prompt, vid.id)}
