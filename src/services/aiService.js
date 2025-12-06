@@ -780,16 +780,16 @@ class AIService {
       throw new Error('请先点击"使用 Google 账户登录"按钮获取 OAuth Token')
     }
 
-    // Vertex AI 模型列表（包含 Veo 和 Imagen）
-    const models = [
-      { id: 'publishers/google/models/veo-3.0-generate-preview', name: 'Veo 3.0 (视频生成)' },
-      { id: 'publishers/google/models/veo-2.0-generate-001', name: 'Veo 2.0 (视频生成)' },
-      { id: 'publishers/google/models/imagen-3.0-generate-002', name: 'Imagen 3.0 (图片生成)' },
-      { id: 'publishers/google/models/imagen-3.0-fast-generate-001', name: 'Imagen 3.0 Fast' },
-      { id: 'publishers/google/models/gemini-2.0-flash-001', name: 'Gemini 2.0 Flash' },
-      { id: 'publishers/google/models/gemini-1.5-flash-001', name: 'Gemini 1.5 Flash' },
-      { id: 'publishers/google/models/gemini-1.5-pro-001', name: 'Gemini 1.5 Pro' }
-    ]
+    // 推荐的模型列表（用于提供友好的名称和排序）
+    const RECOMMENDED_MODELS = {
+      'veo-3.0-generate-preview': { name: 'Veo 3.0 (视频生成)', order: 10 },
+      'veo-2.0-generate-001': { name: 'Veo 2.0 (视频生成)', order: 11 },
+      'imagen-3.0-generate-002': { name: 'Imagen 3.0 (图片生成)', order: 20 },
+      'imagen-3.0-fast-generate-001': { name: 'Imagen 3.0 Fast', order: 21 },
+      'gemini-2.0-flash-001': { name: 'Gemini 2.0 Flash', order: 30 },
+      'gemini-1.5-flash-001': { name: 'Gemini 1.5 Flash', order: 31 },
+      'gemini-1.5-pro-001': { name: 'Gemini 1.5 Pro', order: 32 }
+    }
 
     const headers = {
       'Content-Type': 'application/json'
@@ -799,7 +799,6 @@ class AIService {
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`
     } else {
-      // 回退到 API Key（可能会失败，因为 Vertex 需要 OAuth）
       headers['Authorization'] = `Bearer ${apiKey}`
     }
 
@@ -824,14 +823,9 @@ class AIService {
     if (!testResponse.ok && testResponse.status === 404 && location !== 'us-central1') {
       console.warn(`[Vertex Test] Location ${location} failed with 404. Retrying with us-central1...`)
       const retryResponse = await tryTest('us-central1')
-      // 只有重试成功才覆盖结果，否则保留原始错误（或者保留重试的错误？）
-      // 通常如果重试成功，我们就认为成功。如果重试也失败，可能需要看是哪种失败。
-      // 这里简单起见：如果重试并非 404，或者重试成功，就使用重试的结果。
-      // 但为了让用户知道原始错误，如果重试也失败，可能显示原始错误更好？
-      // 不，如果重试失败，应该显示重试的错误（说明 us-central1 也不行）。
       testResponse = retryResponse
       if (testResponse.ok) {
-        location = 'us-central1' // 更新位置以便显示
+        location = 'us-central1' // 更新位置以便显示和后续调用
       }
     }
 
@@ -863,6 +857,79 @@ class AIService {
         errorMessage += `: ${errorText}`
       }
       throw new Error(errorMessage)
+    }
+
+    // 连通性测试通过后，尝试动态获取模型列表
+    let models = []
+    try {
+      // 仅获取 Google 发布的模型
+      const listEndpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models`
+      console.log('[Vertex Test] Listing models from:', listEndpoint)
+      
+      const listResponse = await fetch(listEndpoint, {
+        method: 'GET',
+        headers
+      })
+
+      if (listResponse.ok) {
+        const data = await listResponse.json()
+        const fetchedModels = data.models || []
+        
+        // 过滤并映射模型
+        models = fetchedModels
+          .filter(m => {
+             const modelId = m.name.split('/').pop() //获取短 ID
+             // 只保留 gemini, imagen, veo 系列
+             return /gemini|imagen|veo/i.test(modelId)
+          })
+          .map(m => {
+            const fullId = m.name // e.g., projects/.../publishers/google/models/gemini-1.5-pro
+            // Vertex 返回的 name 是全路径，我们需要转成 standard ID 格式
+            // 通常我们只需要 publishers/google/models/xxxx
+            const shortId = m.name.split('/').pop()
+            const standardId = `publishers/google/models/${shortId}`
+            
+            const recommended = RECOMMENDED_MODELS[shortId]
+            
+            return {
+              id: standardId,
+              name: recommended ? recommended.name : (m.displayName || shortId),
+              order: recommended ? recommended.order : 999 // 推荐的排前面，其他的排后面
+            }
+          })
+          
+        // 补充推荐列表中有但 API 没返回的（防止 API 列表不全或被过滤掉）
+        // 或者简单起见，如果 API 调用成功，就以 API 为准？
+        // 考虑到兼容性，最好合并。
+        Object.keys(RECOMMENDED_MODELS).forEach(key => {
+          const standardId = `publishers/google/models/${key}`
+          if (!models.find(m => m.id === standardId)) {
+            models.push({
+              id: standardId,
+              name: RECOMMENDED_MODELS[key].name,
+              order: RECOMMENDED_MODELS[key].order
+            })
+          }
+        })
+        
+        // 排序
+        models.sort((a, b) => a.order - b.order)
+
+      } else {
+        console.warn('[Vertex Test] Failed to list models, using fallback list.', listResponse.status)
+        throw new Error('List failed') // 用于触发 catch 走 fallback
+      }
+    } catch (e) {
+      console.warn('[Vertex Test] Fetch models failed, using default list.', e)
+      // 回退到默认列表
+      models = Object.keys(RECOMMENDED_MODELS).map(key => ({
+        id: `publishers/google/models/${key}`,
+        name: RECOMMENDED_MODELS[key].name
+      })).sort((a, b) => {
+         const orderA = RECOMMENDED_MODELS[a.id.split('/').pop()].order
+         const orderB = RECOMMENDED_MODELS[b.id.split('/').pop()].order
+         return orderA - orderB
+      })
     }
 
     return {
