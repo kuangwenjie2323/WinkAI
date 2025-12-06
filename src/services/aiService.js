@@ -808,6 +808,56 @@ class AIService {
     }
   }
 
+  // 辅助方法：解析 Google API 错误
+  _mapGoogleError(status, errorText) {
+    let errorMessage = `API 错误 (${status})`
+    let details = ''
+
+    try {
+      const errorJson = JSON.parse(errorText)
+      const msg = errorJson.error?.message || errorText
+      const code = errorJson.error?.code || status
+      const statusText = errorJson.error?.status || ''
+
+      details = msg
+
+      switch (parseInt(code)) {
+        case 400:
+          errorMessage = '请求参数错误 (400 Bad Request)'
+          details += '\n\n建议: 检查 Project ID、Region 或模型名称是否正确。'
+          break
+        case 401:
+          errorMessage = '认证失败 (401 Unauthenticated)'
+          details += '\n\n建议: OAuth Token 可能无效或已过期，请尝试重新登录 Google 账户。'
+          break
+        case 403:
+          errorMessage = '权限不足 (403 Permission Denied)'
+          details += '\n\n建议:\n1. 确保在 Google Cloud Console 中已启用 **Vertex AI API**。\n2. 确保当前账户拥有 **Vertex AI User** 角色。\n3. 检查是否启用了计费账户。\n4. 如果使用 Service Account，请检查 "Service Account Token Creator" 权限。'
+          break
+        case 404:
+          errorMessage = '资源未找到 (404 Not Found)'
+          details += '\n\n建议:\n1. 检查 Project ID 是否正确。\n2. 检查 Region (区域) 是否支持该模型 (例如 Veo 通常仅在 us-central1 可用)。\n3. 模型名称拼写错误。'
+          break
+        case 429:
+          errorMessage = '配额超限 (429 Resource Exhausted)'
+          details += '\n\n建议: 您已达到 API 调用配额限制，请稍后重试或申请增加配额。'
+          break
+        case 500:
+          errorMessage = '服务器内部错误 (500 Internal Server Error)'
+          details += '\n\n建议: Google 服务器暂时出现问题，请稍后重试。'
+          break
+        case 503:
+          errorMessage = '服务不可用 (503 Service Unavailable)'
+          details += '\n\n建议: 服务暂时过载或维护中，请稍后重试。'
+          break
+      }
+    } catch (e) {
+      details = errorText
+    }
+
+    return `${errorMessage}: ${details}`
+  }
+
   async _testVertex(config) {
     const vertexConfig = this.getVertexConfig()
     const projectId = vertexConfig.projectId
@@ -882,31 +932,7 @@ class AIService {
     if (!testResponse.ok) {
       const errorText = await testResponse.text()
       console.error('[Vertex Test] Error Response:', errorText)
-
-      let errorMessage = `Vertex API 错误 (${testResponse.status})`
-      try {
-        const errorJson = JSON.parse(errorText)
-        const msg = errorJson.error?.message || errorText
-        const code = errorJson.error?.code || testResponse.status
-
-        // 根据错误码提供更具体的提示
-        if (code === 401 || code === 403 || msg.includes('UNAUTHENTICATED') || msg.includes('PERMISSION_DENIED')) {
-          if (msg.includes('OAuth')) {
-            errorMessage = '认证失败: OAuth Token 无效或已过期，请重新登录 Google 账户'
-          } else if (msg.includes('PERMISSION_DENIED')) {
-            errorMessage = `权限不足: 请确保:\n1. 在 Google Cloud Console 启用了 Vertex AI API\n2. 当前账户有访问项目 "${projectId}" 的权限\n3. OAuth 同意屏幕已添加您的账户为测试用户`
-          } else {
-            errorMessage = `认证失败 (${code}): ${msg}`
-          }
-        } else if (code === 404) {
-          errorMessage = `项目不存在或区域不支持: 请检查项目ID "${projectId}" 和区域 "${location}" 是否正确`
-        } else {
-          errorMessage += `: ${msg}`
-        }
-      } catch {
-        errorMessage += `: ${errorText}`
-      }
-      throw new Error(errorMessage)
+      throw new Error(this._mapGoogleError(testResponse.status, errorText))
     }
 
     // 连通性测试通过后，尝试动态获取模型列表
@@ -1133,7 +1159,7 @@ class AIService {
 
     if (!response.ok || !response.body) {
       const errText = await response.text()
-      throw new Error(`Vertex 请求失败: ${response.status} ${errText}`)
+      throw new Error(this._mapGoogleError(response.status, errText))
     }
 
     const reader = response.body.getReader()
@@ -1202,7 +1228,7 @@ class AIService {
       if (!response.ok) {
         const errorText = await response.text()
         console.error(`Vertex Video Gen Failed. Endpoint: ${endpoint}, Status: ${response.status}, Error: ${errorText}`)
-        yield { type: 'content', content: `视频生成失败 (Vertex): ${response.status} - ${errorText}\n\n请求地址: \`${endpoint}\`` }
+        yield { type: 'content', content: `视频生成失败 (Vertex):\n${this._mapGoogleError(response.status, errorText)}\n\n请求地址: \`${endpoint}\`` }
         yield { type: 'done', reason: 'error' }
         return
       }
@@ -1255,7 +1281,7 @@ class AIService {
 
       if (!response.ok) {
         const errorText = await response.text()
-        yield { type: 'content', content: `图片生成失败: ${response.status} - ${errorText}` }
+        yield { type: 'content', content: `图片生成失败 (Vertex):\n${this._mapGoogleError(response.status, errorText)}` }
         yield { type: 'done', reason: 'error' }
         return
       }
