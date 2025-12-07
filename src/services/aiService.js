@@ -1335,12 +1335,14 @@ class AIService {
     let { accessToken, apiKey } = auth
     
     // 智能认证策略：
-    // 1. 如果有 API Key (AIza开头)，优先尝试使用 API Key (因为它永不过期且配置简单)
+    // 1. 如果有 API Key (用户配置的 Vertex API Key)，优先尝试使用 API Key
     // 2. 如果只有 OAuth Token，则使用 Token
     let useOAuth = true
     let token = accessToken
     
-    if (apiKey && apiKey.startsWith('AIza')) {
+    // 用户反馈其 Key 可能不以 AIza 开头 (如 AQ...)，因此移除前缀检查
+    // 只要配置了 apiKey，就优先作为 ?key= 使用
+    if (apiKey) {
        useOAuth = false
        token = apiKey
     } else if (!accessToken) {
