@@ -1,137 +1,139 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+const defaultProviders = {
+  openai: {
+    name: 'OpenAI',
+    apiKey: '',
+    baseURL: 'https://api.openai.com/v1',
+    models: [
+      'gpt-4o',
+      'gpt-4o-mini',
+      'gpt-4-turbo',
+      'gpt-4',
+      'gpt-3.5-turbo',
+      'o1-preview',
+      'o1-mini'
+    ],
+    defaultModel: 'gpt-4o',
+    supportsVision: true,
+    supportsStreaming: true
+  },
+  anthropic: {
+    name: 'Anthropic Claude',
+    apiKey: '',
+    baseURL: 'https://api.anthropic.com/v1',
+    models: [
+      'claude-3-5-sonnet-20241022',
+      'claude-3-5-haiku-20241022',
+      'claude-3-opus-20240229',
+      'claude-3-sonnet-20240229',
+      'claude-3-haiku-20240307'
+    ],
+    defaultModel: 'claude-3-5-sonnet-20241022',
+    supportsVision: true,
+    supportsStreaming: true
+  },
+  google: {
+    name: 'Google Gemini',
+    apiKey: '',
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+    models: [
+      'gemini-3-pro-preview',
+      'gemini-2.5-pro',
+      'gemini-2.5-flash'
+    ],
+    defaultModel: 'gemini-3-pro-preview',
+    supportsVision: true,
+    supportsStreaming: true
+  },
+  qwen: {
+    name: '阿里云通义千问',
+    apiKey: '',
+    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: [
+      'qwen-plus',
+      'qwen-turbo',
+      'qwen-vl-max-latest'
+    ],
+    defaultModel: 'qwen-plus',
+    supportsVision: true,
+    supportsStreaming: true
+  },
+  doubao: {
+    name: '火山方舟豆包',
+    apiKey: '',
+    baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+    models: [
+      'doubao-pro-32k',
+      'doubao-lite-32k',
+      'doubao-pro-128k'
+    ],
+    defaultModel: 'doubao-pro-32k',
+    supportsVision: false,
+    supportsStreaming: true
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    apiKey: '',
+    baseURL: 'https://api.deepseek.com/v1',
+    models: [
+      'deepseek-chat',
+      'deepseek-reasoner',
+      'deepseek-coder'
+    ],
+    defaultModel: 'deepseek-chat',
+    supportsVision: false,
+    supportsStreaming: true
+  },
+  vertex: {
+    name: 'Google Vertex AI',
+    apiKey: '',
+    baseURL: 'https://asia-southeast1-aiplatform.googleapis.com/v1',
+    models: [
+      // 视频生成模型
+      'publishers/google/models/veo-3.1-generate-preview',
+      'publishers/google/models/veo-3.0-generate-preview',
+      'publishers/google/models/veo-3-fast',
+      'publishers/google/models/veo-2.0-generate-001',
+      // 图片生成模型
+      'publishers/google/models/imagen-4-ultra',
+      'publishers/google/models/imagen-4',
+      'publishers/google/models/imagen-4-fast',
+      'publishers/google/models/imagen-3.0-generate-002',
+      // 对话模型
+      'publishers/google/models/gemini-3-pro-preview',
+      'publishers/google/models/gemini-2.5-pro',
+      'publishers/google/models/gemini-2.5-flash',
+      'publishers/google/models/gemini-2.0-flash'
+    ],
+    defaultModel: 'publishers/google/models/gemini-2.5-flash',
+    projectId: '',
+    location: 'us-central1',
+    supportsVision: true,
+    supportsStreaming: true,
+    supportsVideo: true  // 支持视频生成
+  },
+  custom: {
+    name: '自定义 API',
+    apiKey: '',
+    baseURL: '',
+    models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022'],
+    defaultModel: 'gpt-4',
+    supportsVision: false,
+    supportsStreaming: true,
+    apiType: 'openai',    // API 类型: 'openai' | 'anthropic' | 'google'
+    useCorsProxy: false,  // 是否使用 CORS 代理
+    corsProxyUrl: ''      // 自定义 CORS 代理地址（留空则不使用代理）
+  }
+}
+
 // 全局状态管理
 export const useStore = create(
   persist(
     (set, get) => ({
       // AI 提供商配置
-      providers: {
-        openai: {
-          name: 'OpenAI',
-          apiKey: '',
-          baseURL: 'https://api.openai.com/v1',
-          models: [
-            'gpt-4o',
-            'gpt-4o-mini',
-            'gpt-4-turbo',
-            'gpt-4',
-            'gpt-3.5-turbo',
-            'o1-preview',
-            'o1-mini'
-          ],
-          defaultModel: 'gpt-4o',
-          supportsVision: true,
-          supportsStreaming: true
-        },
-        anthropic: {
-          name: 'Anthropic Claude',
-          apiKey: '',
-          baseURL: 'https://api.anthropic.com/v1',
-          models: [
-            'claude-3-5-sonnet-20241022',
-            'claude-3-5-haiku-20241022',
-            'claude-3-opus-20240229',
-            'claude-3-sonnet-20240229',
-            'claude-3-haiku-20240307'
-          ],
-          defaultModel: 'claude-3-5-sonnet-20241022',
-          supportsVision: true,
-          supportsStreaming: true
-        },
-        google: {
-          name: 'Google Gemini',
-          apiKey: '',
-          baseURL: 'https://generativelanguage.googleapis.com/v1beta',
-          models: [
-            'gemini-3-pro-preview',
-            'gemini-2.5-pro',
-            'gemini-2.5-flash'
-          ],
-          defaultModel: 'gemini-3-pro-preview',
-          supportsVision: true,
-          supportsStreaming: true
-        },
-        qwen: {
-          name: '阿里云通义千问',
-          apiKey: '',
-          baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-          models: [
-            'qwen-plus',
-            'qwen-turbo',
-            'qwen-vl-max-latest'
-          ],
-          defaultModel: 'qwen-plus',
-          supportsVision: true,
-          supportsStreaming: true
-        },
-        doubao: {
-          name: '火山方舟豆包',
-          apiKey: '',
-          baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
-          models: [
-            'doubao-pro-32k',
-            'doubao-lite-32k',
-            'doubao-pro-128k'
-          ],
-          defaultModel: 'doubao-pro-32k',
-          supportsVision: false,
-          supportsStreaming: true
-        },
-        deepseek: {
-          name: 'DeepSeek',
-          apiKey: '',
-          baseURL: 'https://api.deepseek.com/v1',
-          models: [
-            'deepseek-chat',
-            'deepseek-reasoner',
-            'deepseek-coder'
-          ],
-          defaultModel: 'deepseek-chat',
-          supportsVision: false,
-          supportsStreaming: true
-        },
-        vertex: {
-          name: 'Google Vertex AI',
-          apiKey: '',
-          baseURL: 'https://asia-southeast1-aiplatform.googleapis.com/v1',
-          models: [
-            // 视频生成模型
-            'publishers/google/models/veo-3.1-generate-preview',
-            'publishers/google/models/veo-3.0-generate-preview',
-            'publishers/google/models/veo-3-fast',
-            'publishers/google/models/veo-2.0-generate-001',
-            // 图片生成模型
-            'publishers/google/models/imagen-4-ultra',
-            'publishers/google/models/imagen-4',
-            'publishers/google/models/imagen-4-fast',
-            'publishers/google/models/imagen-3.0-generate-002',
-            // 对话模型
-            'publishers/google/models/gemini-3-pro-preview',
-            'publishers/google/models/gemini-2.5-pro',
-            'publishers/google/models/gemini-2.5-flash',
-            'publishers/google/models/gemini-2.0-flash'
-          ],
-          defaultModel: 'publishers/google/models/gemini-2.5-flash',
-          projectId: '',
-          location: 'us-central1',
-          supportsVision: true,
-          supportsStreaming: true,
-          supportsVideo: true  // 支持视频生成
-        },
-        custom: {
-          name: '自定义 API',
-          apiKey: '',
-          baseURL: '',
-          models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022'],
-          defaultModel: 'gpt-4',
-          supportsVision: false,
-          supportsStreaming: true,
-          apiType: 'openai',    // API 类型: 'openai' | 'anthropic' | 'google'
-          useCorsProxy: false,  // 是否使用 CORS 代理
-          corsProxyUrl: ''      // 自定义 CORS 代理地址（留空则不使用代理）
-        }
-      },
+      providers: defaultProviders,
 
       // 当前选择的提供商
       currentProvider: 'google',
@@ -501,6 +503,54 @@ export const useStore = create(
       onRehydrateStorage: () => (state) => {
         // 当状态从 localStorage 恢复后，设置水合完成标志
         state?.setHasHydrated(true)
+
+        // 迁移: 确保新增的提供商存在
+        if (state?.providers) {
+          state.providers = { ...defaultProviders, ...state.providers }
+        } else {
+          state.providers = defaultProviders
+        }
+
+        // 迁移: 确保测试结果包含新提供商
+        if (state?.testResults) {
+          state.testResults = {
+            openai: null,
+            anthropic: null,
+            google: null,
+            qwen: null,
+            doubao: null,
+            deepseek: null,
+            vertex: null,
+            custom: null,
+            ...state.testResults
+          }
+        }
+
+        // 迁移: 确保动态/自定义模型包含新提供商键
+        if (state?.dynamicModels) {
+          state.dynamicModels = {
+            openai: [],
+            anthropic: [],
+            google: [],
+            qwen: [],
+            doubao: [],
+            deepseek: [],
+            custom: [],
+            ...state.dynamicModels
+          }
+        }
+        if (state?.customModels) {
+          state.customModels = {
+            openai: [],
+            anthropic: [],
+            google: [],
+            qwen: [],
+            doubao: [],
+            deepseek: [],
+            custom: [],
+            ...state.customModels
+          }
+        }
 
         // 迁移：替换已退役的模型名
         if (state?.providers?.vertex) {
