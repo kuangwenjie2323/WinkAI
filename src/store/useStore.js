@@ -363,18 +363,29 @@ export const useStore = create(
       }),
 
       // 图像库管理
-      addToImageLibrary: (image) => set((state) => ({
-        imageLibrary: [...state.imageLibrary, { ...image, id: `img-${Date.now()}`, createdAt: Date.now() }]
-      })),
+      addToImageLibrary: (image) => set((state) => {
+        // 限制本地存储数量，防止 QuotaExceededError
+        // 只保留最近 10 张图片
+        const maxItems = 10
+        const currentLib = state.imageLibrary.slice(-maxItems + 1) // 留出 1 个位置
+        return {
+          imageLibrary: [...currentLib, { ...image, id: `img-${Date.now()}`, createdAt: Date.now() }]
+        }
+      }),
 
       deleteFromImageLibrary: (imageId) => set((state) => ({
         imageLibrary: state.imageLibrary.filter(img => img.id !== imageId)
       })),
 
       // 视频库管理
-      addToVideoLibrary: (video) => set((state) => ({
-        videoLibrary: [...state.videoLibrary, { ...video, id: `vid-${Date.now()}`, createdAt: Date.now() }]
-      })),
+      addToVideoLibrary: (video) => set((state) => {
+        // 视频 Base64 通常很大，限制保留最近 5 个
+        const maxItems = 5
+        const currentLib = state.videoLibrary.slice(-maxItems + 1)
+        return {
+          videoLibrary: [...currentLib, { ...video, id: `vid-${Date.now()}`, createdAt: Date.now() }]
+        }
+      }),
 
       deleteFromVideoLibrary: (videoId) => set((state) => ({
         videoLibrary: state.videoLibrary.filter(vid => vid.id !== videoId)

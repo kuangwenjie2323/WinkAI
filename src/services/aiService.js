@@ -146,6 +146,41 @@ class AIService {
     }
   }
 
+  // 上传文件到 R2
+  async uploadToR2(data, type = 'url', prefix = 'misc') {
+    try {
+      const endpoint = type === 'url' ? '/api/store-url' : '/api/store-base64'
+      const payload = type === 'url' 
+        ? { fileUrl: data, prefix } 
+        : { base64: data, prefix }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // 本地开发环境可能没有 /api/store-* 函数，忽略错误
+          console.warn('[R2 Upload] Upload endpoint not found (dev environment?), using original data.')
+          return data
+        }
+        throw new Error(`Upload failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      if (result.success && result.url) {
+        console.log('[R2 Upload] Success:', result.url)
+        return result.url
+      }
+      return data
+    } catch (error) {
+      console.warn('[R2 Upload] Failed:', error)
+      return data // 降级：上传失败则使用原始数据
+    }
+  }
+
   // OpenAI 流式聊天
   async *streamChatOpenAI(messages, model, options = {}) {
     const client = this.clients.openai
@@ -459,13 +494,21 @@ class AIService {
                     const downloadUrl = videoUrl.includes('?')
                       ? `${videoUrl}&key=${apiKey}`
                       : `${videoUrl}?key=${apiKey}`
-                    yield { type: 'content', content: `✅ 视频生成完成！\n\n<video controls src="${downloadUrl}" width="100%"></video>\n\n[下载视频](${downloadUrl})` }
+                    
+                    // 尝试上传到 R2
+                    const r2Url = await this.uploadToR2(downloadUrl, 'url', 'google-veo')
+                    
+                    yield { type: 'content', content: `✅ 视频生成完成！\n\n<video controls src="${r2Url}" width="100%"></video>\n\n[下载视频](${r2Url})` }
                   } else if (imageData) {
                     const mimeType = isVeoModel ? 'video/mp4' : 'image/png'
-                    const url = `data:${mimeType};base64,${imageData}`
+                    const rawData = `data:${mimeType};base64,${imageData}`
+                    
+                    // 尝试上传到 R2
+                    const r2Url = await this.uploadToR2(rawData, 'base64', isVeoModel ? 'google-veo' : 'google-imagen')
+                    
                     const markdown = isVeoModel
-                      ? `<video controls src="${url}" width="100%"></video>`
-                      : `![生成的图片](${url})`
+                      ? `<video controls src="${r2Url}" width="100%"></video>`
+                      : `![生成的图片](${r2Url})`
                     yield { type: 'content', content: markdown }
                   } else {
                     console.log('[Google Gen] 未识别的返回结构:', JSON.stringify(data, null, 2))
@@ -522,7 +565,11 @@ class AIService {
             for (const part of parts) {
               if (part.inlineData?.data) {
                 const mimeType = part.inlineData.mimeType || 'image/png'
-                const imageUrl = `data:${mimeType};base64,${part.inlineData.data}`
+                const rawImage = `data:${mimeType};base64,${part.inlineData.data}`
+                
+                // 上传 R2
+                const imageUrl = await this.uploadToR2(rawImage, 'base64', 'gemini-image')
+                
                 yield { type: 'content', content: `![生成的图片](${imageUrl})\n\n` }
                 hasImage = true
               } else if (part.text) {
@@ -1478,17 +1525,29 @@ class AIService {
 
         // 1. Base64 视频
         if (prediction.bytesBase64Encoded) {
-          const videoUrl = `data:video/mp4;base64,${prediction.bytesBase64Encoded}`
+          const rawVideo = `data:video/mp4;base64,${prediction.bytesBase64Encoded}`
+          // 尝试上传到 R2
+          const videoUrl = await this.uploadToR2(rawVideo, 'base64', 'vertex-video')
+          
           yield { type: 'content', content: `<video controls src="${videoUrl}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n` }
         } 
         // 2. Cloud Storage URI (videoUri)
         else if (prediction.videoUri) {
-          yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${prediction.videoUri})` }
+          const rawUrl = prediction.videoUri
+          // 视频 URL 可能需要认证访问，添加 API key
+          // 注意：如果是 GCS uri (gs://)，fetch 可能无法直接下载。但通常 API 返回的是 https 链接。
+          // 如果是 https 且需要 auth，后端 store-url 可能也无法下载除非它有权限。
+          // 既然之前直接能播放，说明链接是公开的或者是签名的。
+          // 尝试上传
+          const videoUrl = await this.uploadToR2(rawUrl, 'url', 'vertex-video')
+          
+          yield { type: 'content', content: `<video controls src="${videoUrl}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${videoUrl})` }
         } 
         // 3. Veo 3.1 结构 (assets.video.uri)
         else if (prediction.assets && prediction.assets.video && prediction.assets.video.uri) {
-           const uri = prediction.assets.video.uri
-           yield { type: 'content', content: `<video controls src="${uri}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${uri})` }
+           const rawUrl = prediction.assets.video.uri
+           const videoUrl = await this.uploadToR2(rawUrl, 'url', 'vertex-video')
+           yield { type: 'content', content: `<video controls src="${videoUrl}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${videoUrl})` }
         }
         else {
           console.log('[Vertex Video] Unrecognized prediction:', prediction)
@@ -1541,7 +1600,10 @@ class AIService {
         const prediction = data.predictions[0]
 
         if (prediction.bytesBase64Encoded) {
-          const imageUrl = `data:image/png;base64,${prediction.bytesBase64Encoded}`
+          const rawImage = `data:image/png;base64,${prediction.bytesBase64Encoded}`
+          // 尝试上传到 R2
+          const imageUrl = await this.uploadToR2(rawImage, 'base64', 'vertex-image')
+          
           yield { type: 'content', content: `![生成的图片](${imageUrl})\n\n` }
         } else {
           yield { type: 'content', content: '图片生成成功但未识别到返回数据格式' }
