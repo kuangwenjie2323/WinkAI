@@ -22,6 +22,7 @@ function VideoGenContainer() {
   
   // 参考图
   const [referenceImage, setReferenceImage] = useState(null) // base64 string (no prefix)
+  const [referenceMimeType, setReferenceMimeType] = useState(null) // image/png, image/jpeg 等
   const [referencePreview, setReferencePreview] = useState(null) // data url
   const fileInputRef = useRef(null)
 
@@ -54,8 +55,11 @@ function VideoGenContainer() {
     reader.onload = (e) => {
       const dataUrl = e.target.result
       setReferencePreview(dataUrl)
-      // 移除 data:image/xxx;base64, 前缀
+      // 提取 mimeType (如 image/png) 和 base64 数据
+      const mimeMatch = dataUrl.match(/^data:([^;]+);base64,/)
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/png'
       const base64 = dataUrl.split(',')[1]
+      setReferenceMimeType(mimeType)
       setReferenceImage(base64)
     }
     reader.readAsDataURL(file)
@@ -64,6 +68,7 @@ function VideoGenContainer() {
   // 移除图片
   const removeReferenceImage = () => {
     setReferenceImage(null)
+    setReferenceMimeType(null)
     setReferencePreview(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -162,7 +167,8 @@ function VideoGenContainer() {
             resolution,
             duration,
             withAudio,
-            referenceImage // 传入参考图
+            referenceImage, // 传入参考图 base64
+            referenceMimeType // 参考图 MIME 类型
           }
         }
       )

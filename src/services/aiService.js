@@ -303,9 +303,11 @@ class AIService {
                   const instance = { prompt }
                   // 支持参考图 (仅视频模式)
                   if (isVeoModel && videoParams.referenceImage) {
-                    // Veo 3.1+ 支持 referenceImages 数组，旧版本可能仅支持 image
-                    // 这里先保持 image 字段兼容，视模型版本可扩展
-                    instance.image = { bytesBase64Encoded: videoParams.referenceImage }
+                    // Veo API 要求 image 同时包含 bytesBase64Encoded 和 mimeType
+                    instance.image = {
+                      bytesBase64Encoded: videoParams.referenceImage,
+                      mimeType: videoParams.referenceMimeType || 'image/png'
+                    }
                   }
       
                   const parameters = {
@@ -1304,9 +1306,12 @@ class AIService {
 
     try {
       const instance = { prompt }
-      // 如果有参考图，添加到 payload
+      // 如果有参考图，添加到 payload (同时需要 mimeType)
       if (videoParams.referenceImage) {
-        instance.image = { bytesBase64Encoded: videoParams.referenceImage }
+        instance.image = {
+          bytesBase64Encoded: videoParams.referenceImage,
+          mimeType: videoParams.referenceMimeType || 'image/png'
+        }
       }
 
       const response = await fetch(endpoint, {
