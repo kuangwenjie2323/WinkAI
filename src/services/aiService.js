@@ -318,9 +318,10 @@ class AIService {
                   }
                   if (isVeoModel) {
                     parameters.aspectRatio = videoParams.aspectRatio || '16:9'
-                    // Veo 3.1 支持 4-8 秒，默认 5 秒
-                    const durationSec = parseInt(videoParams.duration, 10) || 5
-                    parameters.durationSeconds = Math.max(4, Math.min(8, durationSec))
+                    // Veo 3/3.1 只支持 4、6、8 秒，默认 8 秒
+                    const validDurations = [4, 6, 8]
+                    const requestedDuration = parseInt(videoParams.duration, 10)
+                    parameters.durationSeconds = validDurations.includes(requestedDuration) ? requestedDuration : 8
                     if (videoParams.withAudio) {
                       parameters.includeAudio = true
                     }

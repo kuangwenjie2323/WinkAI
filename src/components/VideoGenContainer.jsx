@@ -16,7 +16,7 @@ function VideoGenContainer() {
   
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [resolution, setResolution] = useState('720p')
-  const [duration, setDuration] = useState('5')
+  const [duration, setDuration] = useState('8')
   const [withAudio, setWithAudio] = useState(false)
   const [model, setModel] = useState('veo-3.0-generate-preview')
   
@@ -337,9 +337,9 @@ function VideoGenContainer() {
           <div className="param-group">
             <label>Duration</label>
             <select value={duration} onChange={(e) => setDuration(e.target.value)}>
-              <option value="5">5s (Default)</option>
               <option value="4">4s</option>
-              <option value="8">8s</option>
+              <option value="6">6s</option>
+              <option value="8">8s (Default)</option>
             </select>
           </div>
 
