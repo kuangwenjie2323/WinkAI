@@ -439,6 +439,8 @@
   color: var(--text-primary);
   line-height: 1.7;
   font-size: var(--font-base);
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .message-body p {
@@ -741,6 +743,8 @@
   .message-body {
     font-size: var(--font-sm);
     line-height: 1.6;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .edit-textarea {
