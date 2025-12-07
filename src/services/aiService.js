@@ -318,15 +318,16 @@ class AIService {
                   }
                   if (isVeoModel) {
                     parameters.aspectRatio = videoParams.aspectRatio || '16:9'
-                    if (videoParams.duration) {
-                      parameters.durationSeconds = parseInt(videoParams.duration, 10)
-                    }
+                    // Veo 3.1 支持 4-8 秒，默认 5 秒
+                    const durationSec = parseInt(videoParams.duration, 10) || 5
+                    parameters.durationSeconds = Math.max(4, Math.min(8, durationSec))
                     if (videoParams.withAudio) {
                       parameters.includeAudio = true
                     }
                     if (videoParams.negativePrompt) {
                       parameters.negativePrompt = videoParams.negativePrompt
                     }
+                    console.log('[Google Gen] Veo parameters:', parameters)
                   }
                   
                               // Veo 使用 predictLongRunning，Imagen 使用 predict
