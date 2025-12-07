@@ -63,12 +63,12 @@ export const useStore = create(
             // 图片生成模型
             'publishers/google/models/imagen-3.0-generate-002',
             'publishers/google/models/imagen-3.0-fast-generate-001',
-            // 对话模型
-            'publishers/google/models/gemini-2.0-flash-001',
-            'publishers/google/models/gemini-1.5-flash-001',
-            'publishers/google/models/gemini-1.5-pro-001'
+            // 对话模型（使用不带版本号的别名，自动指向最新稳定版）
+            'publishers/google/models/gemini-2.5-flash',
+            'publishers/google/models/gemini-2.5-pro',
+            'publishers/google/models/gemini-2.0-flash'
           ],
-          defaultModel: 'publishers/google/models/gemini-2.0-flash-001',
+          defaultModel: 'publishers/google/models/gemini-2.0-flash',
           projectId: '',
           location: 'us-central1',
           supportsVision: true,

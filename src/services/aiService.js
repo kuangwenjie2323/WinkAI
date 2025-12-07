@@ -989,9 +989,9 @@ class AIService {
       'veo-2.0-generate-001': { name: 'Veo 2.0 (视频生成)', order: 11 },
       'imagen-3.0-generate-002': { name: 'Imagen 3.0 (图片生成)', order: 20 },
       'imagen-3.0-fast-generate-001': { name: 'Imagen 3.0 Fast', order: 21 },
-      'gemini-2.0-flash-001': { name: 'Gemini 2.0 Flash', order: 30 },
-      'gemini-1.5-flash-001': { name: 'Gemini 1.5 Flash', order: 31 },
-      'gemini-1.5-pro-001': { name: 'Gemini 1.5 Pro', order: 32 }
+      'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', order: 30 },
+      'gemini-2.5-pro': { name: 'Gemini 2.5 Pro', order: 31 },
+      'gemini-2.0-flash': { name: 'Gemini 2.0 Flash', order: 32 }
     }
 
     const headers = {
@@ -1007,7 +1007,8 @@ class AIService {
 
     // 定义测试函数
     const tryTest = async (testLocation) => {
-      const endpoint = `https://${testLocation}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${testLocation}/publishers/google/models/gemini-1.5-flash-001:generateContent`
+      // 使用 gemini-2.0-flash（不带版本号后缀，自动使用最新稳定版）
+      const endpoint = `https://${testLocation}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${testLocation}/publishers/google/models/gemini-2.0-flash:generateContent`
       console.log('[Vertex Test] Endpoint:', endpoint)
       return await fetch(endpoint, {
         method: 'POST',
