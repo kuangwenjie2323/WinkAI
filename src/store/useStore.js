@@ -437,6 +437,28 @@ export const useStore = create(
       onRehydrateStorage: () => (state) => {
         // 当状态从 localStorage 恢复后，设置水合完成标志
         state?.setHasHydrated(true)
+
+        // 迁移：替换已退役的模型名
+        if (state?.providers?.vertex) {
+          const vertex = state.providers.vertex
+          const retiredModels = {
+            'publishers/google/models/gemini-1.5-flash-001': 'publishers/google/models/gemini-2.0-flash',
+            'publishers/google/models/gemini-1.5-pro-001': 'publishers/google/models/gemini-2.5-pro',
+            'publishers/google/models/gemini-2.0-flash-001': 'publishers/google/models/gemini-2.0-flash'
+          }
+
+          // 更新默认模型
+          if (retiredModels[vertex.defaultModel]) {
+            vertex.defaultModel = retiredModels[vertex.defaultModel]
+          }
+
+          // 更新模型列表
+          if (vertex.models) {
+            vertex.models = vertex.models.map(m => retiredModels[m] || m)
+            // 去重
+            vertex.models = [...new Set(vertex.models)]
+          }
+        }
       }
     }
   )
