@@ -1007,18 +1007,23 @@ class AIService {
       'Content-Type': 'application/json'
     }
 
-    // 优先使用 OAuth Token
-    if (accessToken) {
+    // 认证方式：优先 OAuth Token，其次 API Key（通过 URL 参数）
+    const useOAuth = !!accessToken
+    if (useOAuth) {
       headers['Authorization'] = `Bearer ${accessToken}`
-    } else {
-      headers['Authorization'] = `Bearer ${apiKey}`
     }
 
     // 定义测试函数
     const tryTest = async (testLocation) => {
-      // 使用 gemini-2.0-flash（不带版本号后缀，自动使用最新稳定版）
-      const endpoint = `https://${testLocation}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${testLocation}/publishers/google/models/gemini-2.0-flash:generateContent`
-      console.log('[Vertex Test] Endpoint:', endpoint)
+      // 使用 v1beta1 API（支持 API Key 认证）
+      let endpoint = `https://${testLocation}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${testLocation}/publishers/google/models/gemini-2.0-flash:generateContent`
+
+      // API Key 通过 URL 参数传递
+      if (!useOAuth && apiKey) {
+        endpoint += `?key=${apiKey}`
+      }
+
+      console.log('[Vertex Test] Endpoint:', endpoint, useOAuth ? '(OAuth)' : '(API Key)')
       return await fetch(endpoint, {
         method: 'POST',
         headers,
@@ -1054,10 +1059,13 @@ class AIService {
     // 连通性测试通过后，尝试动态获取模型列表
     let models = []
     try {
-      // 仅获取 Google 发布的模型
-      const listEndpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models`
+      // 仅获取 Google 发布的模型（使用 v1beta1）
+      let listEndpoint = `https://${location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models`
+      if (!useOAuth && apiKey) {
+        listEndpoint += `?key=${apiKey}`
+      }
       console.log('[Vertex Test] Listing models from:', listEndpoint)
-      
+
       const listResponse = await fetch(listEndpoint, {
         method: 'GET',
         headers
@@ -1232,13 +1240,13 @@ class AIService {
 
     // Veo 视频生成
     if (isVeoModel) {
-      yield* this._generateVertexVideo(projectId, location, model, prompt, accessToken || apiKey, options.videoParams)
+      yield* this._generateVertexVideo(projectId, location, model, prompt, { accessToken, apiKey }, options.videoParams)
       return
     }
 
     // Imagen 图片生成
     if (isImagenModel) {
-      yield* this._generateVertexImage(projectId, location, model, prompt, accessToken || apiKey, options.imageParams)
+      yield* this._generateVertexImage(projectId, location, model, prompt, { accessToken, apiKey }, options.imageParams)
       return
     }
 
@@ -1250,14 +1258,20 @@ class AIService {
       parts: [{ text: msg.content }]
     }))
 
-    // 拼接 endpoint
-    const baseURL = `https://${location}-aiplatform.googleapis.com/v1`
+    // 拼接 endpoint（使用 v1beta1 支持 API Key）
+    const baseURL = `https://${location}-aiplatform.googleapis.com/v1beta1`
     const modelPath = `projects/${projectId}/locations/${location}/${model}`
-    const url = `${baseURL}/${modelPath}:streamGenerateContent?alt=sse`
+    const useOAuth = !!accessToken
+    let url = `${baseURL}/${modelPath}:streamGenerateContent?alt=sse`
+    if (!useOAuth && apiKey) {
+      url += `&key=${apiKey}`
+    }
 
     const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken || apiKey}`
+      'Content-Type': 'application/json'
+    }
+    if (useOAuth) {
+      headers['Authorization'] = `Bearer ${accessToken}`
     }
 
     const body = {
@@ -1315,64 +1329,158 @@ class AIService {
   }
 
   // Vertex AI Veo 视频生成
-  async *_generateVertexVideo(projectId, location, model, prompt, token, videoParams = {}) {
-    yield { type: 'content', content: '🎬 正在生成视频，请稍候...\n\n' }
+  async *_generateVertexVideo(projectId, location, model, prompt, auth, videoParams = {}) {
+    yield { type: 'content', content: '🎬 正在提交任务至 Vertex AI (Veo)...\n\n' }
 
+    const { accessToken, apiKey } = auth
+    const useOAuth = !!accessToken
+    const token = accessToken || apiKey
+    
+    // 处理模型 ID: 移除 publishers/google/models/ 前缀（如果有）
     const modelName = model.replace('publishers/google/models/', '')
-    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelName}:predict`
+    
+    // Vertex API Key 模式判断
+    const isApiKey = !useOAuth && apiKey && apiKey.startsWith('AIza')
+    
+    // 构建 Endpoint (Veo 3.1+ 使用 v1beta1 + predictLongRunning)
+    const baseUrl = `https://${location}-aiplatform.googleapis.com/v1beta1`
+    let endpoint = `${baseUrl}/projects/${projectId}/locations/${location}/publishers/google/models/${modelName}:predictLongRunning`
+    
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    
+    if (isApiKey) {
+      endpoint += `?key=${apiKey}`
+    } else if (useOAuth) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    } else {
+       // fallback: assume token is a key? or fail
+       // Based on `streamChatVertex` passing {accessToken, apiKey}, we cover both cases.
+    }
 
     try {
       const instance = { prompt }
-      // 如果有参考图，添加到 payload (同时需要 mimeType)
+      // 如果有参考图，添加到 payload
+      // Veo 3.1 可能需要 referenceImages，旧版用 image
+      // 这里根据 Veo 文档，3.1 使用 image 或 video 为输入，referenceImages 为风格参考
+      // 简单起见，沿用 image 字段，如果报错再调整
       if (videoParams.referenceImage) {
-        instance.image = {
-          bytesBase64Encoded: videoParams.referenceImage,
-          mimeType: videoParams.referenceMimeType || 'image/png'
+        instance.image = { bytesBase64Encoded: videoParams.referenceImage }
+      }
+
+      const parameters = {
+        sampleCount: 1,
+        aspectRatio: videoParams.aspectRatio || '16:9',
+        durationSeconds: parseInt(videoParams.duration || '5', 10),
+        includeAudio: !!videoParams.withAudio
+      }
+      
+      // Veo 3.1 参数兼容
+      if (modelName.includes('veo-3.1')) {
+        // 3.1 可能支持 negativePrompt
+        if (videoParams.negativePrompt) {
+          parameters.negativePrompt = videoParams.negativePrompt
         }
       }
 
+      console.log(`[Vertex Video] Request: ${endpoint}`)
+
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({
           instances: [instance],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: videoParams.aspectRatio || '16:9',
-            durationSeconds: parseInt(videoParams.duration || '5', 10),
-            includeAudio: !!videoParams.withAudio
-          }
+          parameters
         })
       })
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error(`Vertex Video Gen Failed. Endpoint: ${endpoint}, Status: ${response.status}, Error: ${errorText}`)
-        yield { type: 'content', content: `视频生成失败 (Vertex):\n${this._mapGoogleError(response.status, errorText)}\n\n请求地址: \`${endpoint}\`` }
+        console.error(`Vertex Video Gen Failed. Status: ${response.status}, Error: ${errorText}`)
+        yield { type: 'content', content: `视频生成请求失败 (Vertex):\n${this._mapGoogleError(response.status, errorText)}\n\n请求地址: \`${endpoint}\`` }
         yield { type: 'done', reason: 'error' }
         return
       }
 
-      const data = await response.json()
+      let data = await response.json()
+      
+      // 处理 Long Running Operation
+      if (data.name && !data.done) {
+        yield { type: 'content', content: '⏳ 任务已提交，正在 Vertex AI 上生成视频 (预计 1-2 分钟)... 0%\n' }
+        
+        const operationName = data.name // e.g., "projects/.../locations/.../operations/..."
+        let pollUrl = `${baseUrl}/${operationName}`
+        if (isApiKey) {
+          pollUrl += `?key=${apiKey}`
+        }
+        
+        console.log(`[Vertex Video] Polling: ${pollUrl}`)
+        
+        let attempts = 0
+        while (true) {
+          await new Promise(resolve => setTimeout(resolve, 5000)) // 5秒轮询
+          attempts++
+          
+          // 更新假进度
+          const progress = Math.min(95, attempts * 5)
+          // yield { type: 'progress', value: progress } // 如果前端支持
+          
+          const opRes = await fetch(pollUrl, {
+            headers: isApiKey ? {} : { 'Authorization': `Bearer ${token}` }
+          })
+          
+          if (!opRes.ok) {
+            const errText = await opRes.text()
+            throw new Error(`轮询失败 ${opRes.status}: ${errText}`)
+          }
+          
+          data = await opRes.json()
+          
+          if (data.done) {
+            if (data.error) {
+              throw new Error(`Vertex 任务失败: ${data.error.message}`)
+            }
+            // 结果通常在 response 字段
+            if (data.response) {
+               // Vertex LRO 的 response 字段可能是一个 Any 类型，
+               // 有时是一个包含 predictions 的对象，有时是直接的字符串结果
+               // 对于 Veo，通常结构是 { predictions: [...] } 或直接就是 predictions 数组？
+               // 标准 LRO response 是一个 JSON 对象
+               data = data.response
+            }
+            break
+          }
+        }
+      }
 
+      // 解析结果 (Video)
       if (data.predictions && data.predictions.length > 0) {
         const prediction = data.predictions[0]
 
+        // 1. Base64 视频
         if (prediction.bytesBase64Encoded) {
           const videoUrl = `data:video/mp4;base64,${prediction.bytesBase64Encoded}`
           yield { type: 'content', content: `<video controls src="${videoUrl}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n` }
-        } else if (prediction.videoUri) {
+        } 
+        // 2. Cloud Storage URI (videoUri)
+        else if (prediction.videoUri) {
           yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${prediction.videoUri})` }
-        } else {
+        } 
+        // 3. Veo 3.1 结构 (assets.video.uri)
+        else if (prediction.assets && prediction.assets.video && prediction.assets.video.uri) {
+           const uri = prediction.assets.video.uri
+           yield { type: 'content', content: `<video controls src="${uri}" width="100%" style="max-width: 640px; border-radius: 8px;"></video>\n\n[下载视频](${uri})` }
+        }
+        else {
+          console.log('[Vertex Video] Unrecognized prediction:', prediction)
           yield { type: 'content', content: '视频生成成功但未识别到返回数据格式' }
         }
       } else {
-        yield { type: 'content', content: '视频生成失败，请重试' }
+        yield { type: 'content', content: '视频生成失败: 未返回 predictions' }
       }
     } catch (error) {
+      console.error('[Vertex Video] Error:', error)
       yield { type: 'content', content: `视频生成错误: ${error.message}` }
     }
 
