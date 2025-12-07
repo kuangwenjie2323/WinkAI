@@ -1387,16 +1387,23 @@ class AIService {
         }
       }
 
+      // ... (前略)
       console.log(`[Vertex Video] Request: ${endpoint} (Auth: ${useOAuth ? 'OAuth' : 'API Key'})`)
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          instances: [instance],
-          parameters
+      let response
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            instances: [instance],
+            parameters
+          })
         })
-      })
+      } catch (networkError) {
+        console.error('[Vertex Video] Network Error (Likely CORS):', networkError)
+        throw new Error(`网络请求失败 (Failed to fetch)。\n\n原因可能是：\n1. 浏览器跨域 (CORS) 限制：Google Vertex AI API 不允许从浏览器直接调用。\n2. 网络连接问题 (VPN/代理)。\n\n解决方案：\n请在设置中配置 "CORS Proxy" (如 https://cors-anywhere.herokuapp.com/)，或将此应用部署为后端服务。`)
+      }
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -1410,16 +1417,24 @@ class AIService {
       
       // 处理 Long Running Operation
       if (data.name && !data.done) {
-        yield { type: 'content', content: '⏳ 任务已提交，正在 Vertex AI 上生成视频 (预计 1-2 分钟)... 0%\n' }
+        yield { type: 'content', content: '⏳ 任务已提交至 Vertex AI，正在生成视频 (预计 1-2 分钟)... 0%\n' }
         
         const operationName = data.name 
-        let pollUrl = `${baseUrl}/${operationName}`
+        // operationName 通常是 "projects/.../locations/.../operations/..."
+        // 注意: 有时 API 返回的 name 可能已经包含了 location 前缀，需小心拼接
+        // 标准用法: https://<region>-aiplatform.googleapis.com/v1beta1/<operation_name>
         
+        let pollUrl = `${baseUrl.replace('/projects/' + projectId + '/locations/' + location + '/publishers/google/models/' + modelName.split(':').shift(), '')}/${operationName}`
+        // 上面的替换逻辑太复杂且易错，直接用 baseUrl (v1beta1) + operationName 即可，只要 operationName 是完整路径
+        // baseUrl 是 https://.../v1beta1
+        pollUrl = `${baseUrl}/${operationName}`
+        
+        // 如果是 API Key 模式，必须追加 key
         if (!useOAuth) {
           pollUrl += `?key=${token}`
         }
         
-        console.log(`[Vertex Video] Polling: ${pollUrl}`)
+        console.log(`[Vertex Video] Polling URL: ${pollUrl}`)
         
         let attempts = 0
         while (true) {
@@ -1427,7 +1442,14 @@ class AIService {
           attempts++
           
           const pollHeaders = useOAuth ? { 'Authorization': `Bearer ${token}` } : {}
-          const opRes = await fetch(pollUrl, { headers: pollHeaders })
+          
+          let opRes
+          try {
+             opRes = await fetch(pollUrl, { headers: pollHeaders })
+          } catch (pollNetworkError) {
+             console.error('[Vertex Video] Polling Network Error:', pollNetworkError)
+             throw new Error('轮询进度时发生网络错误 (CORS/Network)。任务可能仍在后台运行，请稍后在 Google Cloud Console 查看。')
+          }
           
           if (!opRes.ok) {
             const errText = await opRes.text()
@@ -1435,6 +1457,7 @@ class AIService {
           }
           
           data = await opRes.json()
+          console.log('[Vertex Video] Poll Status:', data.done ? 'DONE' : 'RUNNING')
           
           if (data.done) {
             if (data.error) {
@@ -1447,6 +1470,7 @@ class AIService {
           }
         }
       }
+      // ... (后略)
 
       // 解析结果 (Video)
       if (data.predictions && data.predictions.length > 0) {

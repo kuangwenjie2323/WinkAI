@@ -90,7 +90,7 @@ function App() {
       {showOverlay && <div className="overlay" onClick={closeSidebars} />}
 
       {/* 左侧导航栏 */}
-      <LeftSidebar />
+      <LeftSidebar onSettingsOpen={() => setSettingsOpen(true)} />
 
       {/* 中间主内容区 */}
       <div className="main-content">

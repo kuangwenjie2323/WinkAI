@@ -15,10 +15,9 @@ import {
   Search,
   X
 } from 'lucide-react'
-import CodeSnippets from './CodeSnippets'
 import './LeftSidebar.css'
 
-function LeftSidebar() {
+function LeftSidebar({ onSettingsOpen }) {
   const { t } = useTranslation()
   const {
     sessions,
@@ -123,6 +122,10 @@ function LeftSidebar() {
   }
 
   const handleTabClick = (tabId) => {
+    if (tabId === 'settings') {
+      if (onSettingsOpen) onSettingsOpen()
+      return
+    }
     setLeftActiveTab(tabId)
   }
 
@@ -221,10 +224,6 @@ function LeftSidebar() {
 
     if (activeTab === 'video') {
       return <div className="sidebar-placeholder">Video History (Coming Soon)</div>
-    }
-
-    if (activeTab === 'settings') {
-      return <CodeSnippets />
     }
 
     return null
