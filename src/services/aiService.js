@@ -148,6 +148,12 @@ class AIService {
 
   // 上传文件到 R2
   async uploadToR2(data, type = 'url', prefix = 'misc') {
+    // 本地开发环境直接跳过上传，避免 404 或未绑定 Bucket 错误
+    if (import.meta.env.DEV) {
+      console.log('[R2 Upload] Skipped in DEV environment (using original data)')
+      return data
+    }
+
     try {
       const endpoint = type === 'url' ? '/api/store-url' : '/api/store-base64'
       const payload = type === 'url' 
@@ -161,12 +167,12 @@ class AIService {
       })
 
       if (!response.ok) {
-        if (response.status === 404) {
-          // 本地开发环境可能没有 /api/store-* 函数，忽略错误
-          console.warn('[R2 Upload] Upload endpoint not found (dev environment?), using original data.')
-          return data
+        const errorText = await response.text()
+        if (response.status === 500 && errorText.includes('R2 bucket')) {
+           console.error('[R2 Upload] ❌ 严重错误: Cloudflare R2 Bucket 未绑定！\n请在 Cloudflare Dashboard > Pages > Settings > Functions > R2 Bucket Bindings 中绑定名为 "WINKAI_BUCKET" 的存储桶。')
         }
-        throw new Error(`Upload failed: ${response.status}`)
+        console.warn(`[R2 Upload] Failed (${response.status}): ${errorText}`)
+        return data
       }
 
       const result = await response.json()
@@ -176,7 +182,7 @@ class AIService {
       }
       return data
     } catch (error) {
-      console.warn('[R2 Upload] Failed:', error)
+      console.warn('[R2 Upload] Network Error:', error)
       return data // 降级：上传失败则使用原始数据
     }
   }
