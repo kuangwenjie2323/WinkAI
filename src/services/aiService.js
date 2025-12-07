@@ -1030,6 +1030,8 @@ class AIService {
     }
 
     // 第一次尝试
+    const originalLocation = location
+    let locationFallback = false
     let testResponse = await tryTest(location)
 
     // 如果 404 且当前不是 us-central1，自动重试 us-central1
@@ -1039,6 +1041,7 @@ class AIService {
       testResponse = retryResponse
       if (testResponse.ok) {
         location = 'us-central1' // 更新位置以便显示和后续调用
+        locationFallback = true
       }
     }
 
@@ -1121,9 +1124,13 @@ class AIService {
       })
     }
 
+    const fallbackNote = locationFallback
+      ? `\n⚠️ 注意: ${originalLocation} 区域测试失败，已自动切换到 ${location}`
+      : ''
+
     return {
       models,
-      message: `Vertex AI 连接成功 (${accessToken ? 'OAuth Token' : 'API Key'})，项目: ${projectId}，区域: ${location}`
+      message: `Vertex AI 连接成功 (${accessToken ? 'OAuth Token' : 'API Key'})，项目: ${projectId}，区域: ${location}${fallbackNote}`
     }
   }
 
