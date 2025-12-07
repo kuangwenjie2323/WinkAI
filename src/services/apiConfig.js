@@ -7,6 +7,21 @@ export const API_CONFIG = {
       baseURL: 'https://api.openai.com/v1',
       models: ['gpt-3.5-turbo', 'gpt-4']
     },
+    qwen: {
+      name: '通义千问',
+      baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      models: ['qwen-plus', 'qwen-turbo']
+    },
+    doubao: {
+      name: '豆包',
+      baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+      models: ['doubao-pro-32k', 'doubao-lite-32k']
+    },
+    deepseek: {
+      name: 'DeepSeek',
+      baseURL: 'https://api.deepseek.com/v1',
+      models: ['deepseek-chat', 'deepseek-coder']
+    },
     anthropic: {
       name: 'Anthropic',
       baseURL: 'https://api.anthropic.com/v1',

@@ -12,6 +12,9 @@ class AIService {
     this.defaultEndpoints = {
       openai: 'https://api.openai.com/v1',
       anthropic: 'https://api.anthropic.com',
+      qwen: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      doubao: 'https://ark.cn-beijing.volces.com/api/v3',
+      deepseek: 'https://api.deepseek.com/v1',
       google: 'https://generativelanguage.googleapis.com/v1beta',
       vertex: 'https://us-central1-aiplatform.googleapis.com/v1beta',
       custom: ''
@@ -33,6 +36,29 @@ class AIService {
       normalized = normalized.replace(/\/+v1\/?$/, '')
     }
 
+    // 兼容各厂商的 OpenAI 接口路径差异
+    if (['openai', 'deepseek'].includes(provider)) {
+      if (!/\/v\d/.test(normalized)) {
+        normalized = `${normalized.replace(/\/+$/, '')}/v1`
+      }
+    }
+
+    if (provider === 'qwen') {
+      // DashScope 兼容模式推荐路径: /compatible-mode/v1
+      if (!/compatible-mode/.test(normalized)) {
+        normalized = `${normalized.replace(/\/+$/, '')}/compatible-mode/v1`
+      } else if (!/\/v\d/.test(normalized)) {
+        normalized = `${normalized.replace(/\/+$/, '')}/v1`
+      }
+    }
+
+    if (provider === 'doubao') {
+      // 豆包 OpenAI 兼容入口: /api/v3
+      if (!/\/api\/v3/.test(normalized)) {
+        normalized = `${normalized.replace(/\/+$/, '')}/api/v3`
+      }
+    }
+
     return normalized.replace(/\/+$/, '')
   }
 
@@ -42,6 +68,9 @@ class AIService {
     const envKey = {
       openai: import.meta.env.VITE_OPENAI_API_KEY,
       anthropic: import.meta.env.VITE_ANTHROPIC_API_KEY,
+      qwen: import.meta.env.VITE_QWEN_API_KEY,
+      doubao: import.meta.env.VITE_DOUBAO_API_KEY,
+      deepseek: import.meta.env.VITE_DEEPSEEK_API_KEY,
       google: import.meta.env.VITE_GOOGLE_API_KEY,
       vertex: import.meta.env.VITE_VERTEX_API_KEY,
       custom: import.meta.env.VITE_CUSTOM_API_KEY
@@ -60,6 +89,9 @@ class AIService {
     const envEndpoint = {
       openai: import.meta.env.VITE_OPENAI_API_ENDPOINT,
       anthropic: import.meta.env.VITE_ANTHROPIC_API_ENDPOINT,
+      qwen: import.meta.env.VITE_QWEN_API_ENDPOINT,
+      doubao: import.meta.env.VITE_DOUBAO_API_ENDPOINT,
+      deepseek: import.meta.env.VITE_DEEPSEEK_API_ENDPOINT,
       google: import.meta.env.VITE_GOOGLE_API_ENDPOINT,
       vertex: import.meta.env.VITE_VERTEX_API_ENDPOINT,
       custom: import.meta.env.VITE_CUSTOM_API_ENDPOINT
@@ -72,6 +104,11 @@ class AIService {
     const storedEndpoint = providers?.[provider]?.baseURL
 
     return this.normalizeEndpoint(provider, storedEndpoint || this.defaultEndpoints[provider])
+  }
+
+  getProviderName(provider) {
+    const { providers } = useStore.getState()
+    return providers?.[provider]?.name || provider
   }
 
   // 获取 Vertex 配置
@@ -101,6 +138,16 @@ class AIService {
     switch (provider) {
       case 'openai':
         this.clients.openai = new OpenAI({
+          apiKey: resolvedApiKey,
+          baseURL: resolvedBaseURL,
+          dangerouslyAllowBrowser: true
+        })
+        break
+
+      case 'qwen':
+      case 'doubao':
+      case 'deepseek':
+        this.clients[provider] = new OpenAI({
           apiKey: resolvedApiKey,
           baseURL: resolvedBaseURL,
           dangerouslyAllowBrowser: true
@@ -187,10 +234,11 @@ class AIService {
     }
   }
 
-  // OpenAI 流式聊天
-  async *streamChatOpenAI(messages, model, options = {}) {
-    const client = this.clients.openai
-    if (!client) throw new Error('OpenAI 客户端未初始化')
+  // OpenAI 兼容流式聊天 (OpenAI / Qwen / Doubao / DeepSeek)
+  async *_streamOpenAICompatible(provider, messages, model, options = {}) {
+    const client = this.clients[provider]
+    const providerName = this.getProviderName(provider)
+    if (!client) throw new Error(`${providerName} 客户端未初始化`)
 
     try {
       const formattedMessages = messages.map(msg => {
@@ -236,9 +284,25 @@ class AIService {
         }
       }
     } catch (error) {
-      console.error('OpenAI 流式调用错误:', error)
+      console.error(`${providerName} 流式调用错误:`, error)
       throw error
     }
+  }
+
+  async *streamChatOpenAI(messages, model, options = {}) {
+    yield* this._streamOpenAICompatible('openai', messages, model, options)
+  }
+
+  async *streamChatQwen(messages, model, options = {}) {
+    yield* this._streamOpenAICompatible('qwen', messages, model, options)
+  }
+
+  async *streamChatDoubao(messages, model, options = {}) {
+    yield* this._streamOpenAICompatible('doubao', messages, model, options)
+  }
+
+  async *streamChatDeepSeek(messages, model, options = {}) {
+    yield* this._streamOpenAICompatible('deepseek', messages, model, options)
   }
 
   // Anthropic 流式聊天
@@ -736,18 +800,23 @@ class AIService {
 
   /**
    * 测试 API 连接
-   * @param {string} provider - 'openai' | 'anthropic' | 'google' | 'custom'
+   * @param {string} provider - 'openai' | 'anthropic' | 'qwen' | 'doubao' | 'deepseek' | 'google' | 'custom'
    * @param {Object} config - { apiKey, endpoint, apiType }
    * @returns {Promise<Object>} { success, provider, responseTime, models, message, error }
    */
   async testConnection(provider, config = {}) {
+    const { providers } = useStore.getState()
+    const providerConfig = providers?.[provider] || {}
+
     const mergedConfig = {
       ...config,
       apiKey: this.getApiKey(provider) || config.apiKey,
       endpoint: this.normalizeEndpoint(
         provider,
         config.endpoint || config.baseURL || this.getApiEndpoint(provider)
-      )
+      ),
+      defaultModel: providerConfig.defaultModel,
+      fallbackModels: providerConfig.models
     }
     const startTime = Date.now()
 
@@ -756,10 +825,19 @@ class AIService {
 
       switch (provider) {
         case 'openai':
-          result = await this._testOpenAI(mergedConfig)
+          result = await this._testOpenAI(mergedConfig, 'openai')
           break
         case 'anthropic':
           result = await this._testAnthropic(mergedConfig)
+          break
+        case 'qwen':
+          result = await this._testOpenAI(mergedConfig, 'qwen')
+          break
+        case 'doubao':
+          result = await this._testOpenAI(mergedConfig, 'doubao')
+          break
+        case 'deepseek':
+          result = await this._testOpenAI(mergedConfig, 'deepseek')
           break
         case 'google':
           result = await this._testGoogle(mergedConfig)
@@ -791,36 +869,50 @@ class AIService {
     }
   }
 
-  async _testOpenAI(config) {
-    const endpoint = config.endpoint || 'https://api.openai.com/v1'
+  async _testOpenAI(config, provider = 'openai') {
+    const endpoint = config.endpoint || this.defaultEndpoints[provider] || this.defaultEndpoints.openai
     const apiKey = config.apiKey
+    const providerName = this.getProviderName(provider)
 
-    if (!apiKey) throw new Error('请提供 OpenAI API Key')
+    if (!apiKey) throw new Error(`请提供 ${providerName} API Key`)
 
-    // 获取模型列表
-    const modelsResponse = await fetch(`${endpoint}/models`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    })
+    const headers = { 'Authorization': `Bearer ${apiKey}` }
+    let models = []
 
-    if (!modelsResponse.ok) {
-      const error = await modelsResponse.text()
-      throw new Error(`API 错误: ${modelsResponse.status} - ${error}`)
+    try {
+      const modelsResponse = await fetch(`${endpoint}/models`, { headers })
+
+      if (!modelsResponse.ok) {
+        const error = await modelsResponse.text()
+        throw new Error(`API 错误: ${modelsResponse.status} - ${error}`)
+      }
+
+      const modelsData = await modelsResponse.json()
+      models = modelsData.data
+        .map(m => ({ id: m.id, name: m.id, created: m.created }))
+        .sort((a, b) => b.created - a.created)
+    } catch (error) {
+      if (provider === 'openai') {
+        throw error
+      }
+      console.warn(`[${providerName}] 获取模型列表失败，使用预设列表。`, error)
+      models = this._buildFallbackModels(provider, config)
     }
 
-    const modelsData = await modelsResponse.json()
-    const models = modelsData.data
-      .map(m => ({ id: m.id, name: m.id, created: m.created }))
-      .sort((a, b) => b.created - a.created)
+    const testModel = config.testModel
+      || config.defaultModel
+      || models[0]?.id
+      || 'gpt-3.5-turbo'
 
     // 测试简单调用
     const testResponse = await fetch(`${endpoint}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        ...headers,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: testModel,
         messages: [{ role: 'user', content: 'test' }],
         max_tokens: 5
       })
@@ -832,6 +924,11 @@ class AIService {
       models,
       message: `成功获取 ${models.length} 个模型`
     }
+  }
+
+  _buildFallbackModels(provider, config = {}) {
+    const fallback = config.fallbackModels || []
+    return fallback.map(id => ({ id, name: id }))
   }
 
   async _testAnthropic(config) {
@@ -1220,7 +1317,10 @@ class AIService {
     try {
       switch (apiType) {
         case 'openai':
-          return await this._testOpenAI(testConfig)
+        case 'qwen':
+        case 'doubao':
+        case 'deepseek':
+          return await this._testOpenAI(testConfig, apiType)
         case 'anthropic':
           return await this._testAnthropic(testConfig)
         case 'google':
@@ -1246,6 +1346,18 @@ class AIService {
     switch (provider) {
       case 'openai':
         yield* this.streamChatOpenAI(messages, model, options)
+        break
+
+      case 'qwen':
+        yield* this.streamChatQwen(messages, model, options)
+        break
+
+      case 'doubao':
+        yield* this.streamChatDoubao(messages, model, options)
+        break
+
+      case 'deepseek':
+        yield* this.streamChatDeepSeek(messages, model, options)
         break
 
       case 'anthropic':

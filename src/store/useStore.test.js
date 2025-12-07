@@ -31,7 +31,7 @@ describe('useStore', () => {
     expect(state.sessions).toHaveLength(1)
     expect(state.currentSessionId).toBe('default')
     expect(state.settings.theme).toBe('dark')
-    expect(state.currentProvider).toBe('openai')
+    expect(state.currentProvider).toBe('google')
   })
 
   it('应该能创建新会话', () => {

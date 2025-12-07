@@ -80,6 +80,9 @@ function SettingsPanel({ isOpen, onClose }) {
   const envKeys = {
     openai: import.meta.env.VITE_OPENAI_API_KEY,
     anthropic: import.meta.env.VITE_ANTHROPIC_API_KEY,
+    qwen: import.meta.env.VITE_QWEN_API_KEY,
+    doubao: import.meta.env.VITE_DOUBAO_API_KEY,
+    deepseek: import.meta.env.VITE_DEEPSEEK_API_KEY,
     google: import.meta.env.VITE_GOOGLE_API_KEY,
     vertex: import.meta.env.VITE_VERTEX_API_KEY,
     custom: import.meta.env.VITE_CUSTOM_API_KEY
@@ -186,6 +189,9 @@ function SettingsPanel({ isOpen, onClose }) {
                       {key === 'openai' && '🤖'}
                       {key === 'anthropic' && '🧠'}
                       {key === 'google' && '🔷'}
+                      {key === 'qwen' && '🌿'}
+                      {key === 'doubao' && '🥟'}
+                      {key === 'deepseek' && '🔎'}
                       {key === 'vertex' && '🎬'}
                       {key === 'custom' && '⚙️'}
                     </div>
@@ -208,6 +214,9 @@ function SettingsPanel({ isOpen, onClose }) {
                     {currentProvider === 'openai' && ' (platform.openai.com)'}
                     {currentProvider === 'anthropic' && ' (console.anthropic.com)'}
                     {currentProvider === 'google' && ' (aistudio.google.com)'}
+                    {currentProvider === 'qwen' && ' (dashscope.aliyun.com)'}
+                    {currentProvider === 'doubao' && ' (ark.cn-beijing.volces.com)'}
+                    {currentProvider === 'deepseek' && ' (api.deepseek.com)'}
                     {currentProvider === 'vertex' && ' (console.cloud.google.com)'}
                   </span>
                 </label>

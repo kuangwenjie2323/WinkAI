@@ -52,6 +52,45 @@ export const useStore = create(
           supportsVision: true,
           supportsStreaming: true
         },
+        qwen: {
+          name: '阿里云通义千问',
+          apiKey: '',
+          baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+          models: [
+            'qwen-plus',
+            'qwen-turbo',
+            'qwen-vl-max-latest'
+          ],
+          defaultModel: 'qwen-plus',
+          supportsVision: true,
+          supportsStreaming: true
+        },
+        doubao: {
+          name: '火山方舟豆包',
+          apiKey: '',
+          baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+          models: [
+            'doubao-pro-32k',
+            'doubao-lite-32k',
+            'doubao-pro-128k'
+          ],
+          defaultModel: 'doubao-pro-32k',
+          supportsVision: false,
+          supportsStreaming: true
+        },
+        deepseek: {
+          name: 'DeepSeek',
+          apiKey: '',
+          baseURL: 'https://api.deepseek.com/v1',
+          models: [
+            'deepseek-chat',
+            'deepseek-reasoner',
+            'deepseek-coder'
+          ],
+          defaultModel: 'deepseek-chat',
+          supportsVision: false,
+          supportsStreaming: true
+        },
         vertex: {
           name: 'Google Vertex AI',
           apiKey: '',
@@ -141,13 +180,16 @@ export const useStore = create(
       codeSnippets: [],
 
       // API 测试结果（不持久化）
-      testResults: {
-        openai: null,
-        anthropic: null,
-        google: null,
-        vertex: null,
-        custom: null
-      },
+        testResults: {
+          openai: null,
+          anthropic: null,
+          google: null,
+          qwen: null,
+          doubao: null,
+          deepseek: null,
+          vertex: null,
+          custom: null
+        },
 
       // Google OAuth 状态（不持久化，Token 会过期）
       googleOAuth: {
@@ -160,6 +202,9 @@ export const useStore = create(
         openai: [],
         anthropic: [],
         google: [],
+        qwen: [],
+        doubao: [],
+        deepseek: [],
         custom: []
       },
 
@@ -168,6 +213,9 @@ export const useStore = create(
         openai: [],
         anthropic: [],
         google: [],
+        qwen: [],
+        doubao: [],
+        deepseek: [],
         custom: []
       },
 

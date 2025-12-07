@@ -19,6 +19,9 @@ describe('AIService', () => {
       providers: {
         openai: { apiKey: 'store-openai-key', baseURL: 'https://store-openai.com' },
         anthropic: { apiKey: 'store-anthropic-key', baseURL: 'https://store-anthropic.com' },
+        qwen: { apiKey: 'store-qwen-key', baseURL: 'https://store-qwen.com', defaultModel: 'qwen-plus', models: ['qwen-plus'] },
+        doubao: { apiKey: 'store-doubao-key', baseURL: 'https://store-doubao.com', defaultModel: 'doubao-pro-32k', models: ['doubao-pro-32k'] },
+        deepseek: { apiKey: 'store-deepseek-key', baseURL: 'https://store-deepseek.com', defaultModel: 'deepseek-chat', models: ['deepseek-chat'] }
       }
     })
     
@@ -44,6 +47,20 @@ describe('AIService', () => {
 
     it('对于非 Anthropic 不应该移除 /v1', () => {
       expect(aiService.normalizeEndpoint('openai', 'https://api.openai.com/v1')).toBe('https://api.openai.com/v1')
+    })
+
+    it('应该为 DeepSeek 自动追加 /v1', () => {
+      expect(aiService.normalizeEndpoint('deepseek', 'https://api.deepseek.com')).toBe('https://api.deepseek.com/v1')
+    })
+
+    it('应该为千问补全 compatible-mode/v1', () => {
+      expect(aiService.normalizeEndpoint('qwen', 'https://dashscope.aliyuncs.com')).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1')
+      expect(aiService.normalizeEndpoint('qwen', 'https://dashscope.aliyuncs.com/compatible-mode')).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1')
+    })
+
+    it('应该为豆包补全 /api/v3', () => {
+      expect(aiService.normalizeEndpoint('doubao', 'https://ark.cn-beijing.volces.com')).toBe('https://ark.cn-beijing.volces.com/api/v3')
+      expect(aiService.normalizeEndpoint('doubao', 'https://ark.cn-beijing.volces.com/')).toBe('https://ark.cn-beijing.volces.com/api/v3')
     })
   });
 
@@ -118,6 +135,39 @@ describe('AIService', () => {
         
         expect(result.success).toBe(false)
         expect(result.error).toContain('401')
+    })
+
+    it('Qwen: 模型列表失败时应该使用预设列表', async () => {
+      // 模拟获取模型失败，但聊天调用成功
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          text: async () => 'Not Found'
+        })
+        .mockResolvedValueOnce({ ok: true })
+
+      // 覆盖 store 以确保有默认模型
+      useStore.getState.mockReturnValue({
+        providers: {
+          qwen: {
+            apiKey: 'store-qwen-key',
+            baseURL: 'https://store-qwen.com/compatible-mode/v1',
+            defaultModel: 'qwen-plus',
+            models: ['qwen-plus', 'qwen-turbo']
+          }
+        }
+      })
+
+      const result = await aiService.testConnection('qwen', { apiKey: 'manual-key' })
+
+      expect(result.success).toBe(true)
+      expect(result.models).toHaveLength(2)
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+      expect(global.fetch).toHaveBeenLastCalledWith(
+        'https://store-qwen.com/compatible-mode/v1/chat/completions',
+        expect.any(Object)
+      )
     })
   })
 
