@@ -11,6 +11,7 @@ function ImageGenContainer() {
   const { providers, currentProvider, dynamicModels, addToImageLibrary } = useStore()
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [progress, setProgress] = useState(0) // 进度
   const [imageUrl, setImageUrl] = useState(null)
   
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -89,7 +90,19 @@ function ImageGenContainer() {
   const handleGenerate = async () => {
     if (!prompt.trim()) return
     setIsGenerating(true)
+    setProgress(0)
     setImageUrl(null)
+    
+    // 模拟进度条 (图片生成较快，步长稍大)
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 98) return prev
+        const remaining = 98 - prev
+        const increment = Math.max(1, Math.random() * (remaining / 5))
+        return Math.min(98, prev + increment)
+      })
+    }, 200)
+
     let fullText = ''
     let imgFound = false
 
@@ -123,6 +136,7 @@ function ImageGenContainer() {
                const url = srcMatch[1]
                setImageUrl(url)
                imgFound = true
+               setProgress(100)
 
                // 保存到历史记录
                addToImageLibrary({
@@ -145,7 +159,9 @@ function ImageGenContainer() {
       console.error('Image generation failed:', error)
       alert('生成失败: ' + error.message)
     } finally {
+      clearInterval(progressInterval)
       setIsGenerating(false)
+      if (!imgFound) setProgress(0)
     }
   }
 
@@ -196,7 +212,7 @@ function ImageGenContainer() {
         {isGenerating && (
           <div className="generating-overlay">
             <div className="spinner"></div>
-            <p>Generating image...</p>
+            <p>Generating image... {Math.round(progress)}%</p>
           </div>
         )}
       </div>

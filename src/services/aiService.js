@@ -329,94 +329,143 @@ class AIService {
                     }
                   }
                   
-                  // Veo 使用 predictLongRunning，Imagen 使用 predict
-                  const method = isVeoModel ? 'predictLongRunning' : 'predict'
-                  const endpoint = `${baseUrl}/models/${model}:${method}`
-                  console.log(`[Google Gen] Endpoint: ${endpoint}`)
+                              // Veo 使用 predictLongRunning，Imagen 使用 predict
+                              const method = isVeoModel ? 'predictLongRunning' : 'predict'
+                              const endpoint = `${baseUrl}/models/${model}:${method}`
+                              console.log(`[Google Gen] Endpoint: ${endpoint}`)
+                              
+                              const response = await fetch(
+                                `${endpoint}?key=${apiKey}`,
+                                {
+                                  method: 'POST',
+                                  headers: { 
+                                    'Content-Type': 'application/json',
+                                    'x-goog-api-key': apiKey
+                                  },
+                                  body: JSON.stringify({
+                                    instances: [instance],
+                                    parameters
+                                  })
+                                }
+                              )
                   
-                  const response = await fetch(
-                    `${endpoint}?key=${apiKey}`,
-                    {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        instances: [instance],
-                        parameters
-                      })
-                    }
-                  )
-      
-                  if (!response.ok) {
-                    const errorText = await response.text()
-                    throw new Error(`API 错误 ${response.status} (${endpoint}): ${errorText}`)
+                                          if (!response.ok) {
+                                            const errorText = await response.text()
+                                            console.error(`[Google Gen] API Error: ${response.status}`, errorText)
+                                            
+                                            let additionalInfo = ''
+                                            if (response.status === 404) {
+                                               try {
+                                                 // 尝试获取可用模型列表进行诊断
+                                                 const modelsResp = await fetch(`${baseUrl}/models?key=${apiKey}`)
+                                                 if (modelsResp.ok) {
+                                                   const modelsData = await modelsResp.json()
+                                                   const availableModels = modelsData.models?.map(m => m.name.replace('models/', '')) || []
+                                                   const veoModels = availableModels.filter(m => m.includes('veo') || m.includes('imagen'))
+                                                   
+                                                   if (availableModels.includes(model)) {
+                                                     additionalInfo = `\n\n诊断: 模型 '${model}' 存在于您的可用列表中，但 Endpoint 返回 404。这通常意味着：\n1. 请求的 URL 方法 (${method}) 不正确。\n2. 您使用的代理/VPN 不支持此路径。\n3. 该模型暂时不可用。`
+                                                   } else {
+                                                     additionalInfo = `\n\n诊断: 模型 '${model}' 未在您的可用模型列表中找到。\n您的账户可用视频/图片模型: ${veoModels.join(', ') || '无'}`
+                                                   }
+                                                 }
+                                               } catch (e) {
+                                                 console.warn('诊断模型列表失败', e)
+                                               }
+                                            }
+                              
+                                            throw new Error(`API 错误 ${response.status}: ${errorText}${additionalInfo}`)
+                                          }                  
+                              let data = await response.json()
+                  
+                              // 如果是 LongRunning 操作，需要轮询
+                              if (isVeoModel && data.name && !data.done) {
+                                 yield { type: 'content', content: '⏳ 任务已提交，正在生成视频 (预计 1-2 分钟)...\n' }
+                                 
+                                 const operationName = data.name
+                                 // Operation name 通常是 "models/veo.../operations/..."
+                                 // 确保 baseUrl 结尾没有斜杠，operationName 开头没有斜杠
+                                 const cleanBaseUrl = baseUrl.replace(/\/+$/, '')
+                                 const cleanOpName = operationName.replace(/^\/+/, '')
+                                 
+                                 // 如果 operationName 已经是完整 URL (虽然少见)，直接用
+                                 // 否则拼接。注意: 有些情况下 operationName 包含 "v1beta/" 前缀，需留意
+                                 // 安全起见，直接使用 name 拼接到 v1beta 后
+                                 // 假设 baseUrl 是 https://generativelanguage.googleapis.com/v1beta
+                                 const operationUrl = `${cleanBaseUrl}/${cleanOpName}?key=${apiKey}`
+                                 
+                                 console.log(`[Google Gen] Polling Operation: ${operationUrl}`)
+                  
+                                 // 轮询逻辑
+                                 while (true) {
+                                   await new Promise(resolve => setTimeout(resolve, 5000)) // 每 5 秒轮询一次
+                                   
+                                   const opRes = await fetch(operationUrl, {
+                                      headers: { 'x-goog-api-key': apiKey }
+                                   })
+                                   
+                                   if (!opRes.ok) {
+                                     const errText = await opRes.text()
+                                     throw new Error(`轮询失败 ${opRes.status}: ${errText}`)
+                                   }
+                                   
+                                   data = await opRes.json()
+                                   
+                                   if (data.done) {
+                                     if (data.error) {
+                                       throw new Error(`生成失败: ${data.error.message || JSON.stringify(data.error)}`)
+                                     }
+                                     // 任务完成，data.response 包含结果
+                                     if (data.response) {
+                                        // data.response 可能是 Any 类型，如果是 JSON 对象则直接使用
+                                        // 某些 client 库会自动解包 @type，但在 REST API 中通常直接返回结构
+                                        data = data.response
+                                     }
+                                     break
+                                   }
+                                 }
+                              }
+
+                  // 解析返回数据 - 支持多种格式
+                  let videoUrl = null
+                  let imageData = null
+
+                  // 格式1: Gemini API Veo 格式 - generateVideoResponse.generatedSamples[0].video.uri
+                  if (data.generateVideoResponse?.generatedSamples?.[0]?.video?.uri) {
+                    videoUrl = data.generateVideoResponse.generatedSamples[0].video.uri
+                    console.log('[Google Gen] 检测到 Gemini API Veo 格式')
                   }
-      
-                  let data = await response.json()
-      
-                  // 如果是 LongRunning 操作，需要轮询
-                  if (isVeoModel && data.name && !data.done) {
-                     yield { type: 'content', content: '⏳ 任务已提交，正在生成视频 (预计 1-2 分钟)...\n' }
-                     
-                     const operationName = data.name
-                     const operationUrl = `${baseUrl}/${operationName}?key=${apiKey}`
-                     
-                     // 轮询逻辑
-                     while (true) {
-                       await new Promise(resolve => setTimeout(resolve, 5000)) // 每 5 秒轮询一次
-                       
-                       const opRes = await fetch(operationUrl)
-                       if (!opRes.ok) {
-                         throw new Error(`轮询失败: ${opRes.status}`)
-                       }
-                       
-                       data = await opRes.json()
-                       
-                       if (data.done) {
-                         if (data.error) {
-                           throw new Error(`生成失败: ${data.error.message || '未知错误'}`)
-                         }
-                         // 任务完成，data.response 包含结果
-                         // 注意: Google API 的 Operation response 结构可能包裹在 response 字段里
-                         // 通常是 data.response.predictions 或者是 data.result
-                         // 实际上对于 predictLongRunning，结果通常在 data.response 中，它是一个 Any 类型
-                         // 我们需要根据实际返回解包。通常它就是一个 PredictResponse
-                         if (data.response) {
-                            // 这里的 data.response 可能是一个被转义的 JSON 字符串或者对象
-                            // 假设是对象，结构同直接 predict 的返回
-                            data = data.response
-                         }
-                         break
-                       }
-                     }
-                  }
-      
-                  if (data.predictions && data.predictions.length > 0) {
+                  // 格式2: Vertex AI 格式 - predictions[0].xxx
+                  else if (data.predictions && data.predictions.length > 0) {
                     const prediction = data.predictions[0]
-                    
-                    // 处理图片
+
                     if (prediction.bytesBase64Encoded) {
-                      const mimeType = isVeoModel ? 'video/mp4' : 'image/png'
-                      const url = `data:${mimeType};base64,${prediction.bytesBase64Encoded}`
-                      const markdown = isVeoModel 
-                        ? `<video controls src="${url}" width="100%"></video>`
-                        : `![生成的图片](${url})`
-                      yield { type: 'content', content: markdown }
-                    } 
-                    // 处理视频 (Veo 可能返回 videoUri 或其他字段)
-                    else if (prediction.videoUri) {
-                       yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%"></video>\n\n[下载视频](${prediction.videoUri})` }
+                      imageData = prediction.bytesBase64Encoded
+                    } else if (prediction.videoUri) {
+                      videoUrl = prediction.videoUri
+                    } else if (prediction.assets?.video?.uri) {
+                      videoUrl = prediction.assets.video.uri
                     }
-                    // Veo 3.1 有时返回 assets 字段
-                    else if (prediction.assets && prediction.assets.video && prediction.assets.video.uri) {
-                       const uri = prediction.assets.video.uri
-                       yield { type: 'content', content: `<video controls src="${uri}" width="100%"></video>\n\n[下载视频](${uri})` }
-                    }
-                    else {
-                      console.log('未识别的预测结果:', prediction)
-                      yield { type: 'content', content: '生成成功但未识别到返回数据格式' }
-                    }
+                    console.log('[Google Gen] 检测到 Vertex AI 格式')
+                  }
+
+                  // 渲染结果
+                  if (videoUrl) {
+                    // 视频 URL 可能需要认证访问，添加 API key
+                    const downloadUrl = videoUrl.includes('?')
+                      ? `${videoUrl}&key=${apiKey}`
+                      : `${videoUrl}?key=${apiKey}`
+                    yield { type: 'content', content: `✅ 视频生成完成！\n\n<video controls src="${downloadUrl}" width="100%"></video>\n\n[下载视频](${downloadUrl})` }
+                  } else if (imageData) {
+                    const mimeType = isVeoModel ? 'video/mp4' : 'image/png'
+                    const url = `data:${mimeType};base64,${imageData}`
+                    const markdown = isVeoModel
+                      ? `<video controls src="${url}" width="100%"></video>`
+                      : `![生成的图片](${url})`
+                    yield { type: 'content', content: markdown }
                   } else {
-                    yield { type: 'content', content: '生成失败，请重试' }
+                    console.log('[Google Gen] 未识别的返回结构:', JSON.stringify(data, null, 2))
+                    yield { type: 'content', content: `生成完成但未识别返回格式。原始数据:\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\`` }
                   }
       
                   yield { type: 'done', reason: 'stop' }

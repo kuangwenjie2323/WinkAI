@@ -10,7 +10,9 @@ function VideoGenContainer() {
   const { providers, currentProvider, dynamicModels, addToVideoLibrary } = useStore()
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [progress, setProgress] = useState(0) // 进度百分比 0-100
   const [videoUrl, setVideoUrl] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null) // 错误信息
   
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [resolution, setResolution] = useState('720p')
@@ -123,7 +125,21 @@ function VideoGenContainer() {
   const handleGenerate = async () => {
     if (!prompt.trim() && !referenceImage) return
     setIsGenerating(true)
+    setProgress(0)
     setVideoUrl(null)
+    setErrorMsg(null)
+    
+    // 模拟进度条逻辑
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) return prev // 停在 95% 等待完成
+        // 随机增加进度，前期快后期慢
+        const remaining = 95 - prev
+        const increment = Math.max(0.1, Math.random() * (remaining / 10))
+        return Math.min(95, prev + increment)
+      })
+    }, 500)
+
     let fullText = ''
     let videoFound = false
 
@@ -163,6 +179,7 @@ function VideoGenContainer() {
                const url = srcMatch[1]
                setVideoUrl(url)
                videoFound = true
+               setProgress(100) // 完成
                
                // 保存到历史记录
                addToVideoLibrary({
@@ -179,13 +196,17 @@ function VideoGenContainer() {
       }
 
       if (!videoFound && fullText.trim()) {
-        alert('生成未返回视频，可能是模型拒绝或返回了纯文本: \n' + fullText)
+        const msg = '生成未返回视频，可能是模型拒绝或返回了纯文本: \n' + fullText
+        setErrorMsg(msg)
+        console.warn(msg)
       }
     } catch (error) {
       console.error('Video generation failed:', error)
-      alert('生成失败: ' + error.message)
+      setErrorMsg(error.message || '生成过程中发生未知错误')
     } finally {
+      clearInterval(progressInterval)
       setIsGenerating(false)
+      if (!videoFound) setProgress(0) // 失败重置
     }
   }
 
@@ -244,7 +265,35 @@ function VideoGenContainer() {
         {isGenerating && (
           <div className="generating-overlay">
             <div className="spinner"></div>
-            <p>Generating video...</p>
+            <p>Generating video... {Math.round(progress)}%</p>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="error-overlay" style={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(255, 59, 48, 0.9)',
+            color: 'white',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            maxWidth: '80%',
+            zIndex: 25,
+            backdropFilter: 'blur(4px)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <span style={{ fontSize: '14px' }}>{errorMsg}</span>
+            <button 
+              onClick={() => setErrorMsg(null)}
+              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: 4 }}
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
       </div>
