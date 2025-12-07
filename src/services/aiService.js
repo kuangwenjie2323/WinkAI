@@ -279,106 +279,155 @@ class AIService {
       const lastMessage = messages[messages.length - 1]
       const prompt = lastMessage?.content || ''
 
-      // 图片/视频生成模式判断
-      // Google AI Studio 支持：Imagen 4、Veo 3、Nano Banana Pro、Gemini Flash Image 等
-      const isImagenModel = model.toLowerCase().includes('imagen')
-      const isVeoModel = model.toLowerCase().includes('veo')
-      const isNanoBanana = model.toLowerCase().includes('nano') || model.includes('gemini-3-pro-image')
-      // Gemini 图片生成模型：包含 'image' 或 'flash'
-      const isGeminiImageModel = model.includes('gemini') && (model.includes('flash') || model.includes('image'))
-
-      if (options.mode === 'image' || options.mode === 'video' || isImagenModel || isVeoModel || isNanoBanana || (options.imageParams && isGeminiImageModel)) {
-
-                // Imagen/Veo 使用 predict API (Google AI Studio 也支持)
-                if (isImagenModel || isVeoModel) {
-                  try {
-                    const apiKey = this.getApiKey('google')
-                    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
-                    
-                    // 准备参数
-                    const imageParams = options.imageParams || {}
-                    const videoParams = options.videoParams || {}
-                    
-                    // 构建 payload
-                    const instance = { prompt }
-                    // 支持参考图 (仅视频模式)
-                    if (isVeoModel && videoParams.referenceImage) {
-                      instance.image = { bytesBase64Encoded: videoParams.referenceImage }
-                    }
-        
-                    const parameters = {
-                      sampleCount: 1
-                    }
-        
-                    // 添加特定参数
-                    if (isImagenModel) {
-                      parameters.aspectRatio = imageParams.aspectRatio || '1:1'
-                    }
-                    if (isVeoModel) {
-                      parameters.aspectRatio = videoParams.aspectRatio || '16:9'
-                      if (videoParams.duration) {
-                        parameters.durationSeconds = parseInt(videoParams.duration, 10)
-                      }
-                      if (videoParams.withAudio) {
-                        parameters.includeAudio = true
-                      }
-                    }
-                    
-                    const endpoint = `${baseUrl}/models/${model}:predict`
-                    console.log(`[Google Gen] Endpoint: ${endpoint}`)
-                    
-                    const response = await fetch(
-                      `${endpoint}?key=${apiKey}`,
-                      {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          instances: [instance],
-                          parameters
-                        })
-                      }
-                    )
-        
-                    if (!response.ok) {
-                      const errorText = await response.text()
-                      throw new Error(`API 错误 ${response.status} (${endpoint}): ${errorText}`)
-                    }
-        
-                    const data = await response.json()
-        
-                    if (data.predictions && data.predictions.length > 0) {
-                      const prediction = data.predictions[0]
-                      
-                      // 处理图片
-                      if (prediction.bytesBase64Encoded) {
-                        const mimeType = isVeoModel ? 'video/mp4' : 'image/png'
-                        const url = `data:${mimeType};base64,${prediction.bytesBase64Encoded}`
-                        const markdown = isVeoModel 
-                          ? `<video controls src="${url}" width="100%"></video>`
-                          : `![生成的图片](${url})`
-                        yield { type: 'content', content: markdown }
-                      } 
-                      // 处理视频 (Veo 可能返回 videoUri 或其他字段)
-                      else if (prediction.videoUri) {
-                         yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%"></video>\n\n[下载视频](${prediction.videoUri})` }
-                      }
-                      else {
-                        yield { type: 'content', content: '生成成功但未识别到返回数据格式' }
-                      }
-                    } else {
-                      yield { type: 'content', content: '生成失败，请重试' }
-                    }
-        
-                    yield { type: 'done', reason: 'stop' }
-                    return
-                  } catch (err) {
-                    console.error('生成错误:', err)
-                    yield { type: 'content', content: `生成失败: ${err.message}\n\n**排查建议:**\n1. 检查 Base URL 是否配置正确 (当前: ${this.getApiEndpoint('google')})\n2. Veo/Imagen 模型在 AI Studio (API Key) 上可能受限或需申请白名单。\n3. 尝试切换到 **Google Vertex AI** 提供商 (需配置 GCP 项目和 OAuth)。` }
-                    yield { type: 'done', reason: 'stop' }
-                    return
+                // 图片/视频生成模式判断
+            // Google AI Studio 支持：Imagen 4、Veo 3、Nano Banana Pro、Gemini Flash Image 等
+            const isImagenModel = model.toLowerCase().includes('imagen')
+            const isVeoModel = model.toLowerCase().includes('veo')
+            const isNanoBanana = model.toLowerCase().includes('nano') || model.includes('gemini-3-pro-image')
+            // Gemini 图片生成模型：包含 'image' 或 'flash'
+            const isGeminiImageModel = model.includes('gemini') && (model.includes('flash') || model.includes('image'))
+      
+            if (options.mode === 'image' || options.mode === 'video' || isImagenModel || isVeoModel || isNanoBanana || (options.imageParams && isGeminiImageModel)) {
+      
+              // Imagen/Veo 使用 predict API (Google AI Studio 也支持)
+              if (isImagenModel || isVeoModel) {
+                try {
+                  const apiKey = this.getApiKey('google')
+                  const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+                  
+                  // 准备参数
+                  const imageParams = options.imageParams || {}
+                  const videoParams = options.videoParams || {}
+                  
+                  // 构建 payload
+                  const instance = { prompt }
+                  // 支持参考图 (仅视频模式)
+                  if (isVeoModel && videoParams.referenceImage) {
+                    // Veo 3.1+ 支持 referenceImages 数组，旧版本可能仅支持 image
+                    // 这里先保持 image 字段兼容，视模型版本可扩展
+                    instance.image = { bytesBase64Encoded: videoParams.referenceImage }
                   }
+      
+                  const parameters = {
+                    sampleCount: 1
+                  }
+      
+                  // 添加特定参数
+                  if (isImagenModel) {
+                    parameters.aspectRatio = imageParams.aspectRatio || '1:1'
+                  }
+                  if (isVeoModel) {
+                    parameters.aspectRatio = videoParams.aspectRatio || '16:9'
+                    if (videoParams.duration) {
+                      parameters.durationSeconds = parseInt(videoParams.duration, 10)
+                    }
+                    if (videoParams.withAudio) {
+                      parameters.includeAudio = true
+                    }
+                    if (videoParams.negativePrompt) {
+                      parameters.negativePrompt = videoParams.negativePrompt
+                    }
+                  }
+                  
+                  // Veo 使用 predictLongRunning，Imagen 使用 predict
+                  const method = isVeoModel ? 'predictLongRunning' : 'predict'
+                  const endpoint = `${baseUrl}/models/${model}:${method}`
+                  console.log(`[Google Gen] Endpoint: ${endpoint}`)
+                  
+                  const response = await fetch(
+                    `${endpoint}?key=${apiKey}`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        instances: [instance],
+                        parameters
+                      })
+                    }
+                  )
+      
+                  if (!response.ok) {
+                    const errorText = await response.text()
+                    throw new Error(`API 错误 ${response.status} (${endpoint}): ${errorText}`)
+                  }
+      
+                  let data = await response.json()
+      
+                  // 如果是 LongRunning 操作，需要轮询
+                  if (isVeoModel && data.name && !data.done) {
+                     yield { type: 'content', content: '⏳ 任务已提交，正在生成视频 (预计 1-2 分钟)...\n' }
+                     
+                     const operationName = data.name
+                     const operationUrl = `${baseUrl}/${operationName}?key=${apiKey}`
+                     
+                     // 轮询逻辑
+                     while (true) {
+                       await new Promise(resolve => setTimeout(resolve, 5000)) // 每 5 秒轮询一次
+                       
+                       const opRes = await fetch(operationUrl)
+                       if (!opRes.ok) {
+                         throw new Error(`轮询失败: ${opRes.status}`)
+                       }
+                       
+                       data = await opRes.json()
+                       
+                       if (data.done) {
+                         if (data.error) {
+                           throw new Error(`生成失败: ${data.error.message || '未知错误'}`)
+                         }
+                         // 任务完成，data.response 包含结果
+                         // 注意: Google API 的 Operation response 结构可能包裹在 response 字段里
+                         // 通常是 data.response.predictions 或者是 data.result
+                         // 实际上对于 predictLongRunning，结果通常在 data.response 中，它是一个 Any 类型
+                         // 我们需要根据实际返回解包。通常它就是一个 PredictResponse
+                         if (data.response) {
+                            // 这里的 data.response 可能是一个被转义的 JSON 字符串或者对象
+                            // 假设是对象，结构同直接 predict 的返回
+                            data = data.response
+                         }
+                         break
+                       }
+                     }
+                  }
+      
+                  if (data.predictions && data.predictions.length > 0) {
+                    const prediction = data.predictions[0]
+                    
+                    // 处理图片
+                    if (prediction.bytesBase64Encoded) {
+                      const mimeType = isVeoModel ? 'video/mp4' : 'image/png'
+                      const url = `data:${mimeType};base64,${prediction.bytesBase64Encoded}`
+                      const markdown = isVeoModel 
+                        ? `<video controls src="${url}" width="100%"></video>`
+                        : `![生成的图片](${url})`
+                      yield { type: 'content', content: markdown }
+                    } 
+                    // 处理视频 (Veo 可能返回 videoUri 或其他字段)
+                    else if (prediction.videoUri) {
+                       yield { type: 'content', content: `<video controls src="${prediction.videoUri}" width="100%"></video>\n\n[下载视频](${prediction.videoUri})` }
+                    }
+                    // Veo 3.1 有时返回 assets 字段
+                    else if (prediction.assets && prediction.assets.video && prediction.assets.video.uri) {
+                       const uri = prediction.assets.video.uri
+                       yield { type: 'content', content: `<video controls src="${uri}" width="100%"></video>\n\n[下载视频](${uri})` }
+                    }
+                    else {
+                      console.log('未识别的预测结果:', prediction)
+                      yield { type: 'content', content: '生成成功但未识别到返回数据格式' }
+                    }
+                  } else {
+                    yield { type: 'content', content: '生成失败，请重试' }
+                  }
+      
+                  yield { type: 'done', reason: 'stop' }
+                  return
+                } catch (err) {
+                  console.error('生成错误:', err)
+                  yield { type: 'content', content: `生成失败: ${err.message}\n\n**排查建议:**\n1. 检查 Base URL 是否配置正确 (当前: ${this.getApiEndpoint('google')})\n2. Veo/Imagen 模型在 AI Studio (API Key) 上可能受限或需申请白名单。\n3. 尝试切换到 **Google Vertex AI** 提供商 (需配置 GCP 项目和 OAuth)。` }
+                  yield { type: 'done', reason: 'stop' }
+                  return
                 }
-        
+              }        
                 // Nano Banana Pro 和 Gemini 图片生成模型使用 generateContent API
                 if (isNanoBanana || isGeminiImageModel) {
                   try {
