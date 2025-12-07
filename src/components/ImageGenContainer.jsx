@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
-import { Play, Settings2, Type, Image as ImageIcon, Download, Check } from 'lucide-react'
+import { Play, Settings2, Type, Image as ImageIcon, Download, Check, X } from 'lucide-react'
 import aiService from '../services/aiService'
 import './VideoGenContainer.css' // 复用 Video Studio 的样式以保持一致
 import './ImageGenContainer.css'
@@ -16,7 +16,12 @@ function ImageGenContainer() {
   
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [model, setModel] = useState('gemini-3-pro-image-preview')
-  
+
+  // 高级设置
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [negativePrompt, setNegativePrompt] = useState('')
+  const advancedSettingsRef = useRef(null)
+
   // 模式选择 (暂只支持 Text to Image)
   const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const modeMenuRef = useRef(null)
@@ -27,14 +32,17 @@ function ImageGenContainer() {
       if (modeMenuRef.current && !modeMenuRef.current.contains(event.target)) {
         setModeMenuOpen(false)
       }
+      if (advancedSettingsRef.current && !advancedSettingsRef.current.contains(event.target)) {
+        setShowAdvancedSettings(false)
+      }
     }
-    if (modeMenuOpen) {
+    if (modeMenuOpen || showAdvancedSettings) {
       document.addEventListener('mousedown', handleClickOutside)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [modeMenuOpen])
+  }, [modeMenuOpen, showAdvancedSettings])
 
   const handleDownload = (url) => {
     if (!url) return
@@ -263,19 +271,47 @@ function ImageGenContainer() {
             disabled={isGenerating}
           />
           
-          <button className="settings-btn" title="Advanced Settings">
-            <Settings2 size={18} />
-          </button>
-          
-          <button 
-            className="generate-btn" 
+          <div className="settings-btn-wrapper" ref={advancedSettingsRef}>
+            <button
+              className={`settings-btn ${showAdvancedSettings ? 'active' : ''}`}
+              title="Advanced Settings"
+              onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+            >
+              <Settings2 size={18} />
+            </button>
+
+            {showAdvancedSettings && (
+              <div className="advanced-settings-panel">
+                <div className="panel-header">
+                  <span>高级设置</span>
+                  <button className="close-btn" onClick={() => setShowAdvancedSettings(false)}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="panel-content">
+                  <div className="setting-item">
+                    <label>负面提示词</label>
+                    <textarea
+                      placeholder="描述不想出现的内容..."
+                      value={negativePrompt}
+                      onChange={(e) => setNegativePrompt(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            className="generate-btn"
             onClick={handleGenerate}
             disabled={!prompt || isGenerating}
           >
             <Play size={18} fill="currentColor" />
           </button>
         </div>
-        
+
         <div className="footer-note">
           Imagen is a paid-only model. You will be charged on your Cloud project.
         </div>
