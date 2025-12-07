@@ -1332,15 +1332,23 @@ class AIService {
   async *_generateVertexVideo(projectId, location, model, prompt, auth, videoParams = {}) {
     yield { type: 'content', content: '🎬 正在提交任务至 Vertex AI (Veo)...\n\n' }
 
-    const { accessToken, apiKey } = auth
-    const useOAuth = !!accessToken
-    const token = accessToken || apiKey
+    let { accessToken, apiKey } = auth
     
-    // 处理模型 ID: 移除 publishers/google/models/ 前缀（如果有）
+    // 智能认证策略：
+    // 1. 如果有 API Key (AIza开头)，优先尝试使用 API Key (因为它永不过期且配置简单)
+    // 2. 如果只有 OAuth Token，则使用 Token
+    let useOAuth = true
+    let token = accessToken
+    
+    if (apiKey && apiKey.startsWith('AIza')) {
+       useOAuth = false
+       token = apiKey
+    } else if (!accessToken) {
+       // 无任何凭证
+       throw new Error('未检测到有效的 Vertex 认证凭证 (OAuth Token 或 API Key)')
+    }
+
     const modelName = model.replace('publishers/google/models/', '')
-    
-    // Vertex API Key 模式判断
-    const isApiKey = !useOAuth && apiKey && apiKey.startsWith('AIza')
     
     // 构建 Endpoint (Veo 3.1+ 使用 v1beta1 + predictLongRunning)
     const baseUrl = `https://${location}-aiplatform.googleapis.com/v1beta1`
@@ -1350,21 +1358,15 @@ class AIService {
       'Content-Type': 'application/json'
     }
     
-    if (isApiKey) {
-      endpoint += `?key=${apiKey}`
-    } else if (useOAuth) {
-      headers['Authorization'] = `Bearer ${accessToken}`
+    if (!useOAuth) {
+      endpoint += `?key=${token}`
     } else {
-       // fallback: assume token is a key? or fail
-       // Based on `streamChatVertex` passing {accessToken, apiKey}, we cover both cases.
+      headers['Authorization'] = `Bearer ${token}`
     }
 
     try {
       const instance = { prompt }
       // 如果有参考图，添加到 payload
-      // Veo 3.1 可能需要 referenceImages，旧版用 image
-      // 这里根据 Veo 文档，3.1 使用 image 或 video 为输入，referenceImages 为风格参考
-      // 简单起见，沿用 image 字段，如果报错再调整
       if (videoParams.referenceImage) {
         instance.image = { bytesBase64Encoded: videoParams.referenceImage }
       }
@@ -1378,13 +1380,12 @@ class AIService {
       
       // Veo 3.1 参数兼容
       if (modelName.includes('veo-3.1')) {
-        // 3.1 可能支持 negativePrompt
         if (videoParams.negativePrompt) {
           parameters.negativePrompt = videoParams.negativePrompt
         }
       }
 
-      console.log(`[Vertex Video] Request: ${endpoint}`)
+      console.log(`[Vertex Video] Request: ${endpoint} (Auth: ${useOAuth ? 'OAuth' : 'API Key'})`)
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -1409,10 +1410,11 @@ class AIService {
       if (data.name && !data.done) {
         yield { type: 'content', content: '⏳ 任务已提交，正在 Vertex AI 上生成视频 (预计 1-2 分钟)... 0%\n' }
         
-        const operationName = data.name // e.g., "projects/.../locations/.../operations/..."
+        const operationName = data.name 
         let pollUrl = `${baseUrl}/${operationName}`
-        if (isApiKey) {
-          pollUrl += `?key=${apiKey}`
+        
+        if (!useOAuth) {
+          pollUrl += `?key=${token}`
         }
         
         console.log(`[Vertex Video] Polling: ${pollUrl}`)
@@ -1422,13 +1424,8 @@ class AIService {
           await new Promise(resolve => setTimeout(resolve, 5000)) // 5秒轮询
           attempts++
           
-          // 更新假进度
-          const progress = Math.min(95, attempts * 5)
-          // yield { type: 'progress', value: progress } // 如果前端支持
-          
-          const opRes = await fetch(pollUrl, {
-            headers: isApiKey ? {} : { 'Authorization': `Bearer ${token}` }
-          })
+          const pollHeaders = useOAuth ? { 'Authorization': `Bearer ${token}` } : {}
+          const opRes = await fetch(pollUrl, { headers: pollHeaders })
           
           if (!opRes.ok) {
             const errText = await opRes.text()
@@ -1441,12 +1438,7 @@ class AIService {
             if (data.error) {
               throw new Error(`Vertex 任务失败: ${data.error.message}`)
             }
-            // 结果通常在 response 字段
             if (data.response) {
-               // Vertex LRO 的 response 字段可能是一个 Any 类型，
-               // 有时是一个包含 predictions 的对象，有时是直接的字符串结果
-               // 对于 Veo，通常结构是 { predictions: [...] } 或直接就是 predictions 数组？
-               // 标准 LRO response 是一个 JSON 对象
                data = data.response
             }
             break
