@@ -382,9 +382,9 @@ function SettingsPanel({ isOpen, onClose }) {
                   <div className="vertex-info">
                     <p>💡 Vertex AI 支持的功能：</p>
                     <ul>
-                      <li><Video size={14} /> Veo 3.0 / 2.0 视频生成</li>
-                      <li>🖼️ Imagen 3.0 图片生成</li>
-                      <li>💬 Gemini 2.0 / 1.5 对话</li>
+                      <li><Video size={14} /> Veo 3.1 / 3 / 2 视频生成</li>
+                      <li>🖼️ Imagen 4 / 3 图片生成</li>
+                      <li>💬 Gemini 3 / 2.5 / 2.0 对话</li>
                     </ul>
                   </div>
                 </div>

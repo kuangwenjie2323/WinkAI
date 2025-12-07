@@ -985,13 +985,22 @@ class AIService {
 
     // 推荐的模型列表（用于提供友好的名称和排序）
     const RECOMMENDED_MODELS = {
-      'veo-3.0-generate-preview': { name: 'Veo 3.0 (视频生成)', order: 10 },
-      'veo-2.0-generate-001': { name: 'Veo 2.0 (视频生成)', order: 11 },
-      'imagen-3.0-generate-002': { name: 'Imagen 3.0 (图片生成)', order: 20 },
-      'imagen-3.0-fast-generate-001': { name: 'Imagen 3.0 Fast', order: 21 },
-      'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', order: 30 },
-      'gemini-2.5-pro': { name: 'Gemini 2.5 Pro', order: 31 },
-      'gemini-2.0-flash': { name: 'Gemini 2.0 Flash', order: 32 }
+      // 视频生成
+      'veo-3.1-generate-preview': { name: 'Veo 3.1 (视频)', order: 1 },
+      'veo-3.0-generate-preview': { name: 'Veo 3 (视频)', order: 2 },
+      'veo-3-fast': { name: 'Veo 3 Fast (视频)', order: 3 },
+      'veo-2.0-generate-001': { name: 'Veo 2 (视频)', order: 4 },
+      // 图片生成
+      'imagen-4-ultra': { name: 'Imagen 4 Ultra', order: 10 },
+      'imagen-4': { name: 'Imagen 4', order: 11 },
+      'imagen-4-fast': { name: 'Imagen 4 Fast', order: 12 },
+      'imagen-3.0-generate-002': { name: 'Imagen 3.0', order: 13 },
+      'imagen-3.0-fast-generate-001': { name: 'Imagen 3.0 Fast', order: 14 },
+      // 对话模型
+      'gemini-3-pro-preview': { name: 'Gemini 3 Pro Preview', order: 20 },
+      'gemini-2.5-pro': { name: 'Gemini 2.5 Pro', order: 21 },
+      'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', order: 22 },
+      'gemini-2.0-flash': { name: 'Gemini 2.0 Flash', order: 23 }
     }
 
     const headers = {

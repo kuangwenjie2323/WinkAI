@@ -58,17 +58,22 @@ export const useStore = create(
           baseURL: 'https://asia-southeast1-aiplatform.googleapis.com/v1',
           models: [
             // 视频生成模型
+            'publishers/google/models/veo-3.1-generate-preview',
             'publishers/google/models/veo-3.0-generate-preview',
+            'publishers/google/models/veo-3-fast',
             'publishers/google/models/veo-2.0-generate-001',
             // 图片生成模型
+            'publishers/google/models/imagen-4-ultra',
+            'publishers/google/models/imagen-4',
+            'publishers/google/models/imagen-4-fast',
             'publishers/google/models/imagen-3.0-generate-002',
-            'publishers/google/models/imagen-3.0-fast-generate-001',
-            // 对话模型（使用不带版本号的别名，自动指向最新稳定版）
-            'publishers/google/models/gemini-2.5-flash',
+            // 对话模型
+            'publishers/google/models/gemini-3-pro-preview',
             'publishers/google/models/gemini-2.5-pro',
+            'publishers/google/models/gemini-2.5-flash',
             'publishers/google/models/gemini-2.0-flash'
           ],
-          defaultModel: 'publishers/google/models/gemini-2.0-flash',
+          defaultModel: 'publishers/google/models/gemini-2.5-flash',
           projectId: '',
           location: 'us-central1',
           supportsVision: true,
