@@ -137,24 +137,37 @@ function ImageGenContainer() {
       for await (const chunk of iterator) {
         if (chunk.type === 'content') {
           console.log('Chunk:', chunk)
-          // 解析 markdown 图片链接: ![...](data:image/png;base64,...)
-          if (chunk.content.includes('data:image')) {
-             const srcMatch = chunk.content.match(/\((data:image\/[^)]+)\)/)
+          
+          // 尝试提取图片 URL (支持 R2 URL, HTTP URL, Data URL)
+          // 匹配 Markdown 图片语法: ![alt](url)
+          const imgMatch = chunk.content.match(/!\[.*?\]\((.*?)\)/)
+          
+          if (imgMatch && imgMatch[1]) {
+             const url = imgMatch[1]
+             setImageUrl(url)
+             imgFound = true
+             setProgress(100)
+
+             // 保存到历史记录
+             addToImageLibrary({
+               url,
+               prompt,
+               model,
+               createdAt: Date.now()
+             })
+          }
+          // 兼容纯 Data URL (如果某些模型直接返回)
+          else if (chunk.content.includes('data:image')) {
+             const srcMatch = chunk.content.match(/(data:image\/[^"\s)]+)/)
              if (srcMatch && srcMatch[1]) {
                const url = srcMatch[1]
                setImageUrl(url)
                imgFound = true
                setProgress(100)
-
-               // 保存到历史记录
-               addToImageLibrary({
-                 url,
-                 prompt,
-                 model,
-                 createdAt: Date.now()
-               })
+               addToImageLibrary({ url, prompt, model, createdAt: Date.now() })
              }
-          } else {
+          }
+          else {
             fullText += chunk.content
           }
         }

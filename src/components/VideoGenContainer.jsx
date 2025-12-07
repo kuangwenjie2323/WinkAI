@@ -177,27 +177,33 @@ function VideoGenContainer() {
       for await (const chunk of iterator) {
         if (chunk.type === 'content') {
           console.log('Chunk:', chunk)
-          // 处理返回的视频内容
-          // 这里的 chunk.content 可能是 markdown 格式的视频链接或 HTML
-          // 我们需要解析它
+          
+          // 1. 尝试匹配 HTML video 标签
           if (chunk.content.includes('<video')) {
              const srcMatch = chunk.content.match(/src="([^"]+)"/)
              if (srcMatch && srcMatch[1]) {
                const url = srcMatch[1]
                setVideoUrl(url)
                videoFound = true
-               setProgress(100) // 完成
-               
-               // 保存到历史记录
-               addToVideoLibrary({
-                 url,
-                 prompt,
-                 model,
-                 createdAt: Date.now()
-               })
+               setProgress(100)
+               addToVideoLibrary({ url, prompt, model, createdAt: Date.now() })
              }
-          } else {
-            fullText += chunk.content
+          }
+          // 2. 尝试匹配 Markdown 链接 (作为备选，防止 HTML 格式变动)
+          // 匹配 [text](url) 且 url 包含 video 或 mp4 或 /api/file
+          else {
+             const linkMatch = chunk.content.match(/\[.*?\]\((.*?)\)/)
+             if (linkMatch && linkMatch[1]) {
+                const url = linkMatch[1]
+                // 简单过滤，避免误配其他链接
+                if (url.match(/(\.mp4|video|\/api\/file\/)/i)) {
+                   setVideoUrl(url)
+                   videoFound = true
+                   setProgress(100)
+                   addToVideoLibrary({ url, prompt, model, createdAt: Date.now() })
+                }
+             }
+             fullText += chunk.content
           }
         }
       }
