@@ -9,7 +9,7 @@ import aiAvatarImg from '../assets/ai_avatar.png'
 export function UserAvatar({ size = 40, className = '' }) {
   return (
     <img
-      src={userAvatarImg}
+      src={aiAvatarImg}
       alt="User"
       width={size}
       height={size}
@@ -29,7 +29,7 @@ export function UserAvatar({ size = 40, className = '' }) {
 export function AIAvatar({ size = 40, className = '' }) {
   return (
     <img
-      src={aiAvatarImg}
+      src={userAvatarImg}
       alt="AI"
       width={size}
       height={size}
