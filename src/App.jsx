@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useStore } from './store/useStore'
-import { Toaster } from 'react-hot-toast'
+import { Toaster, toast } from 'react-hot-toast'
+import aiService from './services/aiService'
 import LeftSidebar from './components/LeftSidebar'
 import TopBar from './components/TopBar'
 import ChatContainer from './components/ChatContainer'
@@ -12,9 +13,22 @@ import ErrorBoundary from './components/ErrorBoundary'
 import './App.css'
 
 function App() {
-  const { _hasHydrated, uiState, settings, updateSettings, setLeftSidebarOpen, setRightPanelOpen } = useStore()
+  const { 
+    _hasHydrated, 
+    uiState, 
+    settings, 
+    currentProvider,
+    currentModel,
+    providers,
+    updateSettings, 
+    setLeftSidebarOpen, 
+    setRightPanelOpen,
+    setTestResult,
+    setDynamicModels
+  } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const initialTestDone = useRef(false)
 
   // 检测是否为移动端
   useEffect(() => {
@@ -25,6 +39,46 @@ function App() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // 自动测试连接（仅在应用加载完成且水合后执行一次）
+  useEffect(() => {
+    if (_hasHydrated && !initialTestDone.current) {
+      initialTestDone.current = true
+      
+      const performAutoTest = async () => {
+        const config = providers[currentProvider]
+        // 如果没有 API Key 且不是 custom/vertex，通常无法连接，跳过
+        // Vertex 可能用 OAuth Token，所以也要允许
+        // Custom 可能用本地代理，无 Key 也可以
+        if (!config) return
+
+        console.log(`[App] Auto-testing connection for ${currentProvider} (${currentModel})...`)
+
+        try {
+          const result = await aiService.testConnection(currentProvider, { 
+            testModel: currentModel 
+          })
+          
+          setTestResult(currentProvider, result)
+          
+          if (result.success) {
+            console.log('[App] Auto-test success:', result)
+            if (result.models && result.models.length > 0) {
+              setDynamicModels(currentProvider, result.models)
+            }
+          } else {
+            console.warn('[App] Auto-test failed:', result.error)
+            // 可选：连接失败时提示用户
+            // toast.error(`自动连接 ${config.name} 失败: ${result.error}`, { id: 'auto-connect-error' })
+          }
+        } catch (e) {
+          console.error('[App] Auto-test error:', e)
+        }
+      }
+
+      performAutoTest()
+    }
+  }, [_hasHydrated, currentProvider, currentModel, providers, setTestResult, setDynamicModels])
 
   // 等待状态水合完成
   if (!_hasHydrated) {
