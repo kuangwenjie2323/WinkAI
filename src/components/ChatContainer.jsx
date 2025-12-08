@@ -147,6 +147,7 @@ function ChatContainer() {
           {
             temperature: settings.temperature,
             maxTokens: settings.maxTokens,
+            enableSearch: settings.enableSearch,
             mode: generationMode
           }
         )) {
@@ -175,6 +176,7 @@ function ChatContainer() {
           {
             temperature: settings.temperature,
             maxTokens: settings.maxTokens,
+            enableSearch: settings.enableSearch,
             mode: generationMode
           }
         )

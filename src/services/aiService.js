@@ -722,13 +722,19 @@ class AIService {
         }
       })
 
-      const chat = genModel.startChat({
+      const chatConfig = {
         history,
         generationConfig: {
           temperature,
           maxOutputTokens
         }
-      })
+      }
+
+      if (options.enableSearch) {
+        chatConfig.tools = [{ googleSearch: {} }]
+      }
+
+      const chat = genModel.startChat(chatConfig)
 
       // 构建当前多模态消息
       let currentParts = [{ text: prompt }]
@@ -1509,6 +1515,10 @@ class AIService {
         temperature,
         maxOutputTokens
       }
+    }
+
+    if (options.enableSearch) {
+      body.tools = [{ googleSearchRetrieval: {} }]
     }
 
     const response = await fetch(url, {
