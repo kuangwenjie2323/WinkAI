@@ -57,7 +57,8 @@
     "drag_drop": "Drag & drop images here",
     "regenerate": "Regenerate",
     "copy_code": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "token_usage_detail": "Input: {{prompt}} / Output: {{completion}}"
   },
   "settings": {
     "title": "Settings",

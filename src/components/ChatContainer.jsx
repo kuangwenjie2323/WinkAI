@@ -155,6 +155,10 @@ function ChatContainer() {
             updateMessage(session.id, aiMessageId, {
               content: fullContent
             })
+          } else if (chunk.type === 'usage') {
+            updateMessage(session.id, aiMessageId, {
+              usage: chunk.usage
+            })
           } else if (chunk.type === 'done') {
             updateMessage(session.id, aiMessageId, {
               isStreaming: false

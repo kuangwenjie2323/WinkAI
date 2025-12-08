@@ -265,18 +265,39 @@ class AIService {
         }
       })
 
-      const stream = await client.chat.completions.create({
+      const requestOptions = {
         model,
         messages: formattedMessages,
         stream: true,
         temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 4096
-      })
+        max_tokens: options.maxTokens || 4096,
+      }
+
+      // 仅对 OpenAI 官方接口尝试请求 usage 统计
+      // 其他兼容接口如果不抛错也可以加，但在某些严格校验的接口可能会报错，稳妥起见先只给 OpenAI 加，
+      // 或者依赖 try-catch 降级。
+      // DeepSeek 和 Qwen 最新版通常支持。
+      if (['openai', 'deepseek', 'qwen'].includes(provider)) {
+        requestOptions.stream_options = { include_usage: true }
+      }
+
+      const stream = await client.chat.completions.create(requestOptions)
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content
         if (content) {
           yield { type: 'content', content }
+        }
+
+        if (chunk.usage) {
+          yield { 
+            type: 'usage', 
+            usage: {
+              prompt_tokens: chunk.usage.prompt_tokens,
+              completion_tokens: chunk.usage.completion_tokens,
+              total_tokens: chunk.usage.total_tokens
+            }
+          }
         }
 
         if (chunk.choices[0]?.finish_reason) {
@@ -364,6 +385,19 @@ class AIService {
         }
 
         if (event.type === 'message_stop') {
+          // Anthropic 在 message_stop 中返回 usage
+          // event.message.usage: { input_tokens, output_tokens }
+          const usage = event.message?.usage
+          if (usage) {
+            yield {
+              type: 'usage',
+              usage: {
+                prompt_tokens: usage.input_tokens,
+                completion_tokens: usage.output_tokens,
+                total_tokens: (usage.input_tokens || 0) + (usage.output_tokens || 0)
+              }
+            }
+          }
           yield { type: 'done', reason: 'stop' }
         }
       }
@@ -719,6 +753,33 @@ class AIService {
         if (text) {
           yield { type: 'content', content: text }
         }
+        // Google SDK 的 usageMetadata 通常在 aggregate response 中，
+        // 但在流式 chunk 中也可能包含。
+        // 目前的 Google SDK chunk 对象没有直接暴露 usageMetadata 属性，
+        // 通常需要检查 chunk.usageMetadata (如果存在)
+        if (chunk.usageMetadata) {
+             yield {
+              type: 'usage',
+              usage: {
+                prompt_tokens: chunk.usageMetadata.promptTokenCount,
+                completion_tokens: chunk.usageMetadata.candidatesTokenCount,
+                total_tokens: chunk.usageMetadata.totalTokenCount
+              }
+            }
+        }
+      }
+      
+      // 流结束后的 response 也可能包含最终的 usageMetadata
+      const response = await result.response;
+      if (response.usageMetadata) {
+          yield {
+              type: 'usage',
+              usage: {
+                prompt_tokens: response.usageMetadata.promptTokenCount,
+                completion_tokens: response.usageMetadata.candidatesTokenCount,
+                total_tokens: response.usageMetadata.totalTokenCount
+              }
+            }
       }
 
       yield { type: 'done', reason: 'stop' }

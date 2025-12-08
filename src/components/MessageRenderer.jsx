@@ -308,10 +308,23 @@ function MessageRenderer({
             </div>
           )}
 
-          {/* 消息底部复制按钮（整条消息） */}
-          {role === 'assistant' && !isStreaming && textContent && (
+          {/* 消息底部复制按钮（整条消息）和 Token 统计 */}
+          {role === 'assistant' && !isStreaming && (textContent || message.usage) && (
             <div className="message-footer">
-              <CopyButton text={textContent || content} className="footer-copy-btn" />
+              <div className="footer-left">
+                {textContent && <CopyButton text={textContent || content} className="footer-copy-btn" />}
+              </div>
+              {message.usage && (
+                <div 
+                  className="token-usage" 
+                  title={t('chat.token_usage_detail', { 
+                    prompt: message.usage.prompt_tokens, 
+                    completion: message.usage.completion_tokens 
+                  })}
+                >
+                  {message.usage.total_tokens} tokens
+                </div>
+              )}
             </div>
           )}
         </>

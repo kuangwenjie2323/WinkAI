@@ -612,10 +612,32 @@
 /* 消息底部 */
 .message-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   padding-top: var(--spacing-2);
   border-top: 1px solid var(--border-primary);
   margin-top: var(--spacing-2);
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.token-usage {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  opacity: 0.7;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-1);
+}
+
+.token-usage:hover {
+  opacity: 1;
+  color: var(--text-secondary);
 }
 
 .footer-copy-btn {

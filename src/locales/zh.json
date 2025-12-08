@@ -57,7 +57,8 @@
     "drag_drop": "拖拽图片到这里",
     "regenerate": "重新生成",
     "copy_code": "复制",
-    "copied": "已复制!"
+    "copied": "已复制!",
+    "token_usage_detail": "输入: {{prompt}} / 输出: {{completion}}"
   },
   "settings": {
     "title": "设置",
