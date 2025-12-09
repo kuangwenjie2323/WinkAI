@@ -92,9 +92,13 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
 
   // 键盘事件
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+    // Cmd+Enter 或 Ctrl+Enter 发送
+    if (e.key === 'Enter') {
+      if (e.metaKey || e.ctrlKey) {
+        e.preventDefault()
+        handleSend()
+      }
+      // 默认 Enter 为换行
     }
   }
 
@@ -210,7 +214,7 @@ function MultiModalInput({ onSend, disabled = false, mode = 'chat' }) {
           onClick={handleSend}
           disabled={sendDisabled}
           type="button"
-          title={t('chat.run_tooltip') || 'Run (Enter)'}
+          title={t('chat.run_tooltip') || 'Run (Ctrl+Enter)'}
         >
           <Play size={20} fill="currentColor" />
         </button>
