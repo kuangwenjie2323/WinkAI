@@ -78,11 +78,12 @@ const defaultProviders = {
     apiKey: '',
     baseURL: 'https://api.deepseek.com/v1',
     models: [
+      'deepseek-v3.2',
+      'deepseek-v3.2-speciale',
       'deepseek-chat',
-      'deepseek-reasoner',
-      'deepseek-coder'
+      'deepseek-reasoner'
     ],
-    defaultModel: 'deepseek-chat',
+    defaultModel: 'deepseek-v3.2',
     supportsVision: false,
     supportsStreaming: true
   },

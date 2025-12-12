@@ -17,12 +17,11 @@ export const API_CONFIG = {
       baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
       models: ['doubao-pro-32k', 'doubao-lite-32k']
     },
-    deepseek: {
-      name: 'DeepSeek',
-      baseURL: 'https://api.deepseek.com/v1',
-      models: ['deepseek-chat', 'deepseek-coder']
-    },
-    anthropic: {
+        deepseek: {
+          name: 'DeepSeek',
+          baseURL: 'https://api.deepseek.com/v1',
+          models: ['deepseek-v3.2', 'deepseek-v3.2-speciale', 'deepseek-chat', 'deepseek-reasoner']
+        },    anthropic: {
       name: 'Anthropic',
       baseURL: 'https://api.anthropic.com/v1',
       models: ['claude-3-opus', 'claude-3-sonnet']

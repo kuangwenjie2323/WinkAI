@@ -7,6 +7,8 @@ import TopBar from './components/TopBar'
 import ChatContainer from './components/ChatContainer'
 import ImageGenContainer from './components/ImageGenContainer'
 import VideoGenContainer from './components/VideoGenContainer'
+import BatchTaskContainer from './components/BatchTaskContainer'
+import ContextCacheContainer from './components/ContextCacheContainer'
 import RightPanel from './components/RightPanel'
 import SettingsPanel from './components/SettingsPanel'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -125,6 +127,10 @@ function App() {
         return <ImageGenContainer />
       case 'video':
         return <VideoGenContainer />
+      case 'batch':
+        return <BatchTaskContainer />
+      case 'cache':
+        return <ContextCacheContainer />
       case 'chat':
       case 'settings':
       default:

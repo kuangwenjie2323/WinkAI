@@ -698,7 +698,14 @@ class AIService {
         return
       }
 
-      const genModel = client.getGenerativeModel({ model })
+      // Context Caching Support
+      const modelParams = { model }
+      if (options.cachedContent) {
+        modelParams.cachedContent = options.cachedContent
+        console.log('[Google Gen] Using Cached Content:', options.cachedContent)
+      }
+
+      const genModel = client.getGenerativeModel(modelParams)
 
       // 构建多模态历史
       const history = messages.slice(0, -1).map(msg => {
@@ -731,7 +738,18 @@ class AIService {
       }
 
       if (options.enableSearch) {
-        chatConfig.tools = [{ googleSearch: {} }]
+        // 构建 Tools 数组
+        const toolsObj = { googleSearch: {} }
+
+        // URL Context (仅 Gemini 2.0 及以上支持)
+        // 允许模型读取 prompt 中的 URL 内容
+        // 文档: https://ai.google.dev/gemini-api/docs/url-context
+        if (/gemini-[23]/.test(model)) {
+          // 映射为 SDK 期望的 camelCase 属性 (url_context -> urlContext)
+          toolsObj.urlContext = {}
+        }
+
+        chatConfig.tools = [toolsObj]
       }
 
       const chat = genModel.startChat(chatConfig)
@@ -1805,6 +1823,188 @@ class AIService {
     }
 
     yield { type: 'done', reason: 'stop' }
+  }
+
+  // --- Google File API & Batch API ---
+
+  // 上传文件到 Google File API (Resumable Upload)
+  async uploadFileToGoogle(file, mimeType = 'application/json') {
+    const apiKey = this.getApiKey('google')
+    if (!apiKey) throw new Error('Google API Key not set')
+    
+    // 1. 初始化上传
+    const baseUrl = 'https://generativelanguage.googleapis.com/upload/v1beta/files'
+    const startRes = await fetch(`${baseUrl}?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': file.size.toString(),
+        'X-Goog-Upload-Header-Content-Type': mimeType,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ file: { display_name: file.name } })
+    })
+    
+    if (!startRes.ok) {
+      const err = await startRes.text()
+      throw new Error(`Upload init failed: ${err}`)
+    }
+    
+    const uploadUrl = startRes.headers.get('x-goog-upload-url')
+    if (!uploadUrl) throw new Error('No upload URL returned')
+    
+    // 2. 上传内容
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Length': file.size.toString(),
+        'X-Goog-Upload-Offset': '0',
+        'X-Goog-Upload-Command': 'upload, finalize'
+      },
+      body: file
+    })
+    
+    if (!uploadRes.ok) {
+      const err = await uploadRes.text()
+      throw new Error(`Upload failed: ${err}`)
+    }
+    
+    const result = await uploadRes.json()
+    return result.file // { name, uri, state, ... }
+  }
+
+  // 创建 Batch 任务
+  async createBatchJob(model, fileUri) {
+    const apiKey = this.getApiKey('google')
+    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+    
+    const cleanModel = model.startsWith('models/') ? model : `models/${model}`
+    
+    const res = await fetch(`${baseUrl}/${cleanModel}:batchGenerateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+            // Batch API supports inline 'requests' OR 'dataset'.
+            // Here we use 'dataset' pointing to a file.
+        ], 
+        dataset: {
+            file: { uri: fileUri }
+        }
+      })
+    })
+    
+    if (!res.ok) {
+      const err = await res.text()
+      throw new Error(`Create batch failed: ${err}`)
+    }
+    
+    return await res.json()
+  }
+
+  // 获取 Batch 任务列表
+  async listBatchJobs() {
+    const apiKey = this.getApiKey('google')
+    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+    
+    const res = await fetch(`${baseUrl}/batches?key=${apiKey}&pageSize=50`)
+    if (!res.ok) throw new Error('List batches failed')
+    return await res.json()
+  }
+
+  // 获取特定 Batch 任务
+  async getBatchJob(name) {
+    const apiKey = this.getApiKey('google')
+    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+    
+    const res = await fetch(`${baseUrl}/${name}?key=${apiKey}`)
+    if (!res.ok) throw new Error('Get batch job failed')
+    return await res.json()
+  }
+
+  // 取消 Batch 任务
+  async cancelBatchJob(name) {
+    const apiKey = this.getApiKey('google')
+    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+    
+    const res = await fetch(`${baseUrl}/${name}:cancel?key=${apiKey}`, { method: 'POST' })
+    if (!res.ok) throw new Error('Cancel batch job failed')
+    return await res.json()
+  }
+
+  // 下载结果文件
+  async downloadFile(uri) {
+    const apiKey = this.getApiKey('google')
+    // File API uri usually looks like: https://generativelanguage.googleapis.com/v1beta/files/XXX
+    // We need to append key
+    const res = await fetch(`${uri}?key=${apiKey}`)
+    if (!res.ok) throw new Error('Download file failed')
+    return await res.text()
+  }
+
+  // --- Context Caching ---
+
+  // 获取缓存列表
+  async listCachedContents() {
+    const apiKey = this.getApiKey('google')
+    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+    
+    const res = await fetch(`${baseUrl}/cachedContents?key=${apiKey}`)
+    if (!res.ok) throw new Error('List cached contents failed')
+    return await res.json()
+  }
+
+  // 创建缓存
+  async createCachedContent(params) {
+    // params: { model, displayName, systemInstruction, contents, ttl }
+    const apiKey = this.getApiKey('google')
+    const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+    
+    const body = {
+      model: params.model,
+      displayName: params.displayName,
+      ttl: params.ttl || '3600s'
+    }
+    
+    if (params.contents) body.contents = params.contents
+    if (params.systemInstruction) {
+        body.systemInstruction = { parts: [{ text: params.systemInstruction }] }
+    }
+
+    const res = await fetch(`${baseUrl}/cachedContents?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    if (!res.ok) {
+        const err = await res.text()
+        throw new Error(`Create cache failed: ${err}`)
+    }
+    return await res.json()
+  }
+  
+  // 删除缓存
+  async deleteCachedContent(name) {
+      const apiKey = this.getApiKey('google')
+      const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+      const res = await fetch(`${baseUrl}/${name}?key=${apiKey}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete cache failed')
+  }
+  
+  // 更新缓存 TTL
+  async updateCachedContentTTL(name, ttl) {
+      const apiKey = this.getApiKey('google')
+      const baseUrl = this.getApiEndpoint('google') || 'https://generativelanguage.googleapis.com/v1beta'
+      
+      const res = await fetch(`${baseUrl}/${name}?key=${apiKey}`, { 
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ttl })
+      })
+      if (!res.ok) throw new Error('Update cache failed')
+      return await res.json()
   }
 
   // 非流式聊天（兼容接口）

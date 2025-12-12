@@ -23,6 +23,7 @@ function SettingsPanel({ isOpen, onClose }) {
     updateSettings,
     testResults,
     setTestResult,
+    dynamicModels,
     setDynamicModels,
     googleOAuth,
     setGoogleOAuthStatus
@@ -445,7 +446,13 @@ function SettingsPanel({ isOpen, onClose }) {
                   onChange={(e) => setCurrentModel(e.target.value)}
                   className="model-select"
                 >
-                  {provider.models && provider.models.length > 0 ? (
+                  {dynamicModels && dynamicModels[currentProvider] && dynamicModels[currentProvider].length > 0 ? (
+                    dynamicModels[currentProvider].map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name || model.id}
+                      </option>
+                    ))
+                  ) : provider.models && provider.models.length > 0 ? (
                     provider.models.map((model) => (
                       <option key={model} value={model}>
                         {model}
