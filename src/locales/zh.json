@@ -19,6 +19,8 @@
     "tab_chat": "对话",
     "tab_image": "图片",
     "tab_video": "视频",
+    "tab_batch": "批处理",
+    "tab_cache": "缓存",
     "tab_settings": "设置",
     "desc_home": "项目摘要",
     "desc_prompts": "最近的对话与草稿",

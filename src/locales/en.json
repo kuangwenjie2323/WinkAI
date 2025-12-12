@@ -19,6 +19,8 @@
     "tab_chat": "Chat",
     "tab_image": "Image",
     "tab_video": "Video",
+    "tab_batch": "Batch",
+    "tab_cache": "Cache",
     "tab_settings": "Settings",
     "desc_home": "Project Summary",
     "desc_prompts": "Recent chats & drafts",
